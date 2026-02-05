@@ -1,0 +1,20 @@
+[33me7bf44a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Update project for deployment
+[33m6922464[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: Add Groups view with driver team grouping and smart day-based labels
+[33ma269ef9[m Fix: Inventory SKU duplicates, Add Stock Manager role, Update UI
+[33m397082a[m feat: Implement admin-only override for locked assignments
+[33mf295242[m Fix coffin usage emails: switch to SendGrid Web API and add instant alerts
+[33m29cf5dc[m Allow single vehicle for Stillborn and Baby funerals
+[33mc5c41fc[m Add more trace logging to status updates
+[33me301692[m Enhance status/venue update logic and logging
+[33m31dca5c[m Fix is_yard_burial destructuring in server controller
+[33m23440de[m Move In-Yard Burial toggle to Active Cases driver assignment screen
+[33mc8e0a1a[m Add In-Yard Burial logic and UI option
+[33mf3b36cf[m Enhanced grocery tracking and supplier print features
+[33mdc8a76c[m Merge pull request #1 from Bongz26/fix/benefit-exchange
+[33me306d6e[m[33m ([m[1;32mfeat/benefit-exchange-logic[m[33m)[m feat: implement benefit exchange logic in ConsultationForm
+[33m8c4ee66[m UI Feature: Active cases age filter (Recent vs Older than 2 weeks)
+[33m2c61ee9[m Feature Update: Book Top-ups, Duplicate Checks, Receipt Fixes, Schedule Logic
+[33mf73c6ee[m Receipt: Enhance book top-up display with highlighted section
+[33ma798dfa[m Book top-up: Use plan selection instead of manual amount
+[33m3cd9387[m Frontend: Add book top-up UI inputs complete
+[33m6c0374d[m Frontend: Partial book top-up implementation (state + display logic)
