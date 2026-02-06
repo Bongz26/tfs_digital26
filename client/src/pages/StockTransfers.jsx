@@ -33,12 +33,12 @@ const StockTransfers = () => {
         items: [],
         notes: ''
     });
+    const [editingId, setEditingId] = useState(null); // null means create mode
 
 
 
     // Print State
     const [printTransfer, setPrintTransfer] = useState(null);
-    const [editingTransfer, setEditingTransfer] = useState(null); // { id, driver_id, driver_name }
 
     useEffect(() => {
         loadData();
@@ -71,16 +71,56 @@ const StockTransfers = () => {
         }
     };
 
-    const handleCreate = async () => {
-        if (formData.items.length === 0) return alert('Add at least one item');
+    const handleCreateOrUpdate = async () => {
+        let currentFormData = { ...formData };
+
+        // UX Improvement: If user has selected an item but forgot to click '+', add it automatically
+        if (newItem.inventory_id) {
+            const inv = inventory.find(i => i.id === parseInt(newItem.inventory_id));
+            if (inv) {
+                const qtyToAdd = parseInt(newItem.quantity) || 1;
+                const existingIdx = currentFormData.items.findIndex(i => i.inventory_id === inv.id);
+
+                if (existingIdx > -1) {
+                    const newItems = [...currentFormData.items];
+                    newItems[existingIdx] = {
+                        ...newItems[existingIdx],
+                        quantity: (newItems[existingIdx].quantity || 0) + qtyToAdd
+                    };
+                    currentFormData.items = newItems;
+                } else {
+                    currentFormData.items = [
+                        ...currentFormData.items,
+                        {
+                            inventory_id: inv.id,
+                            name: inv.name,
+                            quantity: qtyToAdd,
+                            model: inv.model,
+                            color: inv.color
+                        }
+                    ];
+                }
+                // Clear the item builder state
+                setNewItem({ inventory_id: '', quantity: 1 });
+            }
+        }
+
+        if (currentFormData.items.length === 0) return alert('Add at least one item');
+
         try {
-            await createTransferRequest(formData);
+            if (editingId) {
+                await updateTransferRequest(editingId, currentFormData);
+                alert('Transfer Updated!');
+            } else {
+                await createTransferRequest(currentFormData);
+                alert('Transfer Request Created!');
+            }
             setShowCreateModal(false);
+            setEditingId(null);
             setFormData({ from_location: 'Manekeng', to_location: 'Head Office', driver_id: '', items: [], notes: '' });
             loadData();
-            alert('Transfer Request Created!');
         } catch (error) {
-            alert('Failed to create transfer: ' + (error.response?.data?.error || error.message));
+            alert('Failed to save transfer: ' + (error.response?.data?.error || error.message));
         }
     };
 
@@ -89,14 +129,31 @@ const StockTransfers = () => {
         const inv = inventory.find(i => i.id === parseInt(newItem.inventory_id));
         if (!inv) return;
 
-        const item = {
-            inventory_id: inv.id,
-            name: inv.name,
-            quantity: parseInt(newItem.quantity),
-            model: inv.model,
-            color: inv.color
-        };
-        setFormData({ ...formData, items: [...formData.items, item] });
+        const qtyToAdd = parseInt(newItem.quantity) || 1;
+
+        setFormData(prev => {
+            const existingIdx = prev.items.findIndex(i => i.inventory_id === inv.id);
+            if (existingIdx > -1) {
+                // Merge quantities
+                const newItems = [...prev.items];
+                newItems[existingIdx] = {
+                    ...newItems[existingIdx],
+                    quantity: (newItems[existingIdx].quantity || 0) + qtyToAdd
+                };
+                return { ...prev, items: newItems };
+            } else {
+                // Add new entry
+                const item = {
+                    inventory_id: inv.id,
+                    name: inv.name,
+                    quantity: qtyToAdd,
+                    model: inv.model,
+                    color: inv.color
+                };
+                return { ...prev, items: [...prev.items, item] };
+            }
+        });
+
         setNewItem({ inventory_id: '', quantity: 1 });
     };
 
@@ -123,16 +180,16 @@ const StockTransfers = () => {
         }, 500);
     };
 
-    const handleUpdateDriver = async () => {
-        if (!editingTransfer || !editingTransfer.new_driver_id) return;
-        try {
-            await updateTransferRequest(editingTransfer.id, { driver_id: editingTransfer.new_driver_id });
-            setEditingTransfer(null);
-            loadData();
-            alert('Driver updated successfully');
-        } catch (e) {
-            alert('Failed to update driver: ' + e.message);
-        }
+    const startEdit = (transfer) => {
+        setFormData({
+            from_location: transfer.from_location,
+            to_location: transfer.to_location,
+            driver_id: transfer.driver_id || '',
+            items: [...transfer.items],
+            notes: transfer.notes || ''
+        });
+        setEditingId(transfer.id);
+        setShowCreateModal(true);
     };
 
     // Filter Logic
@@ -172,43 +229,39 @@ const StockTransfers = () => {
             {/* Content */}
             {loading ? <p className="text-gray-500 text-center py-8">Loading transfers...</p> : (
                 <div className="space-y-4">
-                    {activeTab === 'pending' && <TransferList transfers={pending} onDispatch={handleDispatch} onPrint={handlePrintGatePass} isPending={true} onEditDriver={(t) => setEditingTransfer({ ...t, new_driver_id: t.driver_id })} />}
-                    {activeTab === 'in_transit' && <TransferList transfers={inTransit} onReceive={handleReceive} onPrint={handlePrintGatePass} isTransit={true} onEditDriver={(t) => setEditingTransfer({ ...t, new_driver_id: t.driver_id })} />}
+                    {activeTab === 'pending' && (
+                        <TransferList
+                            transfers={pending}
+                            onDispatch={handleDispatch}
+                            onPrint={handlePrintGatePass}
+                            isPending={true}
+                            onEdit={startEdit}
+                        />
+                    )}
+                    {activeTab === 'in_transit' && (
+                        <TransferList
+                            transfers={inTransit}
+                            onReceive={handleReceive}
+                            onPrint={handlePrintGatePass}
+                            isTransit={true}
+                            onEdit={startEdit}
+                        />
+                    )}
                     {activeTab === 'completed' && <TransferList transfers={completed} onPrint={handlePrintGatePass} isHistory={true} />}
-                </div>
-            )}
-
-            {/* Edit Driver Modal */}
-            {editingTransfer && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
-                        <h3 className="text-lg font-bold mb-4">Edit Driver</h3>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Select New Driver</label>
-                            <select
-                                className="w-full border p-2 rounded"
-                                value={editingTransfer.new_driver_id || ''}
-                                onChange={e => setEditingTransfer({ ...editingTransfer, new_driver_id: e.target.value })}
-                            >
-                                <option value="">Select Driver</option>
-                                {drivers.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setEditingTransfer(null)} className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                            <button onClick={handleUpdateDriver} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
-                        </div>
-                    </div>
                 </div>
             )}
 
             {/* Create Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">New Transfer Request (Gate Pass)</h2>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 transition-opacity">
+                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <h2 className="text-xl font-bold mb-4">{editingId ? 'Edit Transfer' : 'New Transfer Request (Gate Pass)'}</h2>
+
+                        {editingId && transfers.find(t => t.id === editingId)?.status === 'in_transit' && (
+                            <div className="bg-blue-50 text-blue-800 p-2 rounded text-xs mb-4 border border-blue-200 flex items-center gap-2">
+                                ℹ️ <span>This transfer is already <strong>In Transit</strong>. Only the Driver and Notes can be modified.</span>
+                            </div>
+                        )}
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -217,7 +270,8 @@ const StockTransfers = () => {
                                     <select
                                         value={formData.from_location}
                                         onChange={e => setFormData({ ...formData, from_location: e.target.value })}
-                                        className="w-full border p-2 rounded focus:ring-red-500 focus:border-red-500"
+                                        className="w-full border p-2 rounded focus:ring-red-500 focus:border-red-500 disabled:bg-gray-100 disabled:text-gray-500"
+                                        disabled={editingId && transfers.find(t => t.id === editingId)?.status === 'in_transit'}
                                     >
                                         <option value="">Select Location</option>
                                         {locations.map(l => (
@@ -230,7 +284,8 @@ const StockTransfers = () => {
                                     <select
                                         value={formData.to_location}
                                         onChange={e => setFormData({ ...formData, to_location: e.target.value })}
-                                        className="w-full border p-2 rounded focus:ring-red-500 focus:border-red-500"
+                                        className="w-full border p-2 rounded focus:ring-red-500 focus:border-red-500 disabled:bg-gray-100 disabled:text-gray-500"
+                                        disabled={editingId && transfers.find(t => t.id === editingId)?.status === 'in_transit'}
                                     >
                                         <option value="">Select Location</option>
                                         {locations.map(l => (
@@ -255,45 +310,54 @@ const StockTransfers = () => {
                             </div>
 
                             {/* Item Builder */}
-                            <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                                <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Add Items</label>
-                                <div className="flex gap-2 mb-2">
-                                    <select
-                                        className="flex-1 border p-1 rounded text-sm"
-                                        value={newItem.inventory_id}
-                                        onChange={e => setNewItem({ ...newItem, inventory_id: e.target.value })}
-                                    >
-                                        <option value="">Select Item</option>
-                                        {inventory.map(i => (
-                                            <option key={i.id} value={i.id}>
-                                                {i.name} {i.model && `(${i.model})`} - Stock: {i.stock_quantity}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="number"
-                                        className="w-16 border p-1 rounded text-sm px-2"
-                                        value={newItem.quantity}
-                                        onChange={e => setNewItem({ ...newItem, quantity: e.target.value })}
-                                        min="1"
-                                    />
-                                    <button onClick={addItem} className="bg-blue-600 text-white px-3 rounded text-sm font-bold shadow-sm">+</button>
-                                </div>
+                            <div className={`p-3 rounded border border-gray-200 ${editingId && transfers.find(t => t.id === editingId)?.status === 'in_transit' ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Items</label>
+                                {(!editingId || transfers.find(t => t.id === editingId)?.status === 'pending') && (
+                                    <div className="flex gap-2 mb-2">
+                                        <select
+                                            className="flex-1 border p-1 rounded text-sm min-w-0"
+                                            value={newItem.inventory_id}
+                                            onChange={e => setNewItem({ ...newItem, inventory_id: e.target.value })}
+                                        >
+                                            <option value="">Select Item</option>
+                                            {inventory.map(i => (
+                                                <option key={i.id} value={i.id}>
+                                                    {i.name} {i.model && `(${i.model})`} {i.color && `[${i.color}]`} - Stock: {i.stock_quantity}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            type="number"
+                                            className="w-16 border p-1 rounded text-sm px-2"
+                                            value={newItem.quantity}
+                                            onChange={e => setNewItem({ ...newItem, quantity: e.target.value })}
+                                            min="1"
+                                        />
+                                        <button onClick={addItem} className="bg-blue-600 text-white px-3 rounded text-sm font-bold shadow-sm hover:bg-blue-700">+</button>
+                                    </div>
+                                )}
                                 <div className="space-y-1">
                                     {formData.items.length === 0 && <p className="text-gray-400 text-xs italic">No items added yet.</p>}
                                     {formData.items.map((item, idx) => (
                                         <div key={idx} className="flex justify-between items-center text-sm bg-white p-2 border rounded shadow-sm">
-                                            <span><span className="font-bold">{item.quantity}x</span> {item.name} <span className="text-gray-500 text-xs">({item.model})</span></span>
-                                            <button
-                                                onClick={() => {
-                                                    const newItems = [...formData.items];
-                                                    newItems.splice(idx, 1);
-                                                    setFormData({ ...formData, items: newItems });
-                                                }}
-                                                className="text-red-500 hover:text-red-700 font-semibold text-xs uppercase"
-                                            >
-                                                Remove
-                                            </button>
+                                            <span>
+                                                <span className="font-bold">{item.quantity}x</span> {item.name}
+                                                <span className="text-gray-500 text-xs ml-1">
+                                                    ({item.model}{item.color ? ` - ${item.color}` : ''})
+                                                </span>
+                                            </span>
+                                            {(!editingId || transfers.find(t => t.id === editingId)?.status === 'pending') && (
+                                                <button
+                                                    onClick={() => {
+                                                        const newItems = [...formData.items];
+                                                        newItems.splice(idx, 1);
+                                                        setFormData({ ...formData, items: newItems });
+                                                    }}
+                                                    className="text-red-500 hover:text-red-700 font-semibold text-xs uppercase"
+                                                >
+                                                    Remove
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -301,15 +365,27 @@ const StockTransfers = () => {
 
                             <textarea
                                 placeholder="Notes (e.g. For generic stock replenishment)"
-                                className="w-full border p-2 rounded text-sm"
+                                className="w-full border p-2 rounded text-sm focus:ring-red-500 focus:border-red-500"
                                 value={formData.notes}
                                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                                rows="3"
                             />
                         </div>
 
                         <div className="mt-6 flex justify-end gap-2">
-                            <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                            <button onClick={handleCreate} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 shadow-sm font-medium">Create Request</button>
+                            <button
+                                onClick={() => {
+                                    setShowCreateModal(false);
+                                    setEditingId(null);
+                                    setFormData({ from_location: 'Manekeng', to_location: 'Head Office', driver_id: '', items: [], notes: '' });
+                                }}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition"
+                            >
+                                Cancel
+                            </button>
+                            <button onClick={handleCreateOrUpdate} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 shadow-sm font-medium transition">
+                                {editingId ? 'Save Changes' : 'Create Request'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -318,7 +394,7 @@ const StockTransfers = () => {
     );
 };
 
-const TransferList = ({ transfers, onDispatch, onReceive, onPrint, isPending, isTransit, isHistory, onEditDriver }) => {
+const TransferList = ({ transfers, onDispatch, onReceive, onPrint, isPending, isTransit, isHistory, onEdit }) => {
     if (transfers.length === 0) return <div className="text-gray-500 text-center py-8 italic border-2 border-dashed border-gray-200 rounded-lg">No transfers found in this status.</div>;
 
     return (
@@ -338,8 +414,8 @@ const TransferList = ({ transfers, onDispatch, onReceive, onPrint, isPending, is
                         <div className="text-sm text-gray-500 mt-2 flex items-center gap-2">
                             <span>🚚 Driver:</span>
                             <span className="font-medium text-gray-800">{t.driver_name || 'Unassigned'}</span>
-                            {(isPending || isTransit) && onEditDriver && (
-                                <button onClick={() => onEditDriver(t)} className="ml-2 text-blue-600 hover:text-blue-800" title="Edit Driver">
+                            {(isPending || isTransit) && onEdit && (
+                                <button onClick={() => onEdit(t)} className="ml-2 text-blue-600 hover:text-blue-800" title="Edit Transfer Details">
                                     <PencilSquareIcon className="w-4 h-4" />
                                 </button>
                             )}

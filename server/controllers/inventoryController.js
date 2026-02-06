@@ -1192,19 +1192,46 @@ exports.createTransfer = async (req, res) => {
 
 
 
-// UPDATE Transfer (Edit Driver/Notes)
+// UPDATE Transfer (Edit All Fields if pending)
 exports.updateTransfer = async (req, res) => {
     try {
         const { id } = req.params;
-        const { driver_id, notes } = req.body;
+        console.log(`📦 updateTransfer (id: ${id}) called with body:`, JSON.stringify(req.body));
+        const { from_location, to_location, driver_id, items, notes } = req.body;
         const supabase = req.app.locals.supabase;
 
         if (!supabase) return res.status(500).json({ success: false, error: 'Database not configured' });
 
+        // Check if transition is allowed (only pending transfers can be fully edited)
+        const { data: existing, error: fetchErr } = await supabase
+            .from('stock_transfers')
+            .select('status')
+            .eq('id', id)
+            .single();
+
+        if (fetchErr || !existing) return res.status(404).json({ success: false, error: 'Transfer not found' });
+
+        // Validation:
+        // - If 'in_transit', ONLY allow driver_id and notes.
+        // - If 'completed' or 'cancelled', allow NOTHING.
+        // - If 'pending', allow ALL.
+
+        if (existing.status === 'completed' || existing.status === 'cancelled') {
+            return res.status(400).json({ success: false, error: `Cannot edit transfer with status: ${existing.status}` });
+        }
+
+        if (existing.status === 'in_transit') {
+            if (from_location !== undefined || to_location !== undefined || items !== undefined) {
+                return res.status(400).json({ success: false, error: 'Cannot change locations or items once dispatched' });
+            }
+        }
+
         // Update fields
         const updates = {};
+        if (from_location !== undefined) updates.from_location = from_location;
+        if (to_location !== undefined) updates.to_location = to_location;
         if (driver_id !== undefined) updates.driver_id = driver_id === '' ? null : driver_id;
-        if (notes !== undefined) updates.notes = notes;
+        if (items !== undefined) updates.items = items;
         if (notes !== undefined) updates.notes = notes;
 
         const { data: updated, error } = await supabase
@@ -1215,9 +1242,6 @@ exports.updateTransfer = async (req, res) => {
             .single();
 
         if (error) throw error;
-
-        // If driver changed and it's already dispatched, maybe notify new driver?
-        // keeping it simple for now, just update record.
 
         res.json({ success: true, transfer: updated });
 

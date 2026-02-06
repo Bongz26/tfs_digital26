@@ -4,7 +4,7 @@
   "description": "TFS Digital - Full Stack Application",
   "private": true,
   "scripts": {
-    "start": "cd server && npm start",
+    "start": "npm run start:server",
     "install:server": "cd server && npm install",
     "install:client": "cd client && npm install",
     "install:all": "npm run install:server && npm run install:client",
@@ -23,4 +23,3 @@
   "author": "",
   "license": "ISC"
 }
-
