@@ -8,7 +8,8 @@ import {
     receiveTransferRequest,
     fetchInventory,
     fetchLocations,
-    updateTransferRequest
+    updateTransferRequest,
+    cancelTransferRequest
 } from '../api/inventory';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { fetchDrivers } from '../api/drivers';
@@ -68,6 +69,17 @@ const StockTransfers = () => {
             console.error('Error loading transfers', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCancel = async (id) => {
+        if (!window.confirm('Are you sure you want to cancel this transfer? This will return stock to the source location if it was already dispatched.')) return;
+        try {
+            await cancelTransferRequest(id);
+            alert('Transfer Cancelled');
+            loadData();
+        } catch (error) {
+            alert('Failed to cancel transfer: ' + (error.response?.data?.error || error.message));
         }
     };
 
@@ -236,6 +248,7 @@ const StockTransfers = () => {
                             onPrint={handlePrintGatePass}
                             isPending={true}
                             onEdit={startEdit}
+                            onCancel={handleCancel}
                         />
                     )}
                     {activeTab === 'in_transit' && (
@@ -245,6 +258,7 @@ const StockTransfers = () => {
                             onPrint={handlePrintGatePass}
                             isTransit={true}
                             onEdit={startEdit}
+                            onCancel={handleCancel}
                         />
                     )}
                     {activeTab === 'completed' && <TransferList transfers={completed} onPrint={handlePrintGatePass} isHistory={true} />}
@@ -394,7 +408,7 @@ const StockTransfers = () => {
     );
 };
 
-const TransferList = ({ transfers, onDispatch, onReceive, onPrint, isPending, isTransit, isHistory, onEdit }) => {
+const TransferList = ({ transfers, onDispatch, onReceive, onPrint, isPending, isTransit, isHistory, onEdit, onCancel }) => {
     if (transfers.length === 0) return <div className="text-gray-500 text-center py-8 italic border-2 border-dashed border-gray-200 rounded-lg">No transfers found in this status.</div>;
 
     return (
@@ -444,15 +458,29 @@ const TransferList = ({ transfers, onDispatch, onReceive, onPrint, isPending, is
                                 >
                                     📦 Confirm Dispatch
                                 </button>
+                                <button
+                                    onClick={() => onCancel(t.id)}
+                                    className="w-full sm:w-auto text-red-600 hover:text-red-800 text-xs font-semibold uppercase mt-1"
+                                >
+                                    Cancel Request
+                                </button>
                             </>
                         )}
                         {isTransit && (
-                            <button
-                                onClick={() => onReceive(t.id)}
-                                className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700 shadow-sm transition"
-                            >
-                                ✅ Confirm Receipt
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => onReceive(t.id)}
+                                    className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700 shadow-sm transition"
+                                >
+                                    ✅ Confirm Receipt
+                                </button>
+                                <button
+                                    onClick={() => onCancel(t.id)}
+                                    className="w-full sm:w-auto text-red-600 hover:text-red-800 text-xs font-semibold uppercase mt-1"
+                                >
+                                    Cancel Transfer
+                                </button>
+                            </>
                         )}
                         <div className="text-xs text-gray-400 mt-2">Created: {new Date(t.created_at).toLocaleDateString()}</div>
                     </div>

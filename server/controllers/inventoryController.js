@@ -1425,19 +1425,68 @@ exports.cancelTransfer = async (req, res) => {
         const { id } = req.params;
         const supabase = req.app.locals.supabase;
 
-        // Only allow cancel if pending
-        const { data: transfer } = await supabase.from('stock_transfers').select('status').eq('id', id).single();
-        if (transfer && transfer.status !== 'pending') {
-            return res.status(400).json({ success: false, error: 'Cannot cancel transfer that is already dispatched' });
+        if (!supabase) return res.status(500).json({ success: false, error: 'Database not configured' });
+
+        // 1. Fetch Transfer details
+        const { data: transfer, error: fetchError } = await supabase
+            .from('stock_transfers')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !transfer) return res.status(404).json({ success: false, error: 'Transfer not found' });
+
+        // 2. Validation: Block already cancelled or completed
+        if (transfer.status === 'cancelled') return res.status(400).json({ success: false, error: 'Transfer is already cancelled' });
+        if (transfer.status === 'completed') return res.status(400).json({ success: false, error: 'Cannot cancel a completed transfer' });
+
+        // 3. Logic: If in_transit, reverse the stock (return to Source)
+        if (transfer.status === 'in_transit') {
+            const items = transfer.items || [];
+            for (const item of items) {
+                // Fetch current stock at the source location
+                const { data: invItem } = await supabase
+                    .from('inventory')
+                    .select('stock_quantity')
+                    .eq('id', item.inventory_id)
+                    .single();
+
+                if (invItem) {
+                    const newQty = (invItem.stock_quantity || 0) + (item.quantity || 0);
+
+                    // Update Inventory
+                    await supabase.from('inventory').update({ stock_quantity: newQty }).eq('id', item.inventory_id);
+
+                    // Log Movement (Reversal)
+                    await supabase.from('stock_movements').insert({
+                        inventory_id: item.inventory_id,
+                        movement_type: 'transfer_cancelled',
+                        quantity_change: item.quantity,
+                        previous_quantity: invItem.stock_quantity,
+                        new_quantity: newQty,
+                        reason: `CANCELLED: ${transfer.transfer_number} - Returned stock to ${transfer.from_location}`,
+                        transfer_id: transfer.id,
+                        recorded_by: req.user ? req.user.email : 'system'
+                    });
+                }
+            }
         }
 
-        const { error } = await supabase.from('stock_transfers').update({ status: 'cancelled' }).eq('id', id);
-        if (error) throw error;
+        // 4. Update Transfer Status
+        const { error: updateError } = await supabase
+            .from('stock_transfers')
+            .update({
+                status: 'cancelled',
+                notes: `${transfer.notes || ''}\n[CANCELLED ON ${new Date().toLocaleString()}]`.trim()
+            })
+            .eq('id', id);
 
-        res.json({ success: true, message: 'Transfer cancelled' });
+        if (updateError) throw updateError;
+
+        res.json({ success: true, message: 'Transfer cancelled successfully' });
 
     } catch (err) {
-        console.error('Cancel Transfer Error:', err);
+        console.error('❌ Cancel Transfer Error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 };

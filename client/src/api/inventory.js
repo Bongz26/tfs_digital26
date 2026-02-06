@@ -231,6 +231,19 @@ export const updateTransferRequest = async (id, data) => {
     }
 };
 
+export const cancelTransferRequest = async (id) => {
+    try {
+        const token = getAccessToken();
+        const res = await axios.post(`${BASE_URL}/transfers/${id}/cancel`, {}, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        return res.data;
+    } catch (err) {
+        console.error("Error cancelling transfer:", err.response || err);
+        throw err;
+    }
+};
+
 export const fetchLocations = async () => {
     try {
         const token = getAccessToken();
