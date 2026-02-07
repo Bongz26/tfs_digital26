@@ -242,7 +242,7 @@ export default function ActiveCases() {
               </div>
               <div className="flex gap-2">
                 <span className="font-semibold text-gray-500 w-16">Burial:</span>
-                <span className="text-gray-800 truncate">{c.burial_place || "Not specified"}</span>
+                <span className="text-gray-800 truncate">{(c.burial_place && c.burial_place.trim()) || "Not specified"}</span>
               </div>
             </div>
 

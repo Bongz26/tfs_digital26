@@ -270,6 +270,14 @@ export default function CaseDetails() {
                 <input className="w-full border rounded p-1" value={editForm.venue_name || ''} onChange={e => setEditForm({ ...editForm, venue_name: e.target.value })} />
               </div>
               <div>
+                <label className="text-xs font-semibold text-gray-500">Venue Address</label>
+                <input className="w-full border rounded p-1" value={editForm.venue_address || ''} onChange={e => setEditForm({ ...editForm, venue_address: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500">Burial Place</label>
+                <input className="w-full border rounded p-1" value={editForm.burial_place || ''} onChange={e => setEditForm({ ...editForm, burial_place: e.target.value })} />
+              </div>
+              <div>
                 <label className="text-xs font-semibold text-gray-500">Service Type</label>
                 <select className="w-full border rounded p-1" value={editForm.service_type || 'book'} onChange={e => setEditForm({ ...editForm, service_type: e.target.value })}>
                   <option value="book">Book Only</option>
@@ -281,8 +289,9 @@ export default function CaseDetails() {
             <>
               <p><span className="font-semibold">Date:</span> {(caseData.service_date || caseData.funeral_date) ? new Date(caseData.service_date || caseData.funeral_date).toLocaleDateString() : 'Not set'}</p>
               <p><span className="font-semibold">Time:</span> {(caseData.service_time || caseData.funeral_time) ? (caseData.service_time || caseData.funeral_time).slice(0, 5) : 'Not set'}</p>
-              <p><span className="font-semibold">Venue:</span> {caseData.venue_name}</p>
-              <p><span className="font-semibold">Address:</span> {caseData.venue_address}</p>
+              <p><span className="font-semibold">Venue:</span> {caseData.venue_name || '-'}</p>
+              <p><span className="font-semibold">Address:</span> {caseData.venue_address || '-'}</p>
+              <p><span className="font-semibold">Burial Place:</span> {caseData.burial_place || '-'}</p>
             </>
           )}
         </div>

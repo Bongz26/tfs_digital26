@@ -1,12 +1,12 @@
 import React from "react";
 
-export default function AssignedTransportList({ roster = [] }) {
+export default function AssignedTransportList({ roster = [], formatVehicleType }) {
     if (!roster || roster.length === 0) return null;
 
-    const formatVehicleType = (type) => {
+    const innerFormatVehicleType = formatVehicleType || ((type) => {
         if (!type) return "";
         return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " ");
-    };
+    });
 
     // Group roster entries by driver name
     const groupByDriver = () => {
@@ -49,7 +49,7 @@ export default function AssignedTransportList({ roster = [] }) {
                         {r.external_vehicle ? (
                             <span> {r.external_vehicle} <span className="text-red-500 text-xs uppercase font-bold">(Hired)</span></span>
                         ) : (
-                            <span> {r.reg_number || 'Not assigned'} {r.vehicle_type && <span className="text-gray-500">({formatVehicleType(r.vehicle_type)})</span>}</span>
+                            <span> {r.reg_number || 'Not assigned'} {r.vehicle_type && <span className="text-gray-500">({innerFormatVehicleType(r.vehicle_type)})</span>}</span>
                         )}
                     </div>
                     <div>
@@ -118,7 +118,7 @@ export default function AssignedTransportList({ roster = [] }) {
                                                 {r.reg_number || 'Not assigned'}
                                                 {r.vehicle_type && (
                                                     <span className="text-gray-500 text-xs ml-1">
-                                                        ({formatVehicleType(r.vehicle_type)})
+                                                        ({innerFormatVehicleType(r.vehicle_type)})
                                                     </span>
                                                 )}
                                             </span>

@@ -143,6 +143,8 @@ router.get('/', async (req, res) => {
           const vehicle = allVehicles.find(v => v.id === r.vehicle_id);
           return {
             ...r,
+            reg_number: vehicle ? vehicle.reg_number : null,
+            vehicle_type: vehicle ? vehicle.type : null,
             vehicle: vehicle || null,
             driver: { name: r.driver_name || 'TBD' }
           };
