@@ -25,7 +25,16 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
             groups[driverKey].assignments.push(entry);
         });
 
-        return Object.values(groups);
+        // Explicit Sorting logic
+        const rolePriority = { 'hearse': 1, 'family car': 2, 'family_car': 2, 'bus': 3 };
+
+        const sortedGroups = Object.values(groups).sort((a, b) => {
+            const aMin = Math.min(...a.assignments.map(as => rolePriority[as.assignment_role?.toLowerCase()] || 99));
+            const bMin = Math.min(...b.assignments.map(as => rolePriority[as.assignment_role?.toLowerCase()] || 99));
+            return aMin - bMin;
+        });
+
+        return sortedGroups;
     };
 
     const driverGroups = groupByDriver();
