@@ -67,8 +67,8 @@ router.get('/', async (req, res) => {
         burial_place: caseData?.burial_place || null,
         case_status: caseData?.status || null,
         // Vehicle data (flattened)
-        reg_number: item.external_vehicle ? item.external_vehicle : (vehicleData?.reg_number || null),
-        vehicle_type: item.external_vehicle ? 'Hired / External' : (vehicleData?.type || null)
+        reg_number: item.external_vehicle || vehicleData?.reg_number || null,
+        vehicle_type: item.external_vehicle ? 'Hired Transport' : (vehicleData?.type || null)
       };
     });
 

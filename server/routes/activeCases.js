@@ -140,11 +140,14 @@ router.get('/', async (req, res) => {
       if (!rosterError && rosterData) {
         // Enrich roster data with vehicle and driver objects
         const enrichedRoster = rosterData.map(r => {
-          const vehicle = allVehicles.find(v => v.id === r.vehicle_id);
+          // Robust ID comparison (string level)
+          const vehicle = allVehicles.find(v => String(v.id) === String(r.vehicle_id));
           return {
             ...r,
-            reg_number: vehicle ? vehicle.reg_number : null,
-            vehicle_type: vehicle ? vehicle.type : null,
+            // External vehicle name takes precedence if provided, otherwise fleet reg_number
+            reg_number: r.external_vehicle || (vehicle ? vehicle.reg_number : null),
+            // Mark as hired transport if external_vehicle exists
+            vehicle_type: r.external_vehicle ? 'Hired Transport' : (vehicle ? vehicle.type : null),
             vehicle: vehicle || null,
             driver: { name: r.driver_name || 'TBD' }
           };
