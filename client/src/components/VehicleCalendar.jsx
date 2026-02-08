@@ -504,6 +504,13 @@ export default function VehicleCalendar() {
                         ⏰ {group.funeral_time || "Time TBA"}
                       </p>
 
+                      {/* Global Group Badge */}
+                      {group.assignments?.[0]?.group_name && (
+                        <div className="mt-2 inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase tracking-wider">
+                          {group.assignments[0].group_name}
+                        </div>
+                      )}
+
                       {/* Locked Case Warning */}
                       {(group.case_status === 'scheduled' || group.case_status === 'in_progress' || group.case_status === 'completed') && (
                         <div className={`mt-2 p-2 rounded text-xs ${isAdmin()
@@ -882,12 +889,22 @@ export default function VehicleCalendar() {
                 </div>
               )}
 
+              {/* Global Group Badge */}
+              {group.assignments?.[0]?.group_name && (
+                <div className="mt-2 inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase tracking-wider">
+                  {group.assignments[0].group_name}
+                </div>
+              )}
+
               {group.assignments && group.assignments.length > 0 && (
                 <div className="mt-3 text-sm text-gray-700">
                   <div className="font-semibold text-gray-600 mb-1">Assignments:</div>
                   {group.assignments.map((a, i) => (
-                    <div key={i} className="text-xs">
-                      • {a.driver_name || "TBD"} - {a.vehicle_type || "Vehicle"}
+                    <div key={i} className="text-xs flex items-center gap-1">
+                      <span className="text-gray-400">•</span>
+                      <span className="font-medium">{a.driver_name || "TBD"}</span>
+                      <span className="text-gray-400">-</span>
+                      <span>{a.reg_number || a.vehicle_type || "Vehicle"}</span>
                     </div>
                   ))}
                 </div>

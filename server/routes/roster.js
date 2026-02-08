@@ -72,12 +72,68 @@ router.get('/', async (req, res) => {
       };
     });
 
-    console.log(`✅ Roster: Returning ${flattenedRoster.length} items`);
-    if (flattenedRoster.length > 0) {
-      console.log('📋 Sample roster item:', JSON.stringify(flattenedRoster[0], null, 2));
-    }
+    // 2. Assign Global Group Names (Business Logic)
+    // Group by date
+    const dateGroups = {};
+    flattenedRoster.forEach(r => {
+      const date = r.funeral_date || 'TBA';
+      if (!dateGroups[date]) dateGroups[date] = [];
+      dateGroups[date].push(r);
+    });
 
-    res.json({ success: true, roster: flattenedRoster });
+    const enrichedRoster = [];
+    Object.keys(dateGroups).forEach(date => {
+      const items = dateGroups[date];
+
+      // Group by Case Team (Team = Driver + Registration)
+      const caseTeams = {};
+      items.forEach(r => {
+        if (!caseTeams[r.case_id]) caseTeams[r.case_id] = [];
+        caseTeams[r.case_id].push(r);
+      });
+
+      // Unique teams on this day
+      const teamMap = {};
+      Object.entries(caseTeams).forEach(([caseId, assignments]) => {
+        const signature = assignments
+          .map(a => `${a.driver_name || 'TBD'}:${a.reg_number || 'TBA'}`)
+          .sort().join(' + ');
+
+        if (!teamMap[signature]) {
+          teamMap[signature] = {
+            signature,
+            cases: [],
+            earliestTime: assignments[0].funeral_time || '23:59'
+          };
+        }
+        teamMap[signature].cases.push({ caseId, assignments });
+        if (assignments[0].funeral_time && assignments[0].funeral_time < teamMap[signature].earliestTime) {
+          teamMap[signature].earliestTime = assignments[0].funeral_time;
+        }
+      });
+
+      // Sort unique teams by time
+      const sortedTeams = Object.values(teamMap).sort((a, b) => a.earliestTime.localeCompare(b.earliestTime));
+
+      // Label
+      const d = new Date(date);
+      const isSaturday = d.getDay() === 6;
+      const dayLabelMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      const dayLabel = dayLabelMap[d.getDay()];
+
+      sortedTeams.forEach((team, index) => {
+        const groupName = isSaturday ? `Group ${index + 1}` : dayLabel;
+        team.cases.forEach(c => {
+          c.assignments.forEach(a => {
+            a.group_name = groupName;
+            enrichedRoster.push(a);
+          });
+        });
+      });
+    });
+
+    console.log(`✅ Roster: Returning ${enrichedRoster.length} items`);
+    res.json({ success: true, roster: enrichedRoster });
   } catch (err) {
     console.error('Roster route error:', err.message);
     res.status(500).json({
