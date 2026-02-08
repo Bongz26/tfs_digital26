@@ -143,30 +143,32 @@ export default function VehicleCalendar() {
     return Array.from(map.values());
   };
 
-  // Group cases by their driver team combination
+  // Group cases by their driver team combination (Team = Driver + Vehicle)
   const groupCasesByDriverTeam = (cases) => {
     const teams = {};
 
     cases.forEach(caseGroup => {
-      // Get unique drivers for this case
-      const uniqueDrivers = [...new Set(
-        caseGroup.assignments.map(a => a.driver_name || 'TBD')
-      )];
-      // Create signature from sorted driver names
-      const signature = uniqueDrivers.sort().join(' + ');
+      // Signature from sorted Driver:Vehicle pairs
+      const signature = caseGroup.assignments
+        .map(a => `${a.driver_name || 'TBD'}:${a.reg_number || 'TBA'}`)
+        .sort().join(' + ');
 
       if (!teams[signature]) {
         teams[signature] = {
           driverTeam: signature,
-          drivers: uniqueDrivers,
-          cases: []
+          cases: [],
+          earliestTime: caseGroup.funeral_time || '23:59'
         };
       }
 
       teams[signature].cases.push(caseGroup);
+      if (caseGroup.funeral_time && caseGroup.funeral_time < teams[signature].earliestTime) {
+        teams[signature].earliestTime = caseGroup.funeral_time;
+      }
     });
 
-    return Object.values(teams);
+    // Return sorted teams (chronological by earliest service)
+    return Object.values(teams).sort((a, b) => a.earliestTime.localeCompare(b.earliestTime));
   };
 
 
@@ -408,26 +410,21 @@ export default function VehicleCalendar() {
                 }
 
                 const { day, dayName } = dayInfo;
+                const upperDay = dayName.toUpperCase();
 
                 // Initialize counter for this day
-                if (!dayCounters[dayName]) {
-                  dayCounters[dayName] = 0;
+                if (!dayCounters[upperDay]) {
+                  dayCounters[upperDay] = 0;
                 }
-                dayCounters[dayName]++;
+                dayCounters[upperDay]++;
 
-                // Monday-Friday (1-5): Use day abbreviation
-                if (day >= 1 && day <= 5) {
-                  team.smartLabel = dayName;
+                // Weekdays + Sunday: Use uppercase day abbreviation (MON, SUN, etc.)
+                if (day !== 6) {
+                  team.smartLabel = upperDay;
                 }
                 // Saturday (6): Use numbered groups
                 else if (day === 6) {
-                  team.smartLabel = `Group ${dayCounters[dayName]}`;
-                }
-                // Sunday (0): Use alphabetic labels
-                else if (day === 0) {
-                  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                  const letter = letters[dayCounters[dayName] - 1] || dayCounters[dayName];
-                  team.smartLabel = `Sunday ${letter}`;
+                  team.smartLabel = `Group ${dayCounters[upperDay]}`;
                 }
               });
 

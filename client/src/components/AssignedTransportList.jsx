@@ -8,36 +8,39 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
         return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " ");
     });
 
-    // Group roster entries by driver name
-    const groupByDriver = () => {
+    // Group roster entries by their global group name (assigned by backend)
+    const groupByGroupName = () => {
         const groups = {};
 
         roster.forEach(entry => {
-            const driverKey = entry.driver_name || 'TBD';
+            const groupKey = entry.group_name || 'TBD';
 
-            if (!groups[driverKey]) {
-                groups[driverKey] = {
-                    driver: driverKey,
+            if (!groups[groupKey]) {
+                groups[groupKey] = {
+                    groupName: groupKey,
                     assignments: []
                 };
             }
 
-            groups[driverKey].assignments.push(entry);
+            groups[groupKey].assignments.push(entry);
         });
 
-        // Explicit Sorting logic
-        const rolePriority = { 'hearse': 1, 'family car': 2, 'family_car': 2, 'bus': 3 };
-
+        // Priority Sorting: Group 1, Group 2... then MON, SUN etc.
         const sortedGroups = Object.values(groups).sort((a, b) => {
-            const aMin = Math.min(...a.assignments.map(as => rolePriority[as.assignment_role?.toLowerCase()] || 99));
-            const bMin = Math.min(...b.assignments.map(as => rolePriority[as.assignment_role?.toLowerCase()] || 99));
-            return aMin - bMin;
+            if (a.groupName.startsWith('Group') && b.groupName.startsWith('Group')) {
+                const numA = parseInt(a.groupName.replace('Group ', ''), 10);
+                const numB = parseInt(b.groupName.replace('Group ', ''), 10);
+                return numA - numB;
+            }
+            if (a.groupName.startsWith('Group')) return -1;
+            if (b.groupName.startsWith('Group')) return 1;
+            return a.groupName.localeCompare(b.groupName);
         });
 
         return sortedGroups;
     };
 
-    const driverGroups = groupByDriver();
+    const driverGroups = groupByGroupName();
 
     // If only one group, display simplified view
     if (driverGroups.length === 1 && driverGroups[0].assignments.length === 1) {
@@ -89,10 +92,7 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
                             </div>
                             <div>
                                 <div className="text-sm font-bold text-red-800">
-                                    Group {groupIndex + 1}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                    Driver: <span className="font-semibold text-gray-800">{group.driver}</span>
+                                    {group.groupName}
                                 </div>
                             </div>
                         </div>
@@ -115,6 +115,9 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
                                     </div>
                                 )}
                                 <div className="text-sm">
+                                    <div className="mb-1">
+                                        <span className="font-semibold text-gray-600">Driver:</span> {r.driver_name || "TBD"}
+                                    </div>
                                     <div className="mb-1">
                                         <span className="font-semibold text-gray-600">Vehicle:</span>
                                         {r.external_vehicle ? (

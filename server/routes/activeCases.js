@@ -153,9 +153,78 @@ router.get('/', async (req, res) => {
           };
         });
 
-        // Group by case_id
+        // 1. Attach dates/times to roster for global grouping
+        const rosterWithDates = enrichedRoster.map(r => {
+          const caseItem = cases.find(c => c.id === r.case_id);
+          return {
+            ...r,
+            funeral_date: caseItem?.funeral_date || 'TBA',
+            funeral_time: caseItem?.funeral_time || '23:59'
+          };
+        });
+
+        // 2. Group by date to assign labels (Groups are unique PER DAY)
+        const dateGroups = {};
+        rosterWithDates.forEach(r => {
+          if (!dateGroups[r.funeral_date]) dateGroups[r.funeral_date] = [];
+          dateGroups[r.funeral_date].push(r);
+        });
+
+        const groupedRoster = [];
+        Object.keys(dateGroups).forEach(date => {
+          const items = dateGroups[date];
+          // Group these items by their "Case Team" first
+          const caseTeams = {};
+          items.forEach(r => {
+            if (!caseTeams[r.case_id]) caseTeams[r.case_id] = [];
+            caseTeams[r.case_id].push(r);
+          });
+
+          // Unique teams on this day
+          const teamMap = {};
+          Object.entries(caseTeams).forEach(([caseId, assignments]) => {
+            // Signature = Driver + RegNumber
+            const signature = assignments
+              .map(a => `${a.driver_name || 'TBD'}:${a.reg_number || 'TBA'}`)
+              .sort().join(' + ');
+
+            if (!teamMap[signature]) {
+              teamMap[signature] = {
+                signature,
+                cases: [],
+                earliestTime: assignments[0].funeral_time
+              };
+            }
+            teamMap[signature].cases.push({ caseId, assignments });
+            if (assignments[0].funeral_time < teamMap[signature].earliestTime) {
+              teamMap[signature].earliestTime = assignments[0].funeral_time;
+            }
+          });
+
+          // Sort unique teams by time
+          const sortedTeams = Object.values(teamMap).sort((a, b) => a.earliestTime.localeCompare(b.earliestTime));
+
+          // Label and Push
+          const d = new Date(date);
+          const isSaturday = d.getDay() === 6;
+          // MON, TUE, WED, THU, FRI, SAT, SUN
+          const dayLabelMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+          const dayLabel = dayLabelMap[d.getDay()];
+
+          sortedTeams.forEach((team, index) => {
+            const groupName = isSaturday ? `Group ${index + 1}` : dayLabel;
+            team.cases.forEach(c => {
+              c.assignments.forEach(a => {
+                a.group_name = groupName;
+                groupedRoster.push(a);
+              });
+            });
+          });
+        });
+
+        // 3. Final grouping by case_id for frontend response
         const rosterByCase = {};
-        enrichedRoster.forEach(r => {
+        groupedRoster.forEach(r => {
           if (!rosterByCase[r.case_id]) {
             rosterByCase[r.case_id] = [];
           }
