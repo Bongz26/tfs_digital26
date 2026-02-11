@@ -3,33 +3,9 @@ const sgMail = require('@sendgrid/mail');
 const { sendWeeklyReportLogic } = require('../cron/weeklyReport');
 const { sendStockReportLogic } = require('../cron/weeklyStockEmail');
 const smsService = require('../utils/smsService');
+const { query } = require('../config/db');
 
-// Initialize SendGrid
-if (process.env.SMTP_PASS && process.env.SMTP_PASS.startsWith('SG.')) {
-    sgMail.setApiKey(process.env.SMTP_PASS);
-}
-
-// Helper: Send Email (shared logic)
-async function sendEmail(to, subject, html, cc) {
-    const fromMail = process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
-    const host = process.env.SMTP_HOST;
-    const user = process.env.SMTP_USER;
-
-    try {
-        if (pass && pass.startsWith('SG.')) {
-            await sgMail.send({ to, cc, from: { email: fromMail, name: 'TFS Inventory' }, subject, html });
-            console.log(`✅ Email sent via SendGrid to ${to}`);
-        } else if (host && user && pass) {
-            const port = parseInt(process.env.SMTP_PORT || '587', 10);
-            const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } });
-            await transporter.sendMail({ from: fromMail, to, cc, subject, html });
-            console.log(`✅ Email sent via SMTP to ${to}`);
-        }
-    } catch (e) {
-        console.error('Email send failed:', e.message);
-    }
-}
+const { sendEmail } = require('../utils/emailService');
 
 async function maybeNotifyLowStock(threshold = 1, supabaseClient = null) {
     try {
@@ -59,6 +35,7 @@ async function maybeNotifyLowStock(threshold = 1, supabaseClient = null) {
         const subject = `⚠️ Low Stock Alert: ${lowItems.length} item(s) at or below threshold`;
         const htmlRows = lowItems.map(i => `
             <tr>
+              <td style="padding:8px;border:1px solid #ddd;">${i.location || 'Unknown'}</td>
               <td style="padding:8px;border:1px solid #ddd;">${i.name}${i.color ? ' • ' + i.color : ''}</td>
               <td style="padding:8px;border:1px solid #ddd;">${i.category}</td>
               <td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold;color:red;">${i.available_quantity}</td>
@@ -67,12 +44,13 @@ async function maybeNotifyLowStock(threshold = 1, supabaseClient = null) {
         `).join('');
 
         const html = `
-          <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#222;max-width:600px;">
+          <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#222;max-width:700px;">
             <h2 style="color:#d32f2f;">Inventory Alert</h2>
-            <p>The following items are low in stock:</p>
+            <p>The following items are low in stock across branches:</p>
             <table style="border-collapse:collapse;width:100%;">
               <thead>
                 <tr style="background:#f5f5f5;">
+                  <th style="padding:8px;border:1px solid #ddd;text-align:left;">Branch</th>
                   <th style="padding:8px;border:1px solid #ddd;text-align:left;">Item</th>
                   <th style="padding:8px;border:1px solid #ddd;text-align:left;">Category</th>
                   <th style="padding:8px;border:1px solid #ddd;text-align:center;">Available</th>
@@ -194,8 +172,11 @@ exports.getInventoryStats = async (req, res) => {
 
         const total_items = data.length;
         const total_stock = data.reduce((sum, item) => sum + (item.stock_quantity || 0), 0);
+        const total_reserved = data.reduce((sum, item) => sum + (item.reserved_quantity || 0), 0);
+        const total_available = total_stock - total_reserved;
+
         const low_stock_count = data.filter(item =>
-            (item.stock_quantity || 0) <= (item.low_stock_threshold !== null ? item.low_stock_threshold : 0)
+            ((item.stock_quantity || 0) - (item.reserved_quantity || 0)) <= (item.low_stock_threshold !== null ? item.low_stock_threshold : 0)
         ).length;
         const categories = new Set(data.map(i => i.category)).size;
 
@@ -203,6 +184,8 @@ exports.getInventoryStats = async (req, res) => {
             total_items,
             low_stock_count,
             total_stock,
+            total_available, // Added for Dashboard accuracy
+            total_reserved,
             categories
         };
 
@@ -427,15 +410,140 @@ exports.getStockMovements = async (req, res) => {
 
 // --- REPORTING STUBS (Legacy SQL Removed) ---
 exports.getCoffinUsageByCase = async (req, res) => {
-    res.json({ success: true, cases: [], note: 'Reporting temporarily unavailable during migration' });
+    try {
+        const { from, to, includeArchived = 'false' } = req.query;
+        const params = [];
+        let where = "WHERE inv.category = 'coffin' AND sm.movement_type = 'sale'";
+
+        if (from) {
+            where += ' AND sm.created_at >= $' + (params.push(from));
+        }
+        if (to) {
+            where += ' AND sm.created_at <= $' + (params.push(to));
+        }
+        if (includeArchived !== 'true') {
+            where += " AND (c.status IS NULL OR c.status != 'archived')";
+        }
+
+        const sql = `
+            SELECT 
+                sm.case_id,
+                c.case_number,
+                c.deceased_name,
+                inv.name,
+                inv.color,
+                ABS(sm.quantity_change) as quantity
+            FROM stock_movements sm
+            JOIN inventory inv ON sm.inventory_id = inv.id
+            LEFT JOIN cases c ON sm.case_id = c.id
+            ${where}
+            ORDER BY c.created_at DESC
+        `;
+
+        const result = await query(sql, params);
+        const rows = result.rows || [];
+
+        // Group by case_id
+        const caseMap = {};
+        rows.forEach(row => {
+            const cid = row.case_id || 'unallocated';
+            if (!caseMap[cid]) {
+                caseMap[cid] = {
+                    case_id: cid,
+                    case_number: row.case_number || 'Unallocated',
+                    deceased_name: row.deceased_name || 'Manual Usage',
+                    items: [],
+                    total_coffins: 0
+                };
+            }
+            caseMap[cid].items.push({
+                name: row.name,
+                color: row.color,
+                quantity: row.quantity
+            });
+            caseMap[cid].total_coffins += parseInt(row.quantity, 10);
+        });
+
+        const cases = Object.values(caseMap);
+        const totals = {
+            grand_total: cases.reduce((sum, c) => sum + c.total_coffins, 0),
+            case_count: cases.filter(c => c.case_id !== 'unallocated').length
+        };
+
+        res.json({ success: true, cases, totals });
+    } catch (err) {
+        console.error('Error in getCoffinUsageByCase:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch coffin usage' });
+    }
 };
 
 exports.getCoffinUsageRaw = async (req, res) => {
-    res.json({ success: true, items: [], note: 'Reporting temporarily unavailable during migration' });
+    try {
+        const { from, to } = req.query;
+        const params = [];
+        let where = "WHERE inv.category = 'coffin'";
+
+        if (from) {
+            where += ' AND sm.created_at >= $' + (params.push(from));
+        }
+        if (to) {
+            where += ' AND sm.created_at <= $' + (params.push(to));
+        }
+
+        const sql = `
+            SELECT 
+                sm.*,
+                inv.name,
+                inv.color,
+                inv.model,
+                c.case_number,
+                c.deceased_name
+            FROM stock_movements sm
+            JOIN inventory inv ON sm.inventory_id = inv.id
+            LEFT JOIN cases c ON sm.case_id = c.id
+            ${where}
+            ORDER BY sm.created_at DESC
+        `;
+
+        const result = await query(sql, params);
+        res.json({ success: true, items: result.rows || [] });
+    } catch (err) {
+        console.error('Error in getCoffinUsageRaw:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch raw coffin usage' });
+    }
 };
 
 exports.getPublicCoffinUsageRaw = async (req, res) => {
-    res.json({ success: true, items: [], note: 'Reporting temporarily unavailable during migration' });
+    try {
+        const { from, to } = req.query;
+        const params = [];
+        let where = "WHERE inv.category = 'coffin' AND sm.movement_type = 'sale'";
+
+        if (from) {
+            where += ' AND sm.created_at >= $' + (params.push(from));
+        }
+        if (to) {
+            where += ' AND sm.created_at <= $' + (params.push(to));
+        }
+
+        const sql = `
+            SELECT 
+                inv.name,
+                inv.color,
+                inv.model,
+                sm.quantity_change,
+                sm.created_at
+            FROM stock_movements sm
+            JOIN inventory inv ON sm.inventory_id = inv.id
+            ${where}
+            ORDER BY sm.created_at DESC
+        `;
+
+        const result = await query(sql, params);
+        res.json({ success: true, items: result.rows || [] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Failed to fetch public coffin usage' });
+    }
 };
 
 exports.backfillCoffinMovementsToCases = async (req, res) => {
@@ -1493,3 +1601,40 @@ exports.cancelTransfer = async (req, res) => {
 
 exports.notifyCasketUsage = notifyCasketUsage;
 exports.maybeNotifyLowStock = maybeNotifyLowStock;
+
+exports.checkDuplicates = async (req, res) => {
+    try {
+        const result = await query(`
+            SELECT name, branch, COUNT(*) as count
+            FROM inventory 
+            GROUP BY name, branch 
+            HAVING COUNT(*) > 1
+        `);
+
+        let details = [];
+        if (result.rows.length > 0) {
+            const detailResult = await query(`
+                SELECT id, name, branch, stock_quantity, created_at, category 
+                FROM inventory 
+                WHERE (name, branch) IN (
+                    SELECT name, branch 
+                    FROM inventory 
+                    GROUP BY name, branch 
+                    HAVING COUNT(*) > 1
+                )
+                ORDER BY name, branch, created_at DESC
+            `);
+            details = detailResult.rows;
+        }
+
+        res.json({
+            success: true,
+            count: result.rows.length,
+            groups: result.rows,
+            details: details
+        });
+    } catch (err) {
+        console.error('Check Duplicates Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+};

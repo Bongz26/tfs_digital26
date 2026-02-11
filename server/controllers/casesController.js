@@ -1,5 +1,6 @@
 const { query, getClient } = require('../config/db');
 const { notifyCasketUsage, maybeNotifyLowStock } = require('./inventoryController');
+const { findOrCreateInventoryItem } = require('../utils/inventoryHelpers');
 
 // --- LOOKUP CASE BY IDENTIFIERS ---
 exports.lookupCase = async (req, res) => {
@@ -435,84 +436,39 @@ exports.createCase = async (req, res) => {
             const nameStr = String(casket_type || '').trim();
             const colorStr = String(casket_colour || '').trim();
             if (nameStr) {
+                let primaryName = nameStr;
+                let modelMatch = null;
+                if (nameStr.includes(' - ')) {
+                    const lastDashIndex = nameStr.lastIndexOf(' - ');
+                    primaryName = nameStr.substring(0, lastDashIndex).trim();
+                    modelMatch = nameStr.substring(lastDashIndex + 3).trim();
+                }
+
                 const selectedBranch = (branch || 'Head Office').trim();
-                let locationsToCheck = [selectedBranch];
-                if (selectedBranch === 'Head Office') {
-                    locationsToCheck = ['HQ Storeroom & showroom', 'Manekeng', 'Manekeng Showroom'];
-                }
 
-                let invItem = null;
-                let targetLoc = selectedBranch;
+                // --- STRICT BRANCH ACCOUNTING LOGIC (Using Helper) ---
+                const invItem = await findOrCreateInventoryItem(supabase, {
+                    name: nameStr,
+                    color: colorStr,
+                    branch: selectedBranch,
+                    category: 'coffin',
+                    caseNumber: created.case_number
+                });
 
-                // Try locations in preference order
-                for (const loc of locationsToCheck) {
-                    targetLoc = loc;
-                    // Find by Name + Location
-                    let query = supabase.from('inventory')
-                        .select('id, stock_quantity, name, model, color, location')
-                        .eq('category', 'coffin')
-                        .eq('location', loc)
-                        .ilike('name', nameStr)
-                        .order('stock_quantity', { ascending: false });
-
-                    const { data: matches } = await query;
-
-                    if (matches && matches.length > 0) {
-                        if (colorStr) {
-                            invItem = matches.find(i => !i.color || i.color.toLowerCase() === colorStr.toLowerCase());
-                        } else {
-                            invItem = matches[0];
-                        }
-                    }
-
-                    if (!invItem) {
-                        // Fallback: Model + Location
-                        const { data: modelMatches } = await supabase.from('inventory')
-                            .select('id, stock_quantity, name, model, color, location')
-                            .eq('category', 'coffin')
-                            .eq('location', loc)
-                            .ilike('model', nameStr)
-                            .order('stock_quantity', { ascending: false });
-
-                        if (modelMatches && modelMatches.length > 0) {
-                            if (colorStr) {
-                                invItem = modelMatches.find(i => !i.color || i.color.toLowerCase() === colorStr.toLowerCase());
-                            } else {
-                                invItem = modelMatches[0];
-                            }
-                        }
-                    }
-
-                    if (invItem) break;
-                }
-
+                // 2. If Found/Created -> Reserve
                 if (invItem) {
-                    // Use atomic RESERVE function
                     const { reserveStock } = require('../utils/dbUtils');
-
                     try {
-                        const result = await reserveStock(
-                            invItem.id,
-                            1,
-                            req.user?.email || 'system',
-                            `Case reservation: ${created.case_number}`
-                        );
-
+                        const result = await reserveStock(invItem.id, 1, req.user?.email || 'system', `Case reservation: ${created.case_number}`);
                         if (!result.success) {
                             created.stock_warning = result.message;
                             console.warn(`⚠️ Reservation warning: ${result.message}`);
                         } else {
-                            console.log(`✅ Stock RESERVED: ${nameStr} at ${targetLoc}, reserved: ${result.new_reserved}`);
+                            console.log(`✅ Stock RESERVED: ${invItem.name} at ${selectedBranch}`);
                         }
-
                     } catch (stockErr) {
-                        console.error('❌ Atomic stock reservation failed:', stockErr.message);
-                        created.stock_warning = `Failed to reserve stock: ${stockErr.message}`;
+                        created.stock_warning = `Failed to reserve: ${stockErr.message}`;
                     }
-
-                } else {
-                    created.stock_warning = `Stock item '${nameStr}' not found in inventory for ${selectedBranch}. Please add it to stock.`;
-                    console.warn(`⚠️ Stock item '${nameStr}' not found at ${selectedBranch} for case ${created.case_number}`);
                 }
             }
         } catch (e) {
@@ -547,11 +503,10 @@ exports.createCase = async (req, res) => {
             });
         } catch (e) { console.warn('Audit log create failed:', e.message); }
 
-        res.json({ success: true, case: created });
-
+        return res.json({ success: true, case: created });
     } catch (err) {
         console.error('❌ [POST /api/cases] Error creating case:', err);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             error: 'Failed to create case',
             details: err.message,
@@ -560,7 +515,6 @@ exports.createCase = async (req, res) => {
     }
 };
 
-// --- ASSIGN VEHICLE TO CASE ---
 // --- ASSIGN VEHICLE TO CASE ---
 exports.assignVehicle = async (req, res) => {
     let { caseId } = req.params;
@@ -979,95 +933,46 @@ exports.updateCaseStatus = async (req, res) => {
             if (status === 'completed' && oldStatus !== 'completed') {
                 const nameStr = String(updatedCase.casket_type || '').trim();
                 const colorStr = String(updatedCase.casket_colour || '').trim();
+                const caseBranch = updatedCase.branch || 'Head Office';
 
                 if (nameStr) {
-                    let invData = null;
-                    // Try finding by name first
-                    const { data: nameMatches } = await supabase
-                        .from('inventory')
-                        .select('id, stock_quantity, reserved_quantity, name, model, color')
-                        .eq('category', 'coffin')
-                        .ilike('name', nameStr)
-                        .order('stock_quantity', { ascending: false });
-
-                    if (nameMatches && nameMatches.length > 0) {
-                        if (colorStr) {
-                            invData = nameMatches.find(i => !i.color || i.color.toLowerCase() === colorStr.toLowerCase());
-                        } else {
-                            invData = nameMatches[0];
-                        }
-                    }
-
-                    // Fallback to model if not found
-                    if (!invData) {
-                        const { data: modelMatches } = await supabase
-                            .from('inventory')
-                            .select('id, stock_quantity, reserved_quantity, name, model, color')
-                            .eq('category', 'coffin')
-                            .ilike('model', nameStr)
-                            .order('stock_quantity', { ascending: false });
-
-                        if (modelMatches && modelMatches.length > 0) {
-                            if (colorStr) {
-                                invData = modelMatches.find(i => !i.color || i.color.toLowerCase() === colorStr.toLowerCase());
-                            } else {
-                                invData = modelMatches[0];
-                            }
-                        }
-                    }
+                    const invData = await findOrCreateInventoryItem(supabase, {
+                        name: nameStr,
+                        color: colorStr,
+                        branch: caseBranch,
+                        category: 'coffin',
+                        caseNumber: updatedCase.case_number
+                    });
 
                     if (invData) {
                         try {
                             const result = await commitStock(invData.id, 1, id, userEmail, `Case Completed: ${updatedCase.case_number}`);
                             console.log(`✅ Stock COMMITTED for case ${id}: ${result.message}`);
-                        } catch (commitErr) {
-                            console.error('❌ Stock commit failed:', commitErr.message);
-                        }
+                            try { await maybeNotifyLowStock(1, supabase); } catch (_) { }
+                        } catch (e) { console.error('❌ Commit failed:', e.message); }
                     } else {
-                        console.warn(`⚠️ Could not find inventory item '${nameStr}' to commit for case ${id}`);
+                        console.warn(`⚠️ Casket '${nameStr}' creation failed in ${caseBranch} for completion`);
                     }
                 }
             }
-
             // 2. RELEASE STOCK (Cancelled)
             else if (status === 'cancelled' && oldStatus !== 'cancelled') {
                 const nameStr = String(updatedCase.casket_type || '').trim();
                 const colorStr = String(updatedCase.casket_colour || '').trim();
+                const caseBranch = updatedCase.branch || 'Head Office';
 
                 if (nameStr) {
-                    let invData = null;
-                    // Lookup logic (Identical to above - ideally refactored)
-                    const { data: nameMatches } = await supabase
-                        .from('inventory')
-                        .select('id, stock_quantity, reserved_quantity, name, model, color')
-                        .eq('category', 'coffin')
-                        .ilike('name', nameStr)
-                        .order('stock_quantity', { ascending: false });
-
-                    if (nameMatches && nameMatches.length > 0) {
-                        if (colorStr) {
-                            invData = nameMatches.find(i => !i.color || i.color.toLowerCase() === colorStr.toLowerCase());
-                        } else {
-                            invData = nameMatches[0];
-                        }
-                    }
-
-                    if (!invData) {
-                        const { data: modelMatches } = await supabase
-                            .from('inventory')
-                            .select('id, stock_quantity, reserved_quantity, name, model, color')
-                            .eq('category', 'coffin')
-                            .ilike('model', nameStr)
-                            .order('stock_quantity', { ascending: false });
-
-                        if (modelMatches && modelMatches.length > 0) {
-                            if (colorStr) {
-                                invData = modelMatches.find(i => !i.color || i.color.toLowerCase() === colorStr.toLowerCase());
-                            } else {
-                                invData = modelMatches[0];
-                            }
-                        }
-                    }
+                    // Note: For release, strict creation might be weird if it never existed, but safe.
+                    // If we are cancelling, we are releasing the reservation. 
+                    // If item doesn't exist, we probably shouldn't create it just to release?
+                    // BUT for consistency, findOrCreate ensures we get an ID.
+                    const invData = await findOrCreateInventoryItem(supabase, {
+                        name: nameStr,
+                        color: colorStr,
+                        branch: caseBranch,
+                        category: 'coffin',
+                        caseNumber: updatedCase.case_number
+                    });
 
                     if (invData) {
                         try {
@@ -1690,60 +1595,57 @@ exports.updateCaseDetails = async (req, res) => {
             const oldName = String(oldValues.casket_type || '').trim();
             const oldColor = String(oldValues.casket_colour || '').trim();
             const newName = String(updatedCase.casket_type || '').trim();
-            const newColor = String(updatedCase.casket_colour || '').trim();
-
+            const newColor = String(updatedCase.casket_colour || '').trim(); // Added newColor
+            const branchChanged = (oldValues.branch !== updatedCase.branch);
             const casketChanged = (oldName !== newName) || (oldColor !== newColor);
             const statusChanged = (oldValues.status !== updatedCase.status);
 
-            // Helper to find item ID (could be refactored to shared function)
-            const findItem = async (n, c) => {
+            // Helper to find item ID (Updated to accept branch)
+            const findItem = async (n, c, b) => {
                 if (!n) return null;
-                const { data: nameMatches } = await supabase.from('inventory').select('id, color').eq('category', 'coffin').ilike('name', n).order('stock_quantity', { ascending: false });
-                if (nameMatches?.length) {
-                    if (c) {
-                        const exact = nameMatches.find(i => !i.color || i.color.toLowerCase() === c.toLowerCase());
-                        if (exact) return exact;
-                    }
-                    return nameMatches[0];
-                }
-                const { data: modelMatches } = await supabase.from('inventory').select('id, color').eq('category', 'coffin').ilike('model', n).order('stock_quantity', { ascending: false });
-                if (modelMatches?.length) {
-                    if (c) {
-                        const exact = modelMatches.find(i => !i.color || i.color.toLowerCase() === c.toLowerCase());
-                        if (exact) return exact;
-                    }
-                    return modelMatches[0];
-                }
-                return null;
+                const targetBranch = b || updatedCase.branch || 'Head Office';
+                return await findOrCreateInventoryItem(supabase, {
+                    name: n,
+                    color: c,
+                    branch: targetBranch,
+                    category: 'coffin',
+                    caseNumber: updatedCase.case_number
+                });
             };
 
-            // A. Handle Casket Swap
-            if (casketChanged) {
-                // 1. Release Old Item (if it existed and case was not cancelled/completed already)
+            // A. Handle Casket Swap or Branch Change
+            if (casketChanged || branchChanged) {
+                // 1. Release Old Item from OLD branch
                 if (oldName && !['cancelled', 'completed'].includes(oldValues.status)) {
-                    const oldItem = await findItem(oldName, oldColor);
+                    const oldItem = await findItem(oldName, oldColor, oldValues.branch);
                     if (oldItem) {
                         try {
-                            await releaseStock(oldItem.id, 1, userEmail, `Casket Changed: Releasing ${oldName}`);
-                            console.log(`✅ Released old stock: ${oldName}`);
+                            const reason = branchChanged ? `Branch Changed from ${oldValues.branch} to ${updatedCase.branch}` : `Casket Changed: Releasing ${oldName}`;
+                            await releaseStock(oldItem.id, 1, userEmail, reason);
+                            console.log(`✅ Released stock from ${oldValues.branch}: ${oldName}`);
                         } catch (e) {
                             console.warn('Failed to release old stock:', e.message);
                         }
                     }
                 }
 
-                // 2. Reserve New Item (if status is active)
-                if (newName && !['cancelled', 'completed'].includes(updatedCase.status)) {
-                    const newItem = await findItem(newName, newColor);
+                // 2. Reserve Item in NEW branch
+                const targetName = casketChanged ? newName : oldName;
+                const targetColor = casketChanged ? newColor : oldColor;
+
+                if (targetName && !['cancelled', 'completed'].includes(updatedCase.status)) {
+                    const newItem = await findItem(targetName, targetColor, updatedCase.branch);
                     if (newItem) {
                         try {
-                            await reserveStock(newItem.id, 1, userEmail, `Casket Changed: Reserving ${newName}`);
-                            console.log(`✅ Reserved new stock: ${newName}`);
+                            const reason = branchChanged ? `Branch Changed: Reserving in ${updatedCase.branch}` : `Casket Changed: Reserving ${targetName}`;
+                            await reserveStock(newItem.id, 1, userEmail, reason);
+                            console.log(`✅ Reserved stock in ${updatedCase.branch}: ${targetName}`);
+                            try { await maybeNotifyLowStock(1, supabase); } catch (_) { }
                         } catch (e) {
                             console.warn('Failed to reserve new stock:', e.message);
                         }
                     } else {
-                        console.warn(`⚠️ New casket '${newName}' not found in inventory.`);
+                        console.warn(`⚠️ Item '${targetName}' not found in ${updatedCase.branch}.`);
                     }
                 }
             }
@@ -1759,6 +1661,7 @@ exports.updateCaseDetails = async (req, res) => {
                     if (itemToCommit) {
                         await commitStock(itemToCommit.id, 1, id, userEmail, `Case Completed`);
                         console.log(`✅ Committed stock on completion`);
+                        try { await maybeNotifyLowStock(1, supabase); } catch (_) { }
                     }
                 } else if (updatedCase.status === 'cancelled') {
                     // Release the CURRENT item

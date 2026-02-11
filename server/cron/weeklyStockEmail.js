@@ -142,9 +142,26 @@ const sendStockReportLogic = async () => {
             `;
         });
 
+        const totalStock = items.reduce((sum, item) => sum + (item.stock_quantity || 0), 0);
+        const lowStockCount = items.filter(item => item.stock_quantity <= (item.low_stock_threshold || 0)).length;
+
         html += `
                     </tbody>
                 </table>
+                <div style="padding: 20px; background: #fff8f8; border-top: 2px solid #b71c1c; display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 11px; color: #777; text-transform: uppercase;">Total Items</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #333;">${items.length}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: #777; text-transform: uppercase;">Grand Total Stock</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #b71c1c;">${totalStock.toLocaleString()}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: #777; text-transform: uppercase;">Low Stock Alert</div>
+                        <div style="font-size: 20px; font-weight: bold; color: ${lowStockCount > 0 ? '#c62828' : '#2e7d32'};">${lowStockCount}</div>
+                    </div>
+                </div>
                 <div class="footer">
                     &copy; ${new Date().getFullYear()} <strong>Thusanang Funeral Services</strong><br>
                     Respectful • Professional • Dignified
@@ -157,7 +174,7 @@ const sendStockReportLogic = async () => {
         // Load Logo
         let attachments = [];
         try {
-            const logoPath = path.join(__dirname, '..', 'assets', 'logo.png');
+            const logoPath = path.join(__dirname, '..', 'assets', 'logo_t_circle.png');
             if (fs.existsSync(logoPath)) {
                 const logoContent = fs.readFileSync(logoPath).toString('base64');
                 attachments.push({

@@ -1,18 +1,25 @@
-const { query } = require('./config/db');
-const fs = require('fs');
+const { Pool } = require('pg');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
 async function checkTriggers() {
     try {
-        const res = await query(`
-            SELECT tgname, pg_get_triggerdef(oid)
-            FROM pg_trigger
-            WHERE tgrelid = 'cases'::regclass
+        console.log('--- Checking Triggers on inventory table ---');
+        const res = await pool.query(`
+            SELECT trigger_name, event_manipulation, condition_timing, action_statement
+            FROM information_schema.triggers
+            WHERE event_object_table = 'inventory';
         `);
-        fs.writeFileSync('triggers.json', JSON.stringify(res.rows, null, 2));
-        process.exit(0);
-    } catch (e) {
-        console.error(e);
-        process.exit(1);
+        console.log('Triggers:', JSON.stringify(res.rows, null, 2));
+    } catch (err) {
+        console.error('Error:', err.message);
+    } finally {
+        await pool.end();
     }
 }
 

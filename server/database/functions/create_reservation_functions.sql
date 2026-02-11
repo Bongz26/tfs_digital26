@@ -19,12 +19,7 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'message', 'Item not found');
     END IF;
 
-    -- Check availability (Stock - Reserved >= Amount)
-    IF (current_stock - current_reserved) < amount THEN
-         RETURN jsonb_build_object('success', false, 'message', 'Insufficient available stock for reservation. Item: ' || item_name);
-    END IF;
-
-    -- Update reservation
+    -- Update reservation (Relaxed check to allow Ghost Stock/Negative Availability)
     new_reserved := current_reserved + amount;
     
     UPDATE inventory 
@@ -110,7 +105,7 @@ BEGIN
 
     -- Log Movement
     INSERT INTO stock_movements (inventory_id, movement_type, quantity_change, previous_quantity, new_quantity, reason, case_id, created_at)
-    VALUES (item_id, 'out', -amount, current_stock, new_stock, reason_text, case_id_val, NOW());
+    VALUES (item_id, 'sale', -amount, current_stock, new_stock, reason_text, case_id_val, NOW());
 
     RETURN jsonb_build_object(
         'success', true, 

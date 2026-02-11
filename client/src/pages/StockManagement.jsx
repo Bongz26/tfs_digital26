@@ -8,6 +8,23 @@ import autoTable from "jspdf-autotable"; // import the function
 const generateStockReportPDF = (inventory) => {
   const doc = new jsPDF();
 
+  // Header Logos / Branding
+  try {
+    const logoUrl = "/logo_t_circle.png";
+    doc.addImage(logoUrl, "PNG", 14, 10, 25, 25);
+  } catch (e) {
+    console.warn("Could not add logo to PDF:", e);
+  }
+
+  doc.setFontSize(22);
+  doc.setTextColor(183, 28, 28); // Brand Red
+  doc.text("THUSANANG FUNERAL SERVICES", 45, 20);
+
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text("Professional Stock Report • QwaQwa", 45, 27);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 45, 33);
+
   // attach autoTable
   autoTable(doc, {
     startY: 45,
@@ -29,9 +46,14 @@ const generateStockReportPDF = (inventory) => {
 
   const finalY = doc.lastAutoTable?.finalY || 45;
   doc.setFontSize(12);
+  doc.setTextColor(0);
   doc.text(`Total Items: ${inventory.length}`, 14, finalY + 10);
+
+  const totalStock = inventory.reduce((sum, item) => sum + (item.stock_quantity || 0), 0);
+  doc.text(`Total Stock Units: ${totalStock.toLocaleString()}`, 14, finalY + 16);
+
   const lowStockCount = inventory.filter(i => i.is_low_stock).length;
-  doc.text(`Low Stock Items: ${lowStockCount}`, 14, finalY + 16);
+  doc.text(`Low Stock Items: ${lowStockCount}`, 14, finalY + 22);
 
   doc.save(`Stock_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
 };
@@ -71,6 +93,8 @@ export default function StockManagement() {
   const [includeArchived, setIncludeArchived] = useState(false);
   const [historyList, setHistoryList] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [locationFilter, setLocationFilter] = useState('all');
+  const [locationsList, setLocationsList] = useState([]);
 
   const API_URL = API_HOST;
 
@@ -177,6 +201,23 @@ export default function StockManagement() {
       // setHistoryList([]);
     } finally {
       setLoadingHistory(false);
+    }
+  }, [API_URL]);
+
+  const fetchLocations = useCallback(async () => {
+    try {
+      const token = getAccessToken();
+      const response = await fetch(`${API_URL}/api/locations`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setLocationsList(data.locations || []);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch locations:', err);
     }
   }, [API_URL]);
 
@@ -433,11 +474,39 @@ export default function StockManagement() {
   };
 
   const lowStockItems = inventory.filter(item => item.is_low_stock);
-  const filteredInventory = activeTab === 'low'
-    ? lowStockItems
-    : activeTab === 'all'
-      ? inventory
-      : inventory.filter(item => item.category === activeTab);
+  const filteredInventory = inventory.filter(item => {
+    const matchesTab = activeTab === 'low'
+      ? item.is_low_stock
+      : activeTab === 'all'
+        ? true
+        : item.category === activeTab;
+
+    const matchesLocation = locationFilter === 'all'
+      ? true
+      : item.location === locationFilter;
+
+    return matchesTab && matchesLocation;
+  });
+
+  const displayStats = {
+    total_items: filteredInventory.length,
+    total_stock: filteredInventory.reduce((a, r) => a + (parseInt(r.stock_quantity, 10) || 0), 0),
+    total_available: filteredInventory.reduce((a, r) => a + (parseInt(r.available_quantity, 10) || 0), 0),
+    total_reserved: filteredInventory.reduce((a, r) => a + (parseInt(r.reserved_quantity, 10) || 0), 0),
+    low_stock_count: filteredInventory.filter(i => i.is_low_stock).length,
+    categories: new Set(filteredInventory.map(i => i.category)).size
+  };
+
+  // Extract unique values for suggestions
+  const existingNames = [...new Set(inventory.map(i => i.name).filter(Boolean))].sort();
+  const existingModels = [...new Set(inventory.map(i => i.model).filter(Boolean))].sort();
+  const existingColors = [...new Set(inventory.map(i => i.color).filter(Boolean))].sort();
+
+  useEffect(() => {
+    fetchInventory();
+    fetchStats();
+    fetchLocations();
+  }, [fetchInventory, fetchStats, fetchLocations]);
 
   if (loading) {
     return (
@@ -499,26 +568,38 @@ export default function StockManagement() {
       )}
 
       {/* STATS */}
-      {stats && (
+      {displayStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-red-600">
             <h3 className="text-lg font-semibold text-gray-700">Total Items</h3>
-            <p className="text-5xl font-bold text-red-600 mt-2">{stats.total_items || 0}</p>
-            <p className="text-sm text-gray-600 mt-2">{stats.categories || 0} categories</p>
+            <p className="text-5xl font-bold text-red-600 mt-2">{displayStats.total_items || 0}</p>
+            <p className="text-sm text-gray-600 mt-2">{displayStats.categories || 0} categories</p>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-orange-500">
             <h3 className="text-lg font-semibold text-gray-700">Total Stock</h3>
-            <p className="text-3xl font-bold text-orange-600 mt-2">{(stats.total_stock || 0).toLocaleString()}</p>
-            <p className="text-sm text-gray-600 mt-2">Total units in stock</p>
+            <div className="flex items-baseline space-x-2">
+              <p className="text-4xl font-bold text-orange-600 mt-2">{(displayStats.total_stock || 0).toLocaleString()}</p>
+              <span className="text-gray-400 text-sm">units</span>
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Available:</span>
+                <span className="font-bold text-green-600">{displayStats.total_available || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Reserved:</span>
+                <span className="font-medium text-orange-400">{displayStats.total_reserved || 0}</span>
+              </div>
+            </div>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-yellow-500">
             <h3 className="text-lg font-semibold text-gray-700">Low Stock</h3>
-            <p className="text-5xl font-bold text-yellow-600 mt-2">{stats.low_stock_count || 0}</p>
+            <p className="text-5xl font-bold text-yellow-600 mt-2">{displayStats.low_stock_count || 0}</p>
             <p className="text-sm text-gray-600 mt-2">Need reordering</p>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-600">
             <h3 className="text-lg font-semibold text-gray-700">Categories</h3>
-            <p className="text-5xl font-bold text-green-600 mt-2">{stats.categories || 0}</p>
+            <p className="text-5xl font-bold text-green-600 mt-2">{displayStats.categories || 0}</p>
             <p className="text-sm text-gray-600 mt-2">Active categories</p>
           </div>
         </div>
@@ -551,6 +632,21 @@ export default function StockManagement() {
                 {tab === 'all' ? 'All Items' : tab === 'low' ? 'Low Stock' : tab === 'usage' ? 'Coffin Usage' : tab === 'history' ? 'Stock Take History' : tab}
               </button>
             ))}
+          </div>
+
+          {/* BRANCH FILTER */}
+          <div className="flex items-center space-x-2 w-full lg:w-auto">
+            <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Filter by Branch:</label>
+            <select
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2"
+            >
+              <option value="all">All Branches</option>
+              {locationsList.map(loc => (
+                <option key={loc.id} value={loc.name}>{loc.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* ACTIONS */}
@@ -608,11 +704,15 @@ export default function StockManagement() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Item Name</label>
                 <input
                   type="text"
+                  list="item-name-list"
                   value={newItem.name}
                   onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
                   placeholder="e.g., Premium Oak Casket"
                 />
+                <datalist id="item-name-list">
+                  {existingNames.map(name => <option key={name} value={name} />)}
+                </datalist>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
@@ -634,21 +734,29 @@ export default function StockManagement() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Model (Optional)</label>
                   <input
                     type="text"
+                    list="item-model-list"
                     value={newItem.model}
                     onChange={(e) => setNewItem({ ...newItem, model: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
                     placeholder="e.g 5 Feet"
                   />
+                  <datalist id="item-model-list">
+                    {existingModels.map(model => <option key={model} value={model} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Color (Optional)</label>
                   <input
                     type="text"
+                    list="item-color-list"
                     value={newItem.color}
                     onChange={(e) => setNewItem({ ...newItem, color: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
                     placeholder="e.g Kiaat"
                   />
+                  <datalist id="item-color-list">
+                    {existingColors.map(color => <option key={color} value={color} />)}
+                  </datalist>
                 </div>
               </div>
 
@@ -684,6 +792,21 @@ export default function StockManagement() {
                     onChange={(e) => setNewItem({ ...newItem, low_stock_threshold: parseInt(e.target.value) || 1 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Branch / Location</label>
+                  <select
+                    value={newItem.location}
+                    onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="Manekeng Showroom">Manekeng Showroom</option>
+                    <option value="Head Office">Head Office</option>
+                    <option value="Bethlehem Branch">Bethlehem Branch</option>
+                    {locationsList.filter(l => !["Head Office", "Manekeng Showroom", "Bethlehem Branch"].includes(l.name)).map(loc => (
+                      <option key={loc.id} value={loc.name}>{loc.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

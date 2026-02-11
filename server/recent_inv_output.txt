@@ -1,0 +1,42 @@
+--- Checking Inventory Updated in last 48 hours ---
+Found 40 recently updated items:
+[2026-02-11T00:41:44.358358] ID: 137 | Name: Ghost Test Casket 1770770503805 | Branch: MAKENENG | Stock: 0 | Reserved: 0
+[2026-02-11T00:39:55.399554] ID: 136 | Name: MINIMAL TEST 1770770395724 | Branch: MAKENENG | Stock: 0 | Reserved: 0
+[2026-02-11T00:28:57.516] ID: 63 | Name: 1.9 FEET | Branch: MAKENENG | Stock: 1 | Reserved: 0
+[2026-02-10T18:17:44.868] ID: 103 | Name: 1/4 View | Branch: Head Office | Stock: 3 | Reserved: 0
+[2026-02-10T15:16:09.431] ID: 134 | Name: Pongee -Poper | Branch: Head Office | Stock: -1 | Reserved: 0
+[2026-02-10T15:16:07.754] ID: 135 | Name: ECONO | Branch: Bethlehem Branch | Stock: 0 | Reserved: 0
+[2026-02-10T15:03:00.722] ID: 97 | Name: Octagon | Branch: Head Office | Stock: 0 | Reserved: 0
+[2026-02-10T15:02:59.098] ID: 98 | Name: 5 FEET | Branch: Head Office | Stock: 0 | Reserved: 0
+[2026-02-10T15:02:52.019] ID: 102 | Name: FLAT LID | Branch: Head Office | Stock: 0 | Reserved: 0
+[2026-02-10T14:59:46.311114] ID: 111 | Name: 1.9 FEET | Branch: Head Office | Stock: 3 | Reserved: 0
+[2026-02-10T11:54:06.58036] ID: 133 | Name: FLAT LID | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T11:18:04.464228] ID: 132 | Name: STERLING STEEL | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T11:16:53.936677] ID: 131 | Name: SKIN LEATHER DOME | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T11:12:10.927133] ID: 130 | Name: HARVARD | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T11:06:31.662709] ID: 129 | Name: SKIN LEATHER DOME | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T11:03:02.18229] ID: 128 | Name: ROYAL DOME | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T11:03:01.110427] ID: 127 | Name: BALMORAL | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T11:01:45.309339] ID: 126 | Name: FRANKLYN | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T10:59:55.010199] ID: 125 | Name: 4 CNR WOODTURNING ELEPHANT | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T10:57:31.223175] ID: 124 | Name: SENATOR | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T10:54:52.324032] ID: 123 | Name: LAPITA | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T10:49:03.761967] ID: 122 | Name: EMPEROR | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T10:48:04.8194] ID: 121 | Name: 4 CNR WOODTURNING | Branch: Head Office | Stock: 0 | Reserved: 0
+[2026-02-10T10:46:55.528209] ID: 120 | Name: NGUNI DOME | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T10:42:14.817085] ID: 119 | Name: NGUNI DOME | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T08:26:14.738785] ID: 118 | Name: 4 FEET  | Branch: Head Office | Stock: 0 | Reserved: 0
+[2026-02-10T08:24:22.352807] ID: 117 | Name: 3 FEET  | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T08:23:40.858851] ID: 116 | Name: 2.6 FEET  | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T08:23:02.755333] ID: 115 | Name: 2 FEET | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T08:22:35.818479] ID: 114 | Name: 2 FEET | Branch: Head Office | Stock: 2 | Reserved: 0
+[2026-02-10T08:19:24.461298] ID: 113 | Name: 2 FEET | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T08:18:59.591383] ID: 112 | Name: 1.9 FEET | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T07:35:22.492096] ID: 110 | Name: 4 TIER | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T07:35:22.464603] ID: 109 | Name: 4 TIER | Branch: Head Office | Stock: 0 | Reserved: 0
+[2026-02-10T07:32:16.440958] ID: 108 | Name: Prince Dome | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T07:28:25.517343] ID: 107 | Name: Octagon | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T07:27:56.787151] ID: 106 | Name: Pongee | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T07:27:35.365004] ID: 105 | Name: Pongee | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T07:21:08.238146] ID: 104 | Name: Spider | Branch: Head Office | Stock: 1 | Reserved: 0
+[2026-02-10T06:12:12.549058] ID: 101 | Name: FLAT LID | Branch: Head Office | Stock: 1 | Reserved: 0

@@ -15,43 +15,36 @@ try {
     const hostname = url.hostname;
     console.log(`🔍 Attempting to resolve ${hostname} using DoH...`);
 
-    const dohUrl = `https://cloudflare-dns.com/dns-query?name=${hostname}&type=A`;
-
-    const req = https.request(dohUrl, {
-        headers: {
-            'Accept': 'application/dns-json'
-        }
-    }, (res) => {
+    const resA = https.request(`https://cloudflare-dns.com/dns-query?name=${hostname}&type=A`, { headers: { 'Accept': 'application/dns-json' } }, (res) => {
         let data = '';
-        res.on('data', (chunk) => data += chunk);
+        res.on('data', chunk => data += chunk);
         res.on('end', () => {
-            try {
-                const response = JSON.parse(data);
-                if (response.Status === 0 && response.Answer) {
-                    const aRecord = response.Answer.find(r => r.type === 1); // Type 1 is A (IPv4)
-                    if (aRecord) {
-                        console.log(`✅ RESOLVED IP: ${aRecord.data}`);
-                        // Write to a temporary file so we can read it
-                        fs.writeFileSync(path.join(__dirname, 'resolved_ip.txt'), aRecord.data);
-                    } else {
-                        console.error('❌ No A record found in DoH response');
-                        console.log(response);
-                    }
-                } else {
-                    console.error('❌ DoH Resolution Failed');
-                    console.log(response);
-                }
-            } catch (e) {
-                console.error('❌ Failed to parse DoH response', e);
+            const response = JSON.parse(data);
+            const aRecord = response.Answer?.find(r => r.type === 1);
+            if (aRecord) {
+                console.log(`✅ RESOLVED IPv4: ${aRecord.data}`);
+                fs.writeFileSync(path.join(__dirname, 'resolved_ip.txt'), aRecord.data);
+            } else {
+                // Try AAAA
+                const resAAAA = https.request(`https://cloudflare-dns.com/dns-query?name=${hostname}&type=AAAA`, { headers: { 'Accept': 'application/dns-json' } }, (res2) => {
+                    let data2 = '';
+                    res2.on('data', chunk => data2 += chunk);
+                    res2.on('end', () => {
+                        const response2 = JSON.parse(data2);
+                        const aaaaRecord = response2.Answer?.find(r => r.type === 28);
+                        if (aaaaRecord) {
+                            console.log(`✅ RESOLVED IPv6: ${aaaaRecord.data}`);
+                            fs.writeFileSync(path.join(__dirname, 'resolved_ip.txt'), aaaaRecord.data);
+                        } else {
+                            console.error('❌ No A or AAAA records found');
+                        }
+                    });
+                });
+                resAAAA.end();
             }
         });
     });
-
-    req.on('error', (e) => {
-        console.error('❌ HTTPS Request failed', e);
-    });
-
-    req.end();
+    resA.end();
 
 } catch (e) {
     console.error('Invalid DATABASE_URL', e);

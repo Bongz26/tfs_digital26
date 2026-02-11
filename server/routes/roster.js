@@ -27,7 +27,9 @@ router.get('/', async (req, res) => {
           delivery_time,
           venue_name,
           burial_place,
-          status
+          status,
+          casket_type,
+          casket_colour
         ),
         vehicles:vehicle_id (
           id,
@@ -66,6 +68,8 @@ router.get('/', async (req, res) => {
         venue_name: caseData?.venue_name || null,
         burial_place: caseData?.burial_place || null,
         case_status: caseData?.status || null,
+        casket_type: caseData?.casket_type || null,
+        casket_colour: caseData?.casket_colour || null,
         // Vehicle data (flattened)
         reg_number: item.external_vehicle || vehicleData?.reg_number || null,
         vehicle_type: item.external_vehicle ? 'Hired Transport' : (vehicleData?.type || null)

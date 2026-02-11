@@ -15,25 +15,15 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
-// Helper to resolve IPv4
-const resolveIPv4 = async (hostname) => {
+// Helper to resolve IP (prefers IPv4, falls back to IPv6)
+const resolveIP = async (hostname) => {
   return new Promise((resolve, reject) => {
-    // First try system DNS
     dns.resolve4(hostname, (err, addresses) => {
-      if (!err && addresses && addresses.length > 0) {
-        return resolve(addresses[0]);
-      }
+      if (!err && addresses && addresses.length > 0) return resolve(addresses[0]);
 
-      // If system DNS fails or returns no IPv4, try Google DNS (8.8.8.8) as fallback
-      const { Resolver } = dns;
-      const resolver = new Resolver();
-      resolver.setServers(['8.8.8.8', '8.8.4.4']);
-
-      resolver.resolve4(hostname, (errFallback, addressesFallback) => {
-        if (!errFallback && addressesFallback && addressesFallback.length > 0) {
-          return resolve(addressesFallback[0]);
-        }
-        reject(err || errFallback || new Error('No IPv4 address found'));
+      dns.resolve6(hostname, (err6, addresses6) => {
+        if (!err6 && addresses6 && addresses6.length > 0) return resolve(addresses6[0]);
+        reject(err || err6 || new Error('No IP address found'));
       });
     });
   });
@@ -44,14 +34,13 @@ const initPool = async () => {
 
   try {
     const url = new URL(databaseUrl);
-    // Attempt to resolve IPv4 to bypass ENOTFOUND/IPv6 issues
-    console.log(`🔍 Resolving IPv4 for ${url.hostname}...`);
-    const ip = await resolveIPv4(url.hostname);
-    console.log(`✅ Resolved ${url.hostname} to IPv4: ${ip}`);
+    console.log(`🔍 Resolving IP for ${url.hostname}...`);
+    const ip = await resolveIP(url.hostname);
+    console.log(`✅ Resolved ${url.hostname} to: ${ip}`);
 
-    // Replace hostname with resolved IP
     const fixedUrl = new URL(databaseUrl);
-    fixedUrl.hostname = ip;
+    // IPv6 must be in brackets for PG connection string
+    fixedUrl.hostname = ip.includes(':') ? `[${ip}]` : ip;
     connectionString = fixedUrl.toString();
   } catch (e) {
     console.warn('⚠️ DNS resolution failed/skipped, using original URL:', e.message);

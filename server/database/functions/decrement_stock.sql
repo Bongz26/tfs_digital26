@@ -45,7 +45,7 @@ BEGIN
     new_quantity,
     reason,
     recorded_by,
-    movement_date
+    created_at
   ) VALUES (
     item_id,
     'sale',

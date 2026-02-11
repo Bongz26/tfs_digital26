@@ -410,6 +410,10 @@ export default function ConsultationForm() {
   const [historyMode, setHistoryMode] = useState(false);
   const [historyList, setHistoryList] = useState([]);
   const [casketOptions, setCasketOptions] = useState([]);
+  const [casketInventory, setCasketInventory] = useState([]);
+  const [availableColors, setAvailableColors] = useState([]);
+
+  // Mock prices for extras (could fetch from DB later)
   const location = useLocation();
 
   useEffect(() => {
@@ -539,22 +543,29 @@ export default function ConsultationForm() {
     const isExchange = form.benefit_exchange && form.benefit_exchange !== 'standard';
 
     const isStillBornPlan = /still\s*born/i.test(form.plan_name || '');
-    setForm(prev => ({
-      ...prev,
-      casket_type: shouldAutoSetCasket ? (benefits.casket || '') : prev.casket_type,
-      casket_colour: isSpecialPlan ? (prev.casket_colour || 'Cherry') : prev.casket_colour,
-      cover_amount: benefits.cover || 0,
-      cashback_amount: nextCashbackAmount,
-      benefit_mode: nextBenefitMode,
-      programs: isStillBornPlan ? 0 : (benefits.programmes || prev.programs),
-      airtime: hasAirtimeBenefit ? true : false,
 
-      // Auto-set requirements based on exchange
-      requires_catering: form.benefit_exchange === 'catering' ? true : prev.requires_catering,
-      requires_cow: form.benefit_exchange === 'cow' ? true : prev.requires_cow,
-      requires_tombstone: form.benefit_exchange === 'tombstone' ? true : prev.requires_tombstone,
-      requires_grocery: form.benefit_exchange === 'grocery' ? true : prev.requires_grocery,
-    }));
+    setForm(prev => {
+      const nextCasketType = shouldAutoSetCasket ? (benefits.casket || '') : prev.casket_type;
+      // Reset color if casket type changes
+      const nextCasketColor = (nextCasketType !== prev.casket_type) ? '' : prev.casket_colour;
+
+      return {
+        ...prev,
+        casket_type: nextCasketType,
+        casket_colour: isSpecialPlan ? (prev.casket_colour || 'Cherry') : nextCasketColor,
+        cover_amount: benefits.cover || 0,
+        cashback_amount: nextCashbackAmount,
+        benefit_mode: nextBenefitMode,
+        programs: isStillBornPlan ? 0 : (benefits.programmes || prev.programs),
+        airtime: hasAirtimeBenefit ? true : false,
+
+        // Auto-set requirements based on exchange
+        requires_catering: form.benefit_exchange === 'catering' ? true : prev.requires_catering,
+        requires_cow: form.benefit_exchange === 'cow' ? true : prev.requires_cow,
+        requires_tombstone: form.benefit_exchange === 'tombstone' ? true : prev.requires_tombstone,
+        requires_grocery: form.benefit_exchange === 'grocery' ? true : prev.requires_grocery,
+      };
+    });
   }, [form.plan_name, form.plan_category, form.benefit_mode, form.service_type, form.top_up_type, form.top_up_amount, form.benefit_exchange]);
 
   useEffect(() => {
@@ -585,35 +596,76 @@ export default function ConsultationForm() {
     const loadCaskets = async () => {
       try {
         const inventory = await fetchInventory('coffin');
-        const inventoryNames = inventory ? inventory.map(i => i.name) : [];
+        // Store full inventory for color filtering
+        setCasketInventory(inventory || []);
 
-        // Collect hardcoded names from plans
-        const planNames = new Set();
-        Object.values(PLAN_BENEFITS).forEach(p => {
-          if (p.casket) planNames.add(p.casket);
-        });
-        Object.values(SPECIAL_PLAN_BENEFITS).forEach(p => {
-          if (p.casket) planNames.add(p.casket);
-        });
+        // Deduplicate and normalize options
+        const uniqueItems = new Set();
+        const inventoryItems = inventory ? inventory.map(i => {
+          const name = i.name.trim();
+          const model = i.model ? i.model.trim() : '';
+          const display = model ? `${name} - ${model}` : name;
+          return display;
+        }) : [];
 
-        // Merge and sort
-        const combined = Array.from(new Set([...inventoryNames, ...planNames])).sort();
+        inventoryItems.forEach(item => uniqueItems.add(item));
+        const combined = Array.from(uniqueItems).sort();
         setCasketOptions(combined);
       } catch (err) {
         console.error('Failed to load casket options', err);
-        // Fallback to just plan names if inventory fails
-        const planNames = new Set();
-        Object.values(PLAN_BENEFITS).forEach(p => {
-          if (p.casket) planNames.add(p.casket);
-        });
-        Object.values(SPECIAL_PLAN_BENEFITS).forEach(p => {
-          if (p.casket) planNames.add(p.casket);
-        });
-        setCasketOptions(Array.from(planNames).sort());
+        setCasketOptions([]);
       }
     };
     loadCaskets();
+    loadCaskets();
   }, []);
+
+  // Effect: Filter colors when Casket Type changes
+  useEffect(() => {
+    if (!form.casket_type) {
+      setAvailableColors([]);
+      return;
+    }
+
+    const selectedType = form.casket_type.trim();
+    // Parse Name/Model from selection
+    let nameToMatch = selectedType;
+    let modelToMatch = null;
+
+    if (selectedType.includes(' - ')) {
+      const parts = selectedType.split(' - ');
+      nameToMatch = parts[0].trim();
+      modelToMatch = parts[1].trim();
+    }
+
+    // Filter inventory for matches
+    const matchingItems = casketInventory.filter(item => {
+      const iName = item.name.trim();
+      const iModel = item.model ? item.model.trim() : null;
+
+      const nameMatch = iName.toLowerCase() === nameToMatch.toLowerCase();
+      const modelMatch = modelToMatch
+        ? (iModel && iModel.toLowerCase() === modelToMatch.toLowerCase())
+        : !iModel; // match null model if no model selected
+
+      return nameMatch && modelMatch;
+    });
+
+    // Extract unique colors
+    const colors = new Set();
+    matchingItems.forEach(item => {
+      if (item.color) colors.add(item.color.trim());
+    });
+
+    const colorList = Array.from(colors).sort();
+    setAvailableColors(colorList);
+
+    // Auto-select if only 1 color exists AND not already set
+    if (colorList.length === 1 && !form.casket_colour) {
+      setForm(prev => ({ ...prev, casket_colour: colorList[0] }));
+    }
+
+  }, [form.casket_type, casketInventory]);
 
 
 
@@ -2020,20 +2072,23 @@ export default function ConsultationForm() {
                       </select>
                     )}
                   </div>
+                  {/* Dynamic Color Dropdown */}
                   <div>
-                    <label>Casket Colour</label>
-                    <select value={form.casket_colour} onChange={e => handleInputChange('casket_colour', e.target.value)} className="w-full px-4 py-3 border rounded-lg">
-                      <option value="">Select colour</option>
-                      <option value="Cherry">Cherry</option>
-                      <option value="Kiaat">Kiaat</option>
-                      <option value="Redwood">Redwood</option>
-                      <option value="Ash">Ash</option>
-                      <option value="White">White</option>
-                      <option value="Black">Black</option>
-                      <option value="Brown">Brown</option>
-                      <option value="MIDBROWN">MIDBROWN</option>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Casket Colour</label>
+                    <select
+                      name="casket_colour"
+                      value={form.casket_colour}
+                      onChange={e => handleInputChange('casket_colour', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                      disabled={availableColors.length === 0}
+                    >
+                      <option value="">{availableColors.length === 0 ? 'Select Type First' : 'Select Colour'}</option>
+                      {availableColors.map(color => (
+                        <option key={color} value={color}>{color}</option>
+                      ))}
                     </select>
                   </div>
+
                   <div><label>Service Venue</label><input value={form.venue_name || ''} onChange={e => handleInputChange('venue_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
                   <div><label>Full Address (GPS) <span className="text-red-600">*</span></label><input required value={form.venue_address || ''} onChange={e => handleInputChange('venue_address', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
                   <div className="md:col-span-2">

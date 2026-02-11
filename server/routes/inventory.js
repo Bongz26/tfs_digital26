@@ -14,6 +14,9 @@ router.get('/coffin-usage-raw', inventoryController.getCoffinUsageRaw);
 router.post('/coffin-usage/backfill', inventoryController.backfillCoffinMovementsToCases);
 router.post('/coffin-usage/backfill/create', inventoryController.createCoffinMovementsForCases);
 
+// GET duplicates check
+router.get('/duplicates', inventoryController.checkDuplicates);
+
 // POST create new inventory item
 router.post('/', inventoryController.createInventoryItem);
 

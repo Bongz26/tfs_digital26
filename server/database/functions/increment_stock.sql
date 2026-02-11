@@ -47,7 +47,7 @@ BEGIN
     reason,
     recorded_by,
     reference_number,
-    movement_date
+    created_at
   ) VALUES (
     item_id,
     'purchase',

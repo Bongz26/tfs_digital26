@@ -9,6 +9,9 @@ import { API_HOST } from '../api/config';
 import AssignVehicleModal from '../components/AssignVehicleModal';
 import AssignedTransportList from '../components/AssignedTransportList';
 import { prepareCaseForEdit } from '../utils/caseFormatters';
+import { fetchInventory } from '../api/inventory';
+
+const CASKET_COLORS = ['Brown', 'KIAAT', 'Cherry', 'White', 'Silver', 'Gold', 'Grey'];
 
 export default function CaseDetails() {
   const { id } = useParams();
@@ -23,6 +26,9 @@ export default function CaseDetails() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [casketOptions, setCasketOptions] = useState([]);
+  const [casketInventory, setCasketInventory] = useState([]);
+  const [availableColors, setAvailableColors] = useState([]);
 
   useEffect(() => {
     const loadCase = async () => {
@@ -54,6 +60,76 @@ export default function CaseDetails() {
 
     loadCase();
   }, [id]);
+
+  useEffect(() => {
+    const loadCaskets = async () => {
+      try {
+        const inventory = await fetchInventory('coffin');
+        setCasketInventory(inventory || []);
+
+        const uniqueItems = new Set();
+        const inventoryItems = inventory ? inventory.map(i => {
+          const name = i.name.trim();
+          const model = i.model ? i.model.trim() : '';
+          const display = model ? `${name} - ${model}` : name;
+          return display;
+        }) : [];
+
+        inventoryItems.forEach(item => uniqueItems.add(item));
+        const combined = Array.from(uniqueItems).sort();
+        setCasketOptions(combined);
+      } catch (err) {
+        console.error('Failed to load caskets', err);
+      }
+    };
+    if (isEditing) loadCaskets();
+  }, [isEditing]);
+
+  // Effect: Filter colors when Casket Type changes in Edit Mode
+  useEffect(() => {
+    if (!editForm.casket_type) {
+      setAvailableColors([]);
+      return;
+    }
+
+    const selectedType = editForm.casket_type.trim();
+    let nameToMatch = selectedType;
+    let modelToMatch = null;
+
+    if (selectedType.includes(' - ')) {
+      const parts = selectedType.split(' - ');
+      nameToMatch = parts[0].trim();
+      modelToMatch = parts[1].trim();
+    }
+
+    const matchingItems = casketInventory.filter(item => {
+      const iName = item.name.trim();
+      const iModel = item.model ? item.model.trim() : null;
+
+      const nameMatch = iName.toLowerCase() === nameToMatch.toLowerCase();
+      const modelMatch = modelToMatch
+        ? (iModel && iModel.toLowerCase() === modelToMatch.toLowerCase())
+        : !iModel;
+
+      return nameMatch && modelMatch;
+    });
+
+    const colors = new Set();
+    matchingItems.forEach(item => {
+      if (item.color) colors.add(item.color.trim());
+    });
+
+    const colorList = Array.from(colors).sort();
+    setAvailableColors(colorList);
+
+    // Auto-select if only 1 color exists AND not already set to a valid option
+    if (colorList.length === 1) {
+      // Only auto-set if current selection is invalid or empty
+      if (!editForm.casket_colour || !colorList.includes(editForm.casket_colour)) {
+        setEditForm(prev => ({ ...prev, casket_colour: colorList[0] }));
+      }
+    }
+  }, [editForm.casket_type, casketInventory]);
 
   const handleSaveEdit = async (e) => {
     // Prevent any default form submission behavior
@@ -208,11 +284,30 @@ export default function CaseDetails() {
             <div className="space-y-2">
               <div>
                 <label className="text-xs font-semibold text-gray-500">Casket Type</label>
-                <input className="w-full border rounded p-1" value={editForm.casket_type || ''} onChange={e => setEditForm({ ...editForm, casket_type: e.target.value })} />
+                <select
+                  className="w-full border rounded p-1"
+                  value={editForm.casket_type || ''}
+                  onChange={e => setEditForm({ ...editForm, casket_type: e.target.value })}
+                >
+                  <option value="">Select Casket Type</option>
+                  {casketOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500">Casket Colour</label>
-                <input className="w-full border rounded p-1" value={editForm.casket_colour || ''} onChange={e => setEditForm({ ...editForm, casket_colour: e.target.value })} />
+                <select
+                  className="w-full border rounded p-1"
+                  value={editForm.casket_colour || ''}
+                  onChange={e => setEditForm({ ...editForm, casket_colour: e.target.value })}
+                  disabled={availableColors.length === 0}
+                >
+                  <option value="">{availableColors.length === 0 ? 'Select Type First' : 'Select Colour'}</option>
+                  {availableColors.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500">Delivery Date</label>

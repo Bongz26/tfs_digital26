@@ -1,0 +1,2 @@
+--- Checking for ANY Replenishment in last 48 hours ---
+Found 0 replenishment/adjustment records.

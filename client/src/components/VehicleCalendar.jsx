@@ -128,6 +128,8 @@ export default function VehicleCalendar() {
         funeral_time: i.funeral_time,
         venue_name: i.venue_name,
         case_status: i.case_status || 'intake',
+        casket_type: i.casket_type || null,
+        casket_colour: i.casket_colour || null,
         assignments: []
       };
       existing.assignments.push({
@@ -504,6 +506,19 @@ export default function VehicleCalendar() {
                         ⏰ {group.funeral_time || "Time TBA"}
                       </p>
 
+                      {/* CASKET INFO */}
+                      {group.casket_type && (
+                        <div className="mt-3 p-2 bg-gray-50 border border-gray-100 rounded-lg">
+                          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Casket/Coffin</div>
+                          <div className="text-sm font-semibold text-red-900 leading-tight">
+                            {group.casket_type}
+                            {group.casket_colour && (
+                              <span className="ml-1 text-gray-500 font-normal italic">({group.casket_colour})</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Global Group Badge */}
                       {group.assignments?.[0]?.group_name && (
                         <div className="mt-2 inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase tracking-wider">
@@ -874,6 +889,19 @@ export default function VehicleCalendar() {
               <p className="text-sm text-gray-600">
                 ⏰ {group.funeral_time || "Time TBA"}
               </p>
+
+              {/* CASKET INFO */}
+              {group.casket_type && (
+                <div className="mt-3 p-2 bg-gray-50 border border-gray-100 rounded-lg">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Casket/Coffin</div>
+                  <div className="text-sm font-semibold text-red-900 leading-tight">
+                    {group.casket_type}
+                    {group.casket_colour && (
+                      <span className="ml-1 text-gray-500 font-normal italic">({group.casket_colour})</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {(group.case_status === 'scheduled' || group.case_status === 'in_progress' || group.case_status === 'completed') && (
                 <div className={`mt-2 p-2 rounded text-xs ${isAdmin()
