@@ -136,16 +136,23 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
                                             </span>
                                         )}
                                     </div>
-                                    {r.pickup_time && (
+                                    {(r.delivery_date && r.delivery_time) || r.pickup_time ? (
                                         <div className="text-xs text-gray-500">
-                                            Pickup: {new Date(r.pickup_time).toLocaleString('en-ZA', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
+                                            Delivery: {(r.delivery_date && r.delivery_time)
+                                                ? new Date(`${r.delivery_date}T${r.delivery_time}`).toLocaleString('en-ZA', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })
+                                                : new Date(r.pickup_time).toLocaleString('en-ZA', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             </div>
                         ))}

@@ -578,7 +578,10 @@ exports.assignVehicle = async (req, res) => {
 
         if (delivery_date && delivery_time) {
             try {
-                calculatedPickupTime = new Date(`${delivery_date}T${delivery_time}`).toISOString();
+                // Preserve user's delivery time as-is (no UTC conversion) to avoid timezone shift
+                const t = String(delivery_time).trim();
+                const normalizedTime = /^\d{1,2}:\d{2}(:\d{2})?$/.test(t) ? (t.length <= 5 ? `${t}:00` : t) : '00:00:00';
+                calculatedPickupTime = `${delivery_date}T${normalizedTime}`;
                 console.log(`📅 Using delivery_time from case: ${calculatedPickupTime}`);
             } catch (err) {
                 calculatedPickupTime = null;
@@ -588,8 +591,11 @@ exports.assignVehicle = async (req, res) => {
         if (!calculatedPickupTime && funeral_date && funeral_time) {
             try {
                 const funeralDateTime = new Date(`${funeral_date}T${funeral_time}`);
-                calculatedPickupTime = new Date(funeralDateTime.getTime() - (1.5 * 60 * 60 * 1000)).toISOString();
-                console.log(`📅 Calculated pickup_time: ${calculatedPickupTime}`);
+                const adjusted = new Date(funeralDateTime.getTime() - (1.5 * 60 * 60 * 1000));
+                // Format as local date/time without UTC conversion
+                const pad = n => String(n).padStart(2, '0');
+                calculatedPickupTime = `${adjusted.getFullYear()}-${pad(adjusted.getMonth() + 1)}-${pad(adjusted.getDate())}T${pad(adjusted.getHours())}:${pad(adjusted.getMinutes())}:${pad(adjusted.getSeconds())}`;
+                console.log(`📅 Calculated pickup_time (funeral - 1.5h): ${calculatedPickupTime}`);
             } catch (err) {
                 calculatedPickupTime = pickup_time || new Date().toISOString();
             }
@@ -1048,12 +1054,14 @@ exports.updateFuneralTime = async (req, res) => {
             return res.status(404).json({ success: false, error: 'Case not found' });
         }
 
-        const currentStatus = caseCheck.status;
+        const currentStatus = (caseCheck.status || '').toLowerCase();
         const isAdmin = req.user && String(req.user.role).toLowerCase() === 'admin';
-        if (currentStatus !== 'intake' && !isAdmin) {
-            return res.status(400).json({
+        // Allow edits unless the case is in a locked/live status. Admins can always override.
+        const lockedStatuses = ['scheduled', 'in_progress', 'completed'];
+        if (lockedStatuses.includes(currentStatus) && !isAdmin) {
+            return res.status(403).json({
                 success: false,
-                error: `Cannot update funeral time. Case status is "${currentStatus}". Funeral time can only be changed when status is "intake".`
+                error: `Cannot update funeral time. Case status is "${currentStatus}" which is a live/locked status. Only administrators may modify funeral time for live cases.`
             });
         }
 
@@ -1105,12 +1113,25 @@ exports.updateCaseVenue = async (req, res) => {
     try {
         const { data: oldValues, error: fetchErr } = await supabase
             .from('cases')
-            .select('venue_name, venue_address, venue_lat, venue_lng, burial_place, is_yard_burial')
+            .select('venue_name, venue_address, venue_lat, venue_lng, burial_place, is_yard_burial, status')
             .eq('id', id)
             .single();
 
         if (fetchErr || !oldValues) {
             return res.status(404).json({ success: false, error: 'Case not found' });
+        }
+
+        // Admin override: allow admins to edit regardless of case status
+        const currentStatus = (oldValues.status || '').toLowerCase();
+        const isAdmin = req.user && String(req.user.role).toLowerCase() === 'admin';
+        const lockedStatuses = ['scheduled', 'in_progress', 'completed'];
+        if (lockedStatuses.includes(currentStatus) && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: `Cannot update venue. Case status is "${currentStatus}" which is a live/locked status. Only administrators may modify venue for live cases.`,
+                case_status: currentStatus,
+                requires_admin: true
+            });
         }
 
         const updates = { updated_at: new Date() };
@@ -1439,11 +1460,11 @@ exports.getCaseAuditLog = async (req, res) => {
 
         const { data: logs, error } = await supabase
             .from('audit_log')
-            .select('id, user_id, user_email, action, old_values, new_values, ip_address, user_agent')
+            .select('id, user_id, user_email, action, old_values, new_values, ip_address, user_agent, created_at')
             .eq('resource_type', 'case')
             .eq('resource_id', id)
-            .eq('action', 'case_status_change')
-            .order('id', { ascending: false });
+            .in('action', ['case_create', 'case_status_change', 'case_full_update', 'case_venue_update'])
+            .order('created_at', { ascending: false });
 
         if (error) {
             throw error;
@@ -1455,7 +1476,16 @@ exports.getCaseAuditLog = async (req, res) => {
                 const nv = typeof row.new_values === 'string' ? JSON.parse(row.new_values) : row.new_values;
                 notes = nv?.notes || null;
             } catch (e) { }
-            return { id: row.id, user_id: row.user_id, user_email: row.user_email, action: row.action, old_values: row.old_values, new_values: row.new_values, notes };
+            return {
+                id: row.id,
+                user_id: row.user_id,
+                user_email: row.user_email,
+                action: row.action,
+                old_values: row.old_values,
+                new_values: row.new_values,
+                notes,
+                created_at: row.created_at
+            };
         });
         res.json({ success: true, logs: formattedLogs });
     } catch (err) {
@@ -1514,6 +1544,19 @@ exports.updateCaseDetails = async (req, res) => {
         const { data: oldValues, error: checkError } = await supabase.from('cases').select('*').eq('id', id).single();
         if (checkError || !oldValues) {
             return res.status(404).json({ success: false, error: 'Case not found' });
+        }
+
+        // Admin override: allow admins to edit regardless of case status
+        const currentStatus = (oldValues.status || '').toLowerCase();
+        const isAdmin = req.user && String(req.user.role).toLowerCase() === 'admin';
+        const lockedStatuses = ['scheduled', 'in_progress', 'completed'];
+        if (lockedStatuses.includes(currentStatus) && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: `Cannot edit case details. Case status is "${currentStatus}" which is a live/locked status. Only administrators may edit cases in this state.`,
+                case_status: currentStatus,
+                requires_admin: true
+            });
         }
 
         const finalFuneralDate = service_date || funeral_date;

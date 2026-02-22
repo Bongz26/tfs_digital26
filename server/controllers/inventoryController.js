@@ -1359,12 +1359,15 @@ exports.updateTransfer = async (req, res) => {
     }
 };
 
-// DISPATCH Transfer (Deduct Stock)
+// DISPATCH Transfer (Reserve Stock at Source - stock is "in transit", not yet deducted)
 exports.dispatchTransfer = async (req, res) => {
     try {
         const { id } = req.params; // Transfer ID
         const supabase = req.app.locals.supabase;
         if (!supabase) return res.status(500).json({ success: false, error: 'Database not configured' });
+
+        const { reserveStock } = require('../utils/dbUtils');
+        const userEmail = req.user ? req.user.email : 'system';
 
         const { data: transfer, error: fetchError } = await supabase
             .from('stock_transfers')
@@ -1375,28 +1378,22 @@ exports.dispatchTransfer = async (req, res) => {
         if (fetchError || !transfer) return res.status(404).json({ success: false, error: 'Transfer not found' });
         if (transfer.status !== 'pending') return res.status(400).json({ success: false, error: 'Transfer already dispatched or processed' });
 
-        // Process Items
+        // Process Items: RESERVE at source (Makeng) - stock allocated for transfer, not yet deducted
         const items = transfer.items || [];
         for (const item of items) {
-            // 1. Deduct from Source
-            const { data: invItem } = await supabase.from('inventory').select('stock_quantity, reserved_quantity').eq('id', item.inventory_id).single();
-            if (invItem) {
-                const newQty = (invItem.stock_quantity || 0) - (item.quantity || 0);
-
-                await supabase.from('inventory').update({ stock_quantity: newQty }).eq('id', item.inventory_id);
-
-                // Log Movement
-                await supabase.from('stock_movements').insert({
-                    inventory_id: item.inventory_id,
-                    movement_type: 'transfer_out',
-                    quantity_change: -1 * Math.abs(item.quantity),
-                    previous_quantity: invItem.stock_quantity,
-                    new_quantity: newQty,
-                    reason: `Transfer ${transfer.transfer_number} to ${transfer.to_location}`,
-                    driver_id: transfer.driver_id,
-                    transfer_id: transfer.id,
-                    recorded_by: req.user ? req.user.email : 'system'
-                });
+            const qty = Math.abs(item.quantity || 0);
+            if (qty > 0) {
+                try {
+                    await reserveStock(
+                        item.inventory_id,
+                        qty,
+                        userEmail,
+                        `Transfer ${transfer.transfer_number} to ${transfer.to_location} (in transit)`
+                    );
+                } catch (stockErr) {
+                    console.warn(`⚠️ Reserve failed for item ${item.inventory_id}:`, stockErr.message);
+                    throw new Error(`Failed to reserve stock for transfer: ${stockErr.message}`);
+                }
             }
         }
 
@@ -1435,11 +1432,14 @@ exports.dispatchTransfer = async (req, res) => {
     }
 };
 
-// RECEIVE Transfer (Add Stock)
+// RECEIVE Transfer (Deduct from Source, Add to Destination)
 exports.receiveTransfer = async (req, res) => {
     try {
         const { id } = req.params;
         const supabase = req.app.locals.supabase;
+
+        const { releaseStock, decrementStock } = require('../utils/dbUtils');
+        const userEmail = req.user ? req.user.email : 'system';
 
         const { data: transfer, error: fetchError } = await supabase
             .from('stock_transfers')
@@ -1452,6 +1452,32 @@ exports.receiveTransfer = async (req, res) => {
 
         const items = transfer.items || [];
         for (const item of items) {
+            const qty = Math.abs(item.quantity || 0);
+            if (qty > 0) {
+                // 1. Release reservation at source (Makeng)
+                try {
+                    await releaseStock(
+                        item.inventory_id,
+                        qty,
+                        userEmail,
+                        `Transfer ${transfer.transfer_number} received at ${transfer.to_location}`
+                    );
+                } catch (relErr) {
+                    console.warn(`⚠️ Release reservation failed for item ${item.inventory_id}:`, relErr.message);
+                }
+                // 2. Deduct from source (Makeng) - physical removal confirmed
+                try {
+                    await decrementStock(
+                        item.inventory_id,
+                        qty,
+                        userEmail,
+                        `Transfer ${transfer.transfer_number} out to ${transfer.to_location}`
+                    );
+                } catch (decErr) {
+                    console.error(`❌ Deduct from source failed:`, decErr.message);
+                    throw new Error(`Failed to deduct stock from source: ${decErr.message}`);
+                }
+            }
             // Find equivalent item at Dest
             // Matching by Name + Category + Model + Color + Location = Dest
             let query = supabase.from('inventory')
@@ -1548,34 +1574,24 @@ exports.cancelTransfer = async (req, res) => {
         if (transfer.status === 'cancelled') return res.status(400).json({ success: false, error: 'Transfer is already cancelled' });
         if (transfer.status === 'completed') return res.status(400).json({ success: false, error: 'Cannot cancel a completed transfer' });
 
-        // 3. Logic: If in_transit, reverse the stock (return to Source)
+        // 3. Logic: If in_transit, release the reservation at source (stock was never deducted, only reserved)
         if (transfer.status === 'in_transit') {
+            const { releaseStock } = require('../utils/dbUtils');
+            const userEmail = req.user ? req.user.email : 'system';
             const items = transfer.items || [];
             for (const item of items) {
-                // Fetch current stock at the source location
-                const { data: invItem } = await supabase
-                    .from('inventory')
-                    .select('stock_quantity')
-                    .eq('id', item.inventory_id)
-                    .single();
-
-                if (invItem) {
-                    const newQty = (invItem.stock_quantity || 0) + (item.quantity || 0);
-
-                    // Update Inventory
-                    await supabase.from('inventory').update({ stock_quantity: newQty }).eq('id', item.inventory_id);
-
-                    // Log Movement (Reversal)
-                    await supabase.from('stock_movements').insert({
-                        inventory_id: item.inventory_id,
-                        movement_type: 'transfer_cancelled',
-                        quantity_change: item.quantity,
-                        previous_quantity: invItem.stock_quantity,
-                        new_quantity: newQty,
-                        reason: `CANCELLED: ${transfer.transfer_number} - Returned stock to ${transfer.from_location}`,
-                        transfer_id: transfer.id,
-                        recorded_by: req.user ? req.user.email : 'system'
-                    });
+                const qty = Math.abs(item.quantity || 0);
+                if (qty > 0) {
+                    try {
+                        await releaseStock(
+                            item.inventory_id,
+                            qty,
+                            userEmail,
+                            `CANCELLED: ${transfer.transfer_number} - Released reservation`
+                        );
+                    } catch (relErr) {
+                        console.warn(`⚠️ Release failed for item ${item.inventory_id}:`, relErr.message);
+                    }
                 }
             }
         }

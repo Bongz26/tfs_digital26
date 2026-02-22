@@ -161,12 +161,12 @@ const PLAN_BENEFITS = {
     cover: 5000,
     juice_liters: 15,
     cakes_liters: 40,
-    grocery_items: ["Rice", "Maize", "Sugar", "Oil", "Tea", "Cremora"]
+    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"]
   },
   Silver: {
     casket: "Economy Casket",
     cover: 10000,
-    grocery_items: ["Rice", "Maize", "Sugar", "Oil", "Tea", "Cremora"],
+    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
     tent: 1,
     table: 1,
     toilet: 1,
@@ -179,7 +179,7 @@ const PLAN_BENEFITS = {
   Gold: {
     casket: "Pongee Casket",
     cover: 15000,
-    grocery_items: ["Rice", "Maize", "Sugar", "Oil", "Tea", "Cremora"],
+    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
     tent: 1,
     table: 2,
     toilet: 1,
@@ -194,7 +194,7 @@ const PLAN_BENEFITS = {
   Platinum: {
     casket: "Raised HalfView Casket",
     cover: 20000,
-    grocery_items: ["Rice", "Maize", "Sugar", "Oil", "Tea", "Cremora"],
+    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -208,7 +208,7 @@ const PLAN_BENEFITS = {
   Black: {
     casket: "Four Tier Casket",
     cover: 30000,
-    grocery_items: ["Rice", "Maize", "Sugar", "Oil", "Tea", "Cremora"],
+    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -222,7 +222,7 @@ const PLAN_BENEFITS = {
   Pearl: {
     casket: "Princeton Dome Casket",
     cover: 40000,
-    grocery_items: ["Rice", "Maize", "Sugar", "Oil", "Tea", "Cremora"],
+    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -236,7 +236,7 @@ const PLAN_BENEFITS = {
   Ivory: {
     casket: "Four CNR Figurine",
     cover: 50000,
-    grocery_items: ["Rice", "Maize", "Sugar", "Oil", "Tea", "Cremora"],
+    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -254,6 +254,7 @@ const PLAN_BENEFITS = {
 const SPECIAL_PLAN_BENEFITS = {
   'Spring A': {
     cover: 6500,
+    airtime: 100,
     casket: "3-Tier Coffin",
     benefits: [
       "Full Service (Includes Fleet & Graveyard Setup)",
@@ -266,6 +267,7 @@ const SPECIAL_PLAN_BENEFITS = {
   },
   'Spring B': {
     cover: 6500,
+    airtime: 100,
     casket: "Econo Casket",
     benefits: [
       "Full Service (Includes Fleet & Graveyard Setup)",
@@ -1096,19 +1098,24 @@ export default function ConsultationForm() {
   };
 
   const renderBenefitsList = (data) => {
-    // FIX: Special handling for Private Still Born cases to exclude standard plan benefits
-    // Checks for "Still Born" in plan name OR "Still Born" in casket type OR "1.9 Feet" casket (standard for stillborns)
-    const isStillBorn = /still\s*born/i.test(data.plan_name || '')
-      || /still\s*born/i.test(data.casket_type || '')
-      || (data.casket_type || '').includes('1.9 Feet');
+    // Robust detection for Baby/Stillborn services (Case Insensitive)
+    const combinedText = `${data.plan_name || ''} ${data.casket_type || ''}`.toLowerCase();
+    const isBabyService = combinedText.includes('still born')
+      || combinedText.includes('stillborn')
+      || combinedText.includes('1.9 feet')
+      || combinedText.includes('2.1 feet')
+      || combinedText.includes('2.7 feet')
+      || combinedText.includes('3.0 feet')
+      || combinedText.includes('3.6 feet');
 
-    if (data.service_type === 'private' && isStillBorn) {
+    // If it's a baby/stillborn service (Private OR Book), strictly limit benefits
+    if (isBabyService) {
       return (
         <div className="space-y-2">
-          <div className="font-semibold">Private Service: {data.casket_type}</div>
+          <div className="font-semibold">{data.service_type === 'private' ? 'Private' : 'Plan'} Service: {data.casket_type || 'Baby Casket'}</div>
           <ul className="list-disc pl-5">
-            <li>Casket: {data.casket_type}</li>
-            <li>1 Service (Incl. Hearse)</li>
+            <li>Casket: {data.casket_type || 'Baby Casket'}</li>
+            <li>1 Service (Incl. Lead Car / Hearse)</li>
           </ul>
         </div>
       );
@@ -1943,7 +1950,9 @@ export default function ConsultationForm() {
                     type="button"
                     onClick={async () => {
                       try {
-                        const b = PLAN_BENEFITS[form.plan_name] || {};
+                        const b = form.plan_category === 'specials'
+                          ? (SPECIAL_PLAN_BENEFITS[form.plan_name] || {})
+                          : (PLAN_BENEFITS[form.plan_name] || {});
                         const amount = typeof b.airtime !== 'undefined' ? parseFloat(b.airtime) : 0;
                         if (!form.airtime_network || !form.airtime_number) {
                           setMessage('Provide Network and Number for airtime request');
@@ -2450,12 +2459,37 @@ export default function ConsultationForm() {
                 <div className="print-section">
                   <div className="print-section-title">SERVICE REQUIREMENTS & CHECKLIST</div>
                   <div className="checklist-grid">
-                    {printedData.benefit_exchange === 'standard' && (
-                      <>
-                        <div className="checklist-item"><span className="checklist-label">Casket Type</span> <span className="checklist-val">{printedData.casket_type}</span></div>
-                        <div className="checklist-item"><span className="checklist-label">Casket Colour</span> <span className="checklist-val">{printedData.casket_colour}</span></div>
-                      </>
-                    )}
+                    {(() => {
+                      const combinedText = `${printedData.plan_name || ''} ${printedData.casket_type || ''}`.toLowerCase();
+                      const isStillBorn = combinedText.includes('still born')
+                        || combinedText.includes('stillborn')
+                        || combinedText.includes('1.9 feet')
+                        || combinedText.includes('2.1 feet')
+                        || combinedText.includes('2.7 feet')
+                        || combinedText.includes('3.0 feet')
+                        || combinedText.includes('3.6 feet');
+
+                      if (isStillBorn) {
+                        return (
+                          <>
+                            <div className="checklist-item col-span-3">
+                              <span className="checklist-label">BABY SERVICE</span>
+                              <span className="checklist-val">Casket: {printedData.casket_type} | 1 Service (Lead Car)</span>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      if (printedData.benefit_exchange === 'standard') {
+                        return (
+                          <>
+                            <div className="checklist-item"><span className="checklist-label">Casket Type</span> <span className="checklist-val">{printedData.casket_type}</span></div>
+                            <div className="checklist-item"><span className="checklist-label">Casket Colour</span> <span className="checklist-val">{printedData.casket_colour}</span></div>
+                          </>
+                        );
+                      }
+                      return null;
+                    })()}
                     {/* Top-Up Display - Enhanced for Book Top-Up */}
                     {printedData.top_up_type === 'book' && printedData.top_up_amount > 0 ? (
                       <div className="checklist-item col-span-3 bg-blue-50 border-2 border-blue-300">
@@ -2507,38 +2541,50 @@ export default function ConsultationForm() {
                       </div>
                     )}
 
-                    <div className="checklist-item"><span className="checklist-label">Cow</span> <span className="checklist-val">{printedData.requires_cow ? 'YES' : 'NO'}</span></div>
-                    <div className="checklist-item"><span className="checklist-label">Sheep</span> <span className="checklist-val">{printedData.requires_sheep ? 'YES' : 'NO'}</span></div>
-                    <div className="checklist-item"><span className="checklist-label">Tombstone</span> <span className="checklist-val">{printedData.requires_tombstone ? (printedData.tombstone_type ? `YES (${printedData.tombstone_type})` : 'YES') : 'NO'}</span></div>
+                    {(() => {
+                      const combinedText = `${printedData.plan_name || ''} ${printedData.casket_type || ''}`.toLowerCase();
+                      const isStillBorn = combinedText.includes('still born')
+                        || combinedText.includes('stillborn')
+                        || combinedText.includes('1.9 feet')
+                        || combinedText.includes('2.1 feet')
+                        || combinedText.includes('2.7 feet')
+                        || combinedText.includes('3.0 feet')
+                        || combinedText.includes('3.6 feet');
 
-                    <div className="checklist-item"><span className="checklist-label">Flower</span> <span className="checklist-val">{printedData.requires_flower ? 'YES' : 'NO'}</span></div>
-                    <div className="checklist-item"><span className="checklist-label">Bus</span> <span className="checklist-val">{printedData.requires_bus ? 'YES' : 'NO'}</span></div>
-                    <div className="checklist-item">
-                      <span className="checklist-label">Programmes</span>
-                      <span className="checklist-val">
-                        {(() => {
-                          const isStillBorn = /still\s*born/i.test(printedData.plan_name || '')
-                            || /still\s*born/i.test(printedData.casket_type || '')
-                            || (printedData.casket_type || '').includes('1.9 Feet');
-                          return isStillBorn ? '0' : (printedData.programs || 'NO');
-                        })()}
-                      </span>
-                    </div>
+                      if (isStillBorn) return null; // Don't show standard checklist for babies
 
-                    <div className="checklist-item"><span className="checklist-label">Catering</span> <span className="checklist-val">{printedData.requires_catering ? 'YES' : 'NO'}</span></div>
-                    <div className="checklist-item"><span className="checklist-label">Airtime</span> <span className="checklist-val">{printedData.airtime ? 'YES' : 'NO'}</span></div>
-                    <div className="checklist-item"><span className="checklist-label">Network/No</span> <span className="checklist-val text-[9px]">{printedData.airtime ? `${printedData.airtime_network} ${printedData.airtime_number}` : '-'}</span></div>
+                      return (
+                        <>
+                          <div className="checklist-item"><span className="checklist-label">Cow</span> <span className="checklist-val">{printedData.requires_cow ? 'YES' : 'NO'}</span></div>
+                          <div className="checklist-item"><span className="checklist-label">Sheep</span> <span className="checklist-val">{printedData.requires_sheep ? 'YES' : 'NO'}</span></div>
+                          <div className="checklist-item"><span className="checklist-label">Tombstone</span> <span className="checklist-val">{printedData.requires_tombstone ? (printedData.tombstone_type ? `YES (${printedData.tombstone_type})` : 'YES') : 'NO'}</span></div>
 
-                    <div className="checklist-item col-span-3"><span className="checklist-label mr-2">Grocery:</span> <span className="checklist-val font-normal text-[9px]">
-                      {(() => {
-                        const isSpecial = printedData.plan_category === 'specials';
-                        const benefits = isSpecial ? (SPECIAL_PLAN_BENEFITS[printedData.plan_name] || {}) : (PLAN_BENEFITS[printedData.plan_name] || {});
-                        if (Array.isArray(benefits.grocery_items) && benefits.grocery_items.length > 0) return benefits.grocery_items.join(', ');
-                        if (benefits.grocery) return String(benefits.grocery);
-                        if (benefits.groceries) return String(benefits.groceries);
-                        return printedData.requires_grocery ? 'Standard Grocery Benefit' : 'None';
-                      })()}
-                    </span></div>
+                          <div className="checklist-item"><span className="checklist-label">Flower</span> <span className="checklist-val">{printedData.requires_flower ? 'YES' : 'NO'}</span></div>
+                          <div className="checklist-item"><span className="checklist-label">Bus</span> <span className="checklist-val">{printedData.requires_bus ? 'YES' : 'NO'}</span></div>
+                          <div className="checklist-item">
+                            <span className="checklist-label">Programmes</span>
+                            <span className="checklist-val">
+                              {printedData.programs || 'NO'}
+                            </span>
+                          </div>
+
+                          <div className="checklist-item"><span className="checklist-label">Catering</span> <span className="checklist-val">{printedData.requires_catering ? 'YES' : 'NO'}</span></div>
+                          <div className="checklist-item"><span className="checklist-label">Airtime</span> <span className="checklist-val">{printedData.airtime ? 'YES' : 'NO'}</span></div>
+                          <div className="checklist-item"><span className="checklist-label">Network/No</span> <span className="checklist-val text-[9px]">{printedData.airtime ? `${printedData.airtime_network} ${printedData.airtime_number}` : '-'}</span></div>
+
+                          <div className="checklist-item col-span-3"><span className="checklist-label mr-2">Grocery:</span> <span className="checklist-val font-normal text-[9px]">
+                            {(() => {
+                              const isSpecial = printedData.plan_category === 'specials';
+                              const benefits = isSpecial ? (SPECIAL_PLAN_BENEFITS[printedData.plan_name] || {}) : (PLAN_BENEFITS[printedData.plan_name] || {});
+                              if (Array.isArray(benefits.grocery_items) && benefits.grocery_items.length > 0) return benefits.grocery_items.join(', ');
+                              if (benefits.grocery) return String(benefits.grocery);
+                              if (benefits.groceries) return String(benefits.groceries);
+                              return printedData.requires_grocery ? 'Standard Grocery Benefit' : 'None';
+                            })()}
+                          </span></div>
+                        </>
+                      );
+                    })()}
 
                     {/* Extra Items Row */}
                     {(printedData.extra_chairs > 0 || printedData.extra_tables > 0 || printedData.extra_toilets > 0 || printedData.extra_tents > 0) && (

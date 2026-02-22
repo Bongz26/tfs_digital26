@@ -4,7 +4,8 @@ import { getAccessToken } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import { fetchDrivers } from "../api/drivers";
 import { updateRoster } from "../api/roster";
-import { updateCaseVenue, updateFuneralTime } from "../api/cases";
+import { updateCaseVenue, updateFuneralTime, updateCaseStatus } from "../api/cases";
+import { getNextStatuses, getStatusConfig } from "../utils/caseStatus";
 
 export default function VehicleCalendar() {
   const { isAdmin } = useAuth();
@@ -21,6 +22,7 @@ export default function VehicleCalendar() {
   const [editVehicle, setEditVehicle] = useState({});
   const [editStatus, setEditStatus] = useState({});
   const [saving, setSaving] = useState({});
+  const [changingStatus, setChangingStatus] = useState({});
   const [editingAssignments, setEditingAssignments] = useState({});
 
   const [editVenueName, setEditVenueName] = useState({});
@@ -114,6 +116,29 @@ export default function VehicleCalendar() {
       ? new Date(b.funeral_date) - new Date(a.funeral_date)
       : new Date(a.funeral_date) - new Date(b.funeral_date);
   });
+
+  // Status options for admin: next statuses + cancelled when applicable
+  const getStatusOptionsForAdmin = (currentStatus) => {
+    const next = getNextStatuses(currentStatus) || [];
+    const hasCancelled = next.some(s => s.value === "cancelled");
+    const canCancel = !["cancelled", "completed", "archived"].includes(currentStatus);
+    if (canCancel && !hasCancelled) {
+      return [...next, { value: "cancelled", ...getStatusConfig("cancelled") }];
+    }
+    return next;
+  };
+
+  const handleChangeCaseStatus = async (caseId, newStatus, notes) => {
+    try {
+      setChangingStatus(prev => ({ ...prev, [caseId]: true }));
+      await updateCaseStatus(caseId, newStatus, notes);
+      window.location.reload();
+    } catch (err) {
+      alert("Failed to update status: " + (err.response?.data?.error || err.message || "Unknown error"));
+    } finally {
+      setChangingStatus(prev => ({ ...prev, [caseId]: false }));
+    }
+  };
 
   /* ================= GROUPING ================= */
   const groupByCase = items => {
@@ -541,6 +566,39 @@ export default function VehicleCalendar() {
                         </div>
                       )}
 
+                      {/* Admin: Change Case Status */}
+                      {isAdmin() && getStatusOptionsForAdmin(group.case_status || "intake").length > 0 && (
+                        <div className="mt-2">
+                          <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Change Status</label>
+                          <select
+                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                            disabled={changingStatus[group.case_id]}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (!val) return;
+                              if (val === "cancelled") {
+                                const reason = window.prompt("Cancellation reason (required):");
+                                if (reason == null || String(reason).trim() === "") return;
+                                if (window.confirm(`Cancel this case? Reason: ${reason.trim()}`)) {
+                                  handleChangeCaseStatus(group.case_id, val, reason.trim());
+                                }
+                                e.target.value = "";
+                                return;
+                              }
+                              if (window.confirm(`Change status to "${getStatusConfig(val).label}"?`)) {
+                                handleChangeCaseStatus(group.case_id, val);
+                              }
+                              e.target.value = "";
+                            }}
+                          >
+                            <option value="">Update Status...</option>
+                            {getStatusOptionsForAdmin(group.case_status || "intake").map(s => (
+                              <option key={s.value} value={s.value}>{s.icon} {s.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
                       {isAdmin() && (
                         <div className="mt-2">
                           {!editCaseFuneralTime[group.case_id] ? (
@@ -917,6 +975,39 @@ export default function VehicleCalendar() {
                 </div>
               )}
 
+              {/* Admin: Change Case Status */}
+              {isAdmin() && getStatusOptionsForAdmin(group.case_status || "intake").length > 0 && (
+                <div className="mt-2">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Change Status</label>
+                  <select
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                    disabled={changingStatus[group.case_id]}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (!val) return;
+                      if (val === "cancelled") {
+                        const reason = window.prompt("Cancellation reason (required):");
+                        if (reason == null || String(reason).trim() === "") return;
+                        if (window.confirm(`Cancel this case? Reason: ${reason.trim()}`)) {
+                          handleChangeCaseStatus(group.case_id, val, reason.trim());
+                        }
+                        e.target.value = "";
+                        return;
+                      }
+                      if (window.confirm(`Change status to "${getStatusConfig(val).label}"?`)) {
+                        handleChangeCaseStatus(group.case_id, val);
+                      }
+                      e.target.value = "";
+                    }}
+                  >
+                    <option value="">Update Status...</option>
+                    {getStatusOptionsForAdmin(group.case_status || "intake").map(s => (
+                      <option key={s.value} value={s.value}>{s.icon} {s.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Global Group Badge */}
               {group.assignments?.[0]?.group_name && (
                 <div className="mt-2 inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase tracking-wider">
@@ -924,19 +1015,221 @@ export default function VehicleCalendar() {
                 </div>
               )}
 
-              {group.assignments && group.assignments.length > 0 && (
-                <div className="mt-3 text-sm text-gray-700">
-                  <div className="font-semibold text-gray-600 mb-1">Assignments:</div>
-                  {group.assignments.map((a, i) => (
-                    <div key={i} className="text-xs flex items-center gap-1">
-                      <span className="text-gray-400">•</span>
-                      <span className="font-medium">{a.driver_name || "TBD"}</span>
-                      <span className="text-gray-400">-</span>
-                      <span>{a.reg_number || a.vehicle_type || "Vehicle"}</span>
+              {isAdmin() && (
+                <div className="mt-2">
+                  {!editCaseFuneralTime[group.case_id] ? (
+                    <button
+                      className="text-xs text-blue-600 underline"
+                      onClick={() =>
+                        setEditCaseFuneralTime(prev => ({ ...prev, [group.case_id]: true }))
+                      }
+                    >
+                      Edit Time
+                    </button>
+                  ) : (
+                    <div className="flex gap-2 mt-2">
+                      <input
+                        type="time"
+                        className="border rounded px-2 py-1 text-sm"
+                        value={caseFuneralTimeValues[group.case_id] || ""}
+                        onChange={e =>
+                          setCaseFuneralTimeValues(prev => ({ ...prev, [group.case_id]: e.target.value }))
+                        }
+                      />
+                      <button
+                        className="bg-green-600 text-white px-2 py-1 rounded text-sm"
+                        onClick={async () => {
+                          await updateFuneralTime(group.case_id, caseFuneralTimeValues[group.case_id]);
+                          window.location.reload();
+                        }}
+                      >
+                        Save
+                      </button>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
+
+              <div className="mt-4 space-y-3">
+                {group.assignments && group.assignments.length > 0 && (() => {
+                  const driverGroups = {};
+                  group.assignments.forEach(a => {
+                    const driverKey = a.driver_name || 'TBD';
+                    if (!driverGroups[driverKey]) driverGroups[driverKey] = { driver: driverKey, assignments: [] };
+                    driverGroups[driverKey].assignments.push(a);
+                  });
+                  const groups = Object.values(driverGroups);
+
+                  if (groups.length === 1 && groups[0].assignments.length === 1) {
+                    const a = groups[0].assignments[0];
+                    return (
+                      <div
+                        key={a.id}
+                        className={`border rounded p-3 transition-colors ${editingAssignments[a.id] ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100' : 'bg-yellow-50 hover:bg-yellow-100 cursor-pointer'}`}
+                      >
+                        {editingAssignments[a.id] ? (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-500 uppercase">Driver</label>
+                              <select
+                                className="w-full border rounded p-1 text-sm bg-white"
+                                value={editDriver[a.id] !== undefined ? editDriver[a.id] : (a.driver_name || "")}
+                                onChange={(e) => setEditDriver(prev => ({ ...prev, [a.id]: e.target.value }))}
+                              >
+                                <option value="">Select Driver...</option>
+                                {drivers.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-500 uppercase">Vehicle</label>
+                              <select
+                                className="w-full border rounded p-1 text-sm bg-white"
+                                value={editVehicle[a.id] !== undefined ? editVehicle[a.id] : (a.vehicle_id || "")}
+                                onChange={(e) => setEditVehicle(prev => ({ ...prev, [a.id]: e.target.value }))}
+                              >
+                                <option value="">Select Vehicle...</option>
+                                {vehicles.map(v => <option key={v.id} value={v.id}>{v.type} - {v.reg_number}</option>)}
+                              </select>
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingAssignments(prev => ({ ...prev, [a.id]: false })); setPermissionError(null); }}
+                                className="px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200 rounded"
+                              >Cancel</button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  setSaving(prev => ({ ...prev, [a.id]: true }));
+                                  setPermissionError(null);
+                                  try {
+                                    const updates = {};
+                                    const dName = editDriver[a.id];
+                                    if (dName !== undefined && dName !== a.driver_name) updates.driver_name = dName;
+                                    const vId = editVehicle[a.id];
+                                    if (vId !== undefined && vId !== a.vehicle_id) updates.vehicle_id = vId;
+                                    if (Object.keys(updates).length > 0) {
+                                      await updateRoster(a.id, updates);
+                                      window.location.reload();
+                                    } else {
+                                      setEditingAssignments(prev => ({ ...prev, [a.id]: false }));
+                                    }
+                                  } catch (err) {
+                                    if (err.response?.status === 403) setPermissionError(err.response.data?.error || "Permission Denied");
+                                    else alert("Failed to update: " + (err.message || "Unknown error"));
+                                  } finally {
+                                    setSaving(prev => ({ ...prev, [a.id]: false }));
+                                  }
+                                }}
+                                disabled={saving[a.id]}
+                                className="px-3 py-1 text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 rounded shadow-sm"
+                              >{saving[a.id] ? "Saving..." : "Save Changes"}</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => {
+                              setEditingAssignments(prev => ({ ...prev, [a.id]: true }));
+                              setEditDriver(prev => ({ ...prev, [a.id]: a.driver_name }));
+                              setEditVehicle(prev => ({ ...prev, [a.id]: a.vehicle_id }));
+                            }}
+                            className="relative"
+                          >
+                            <div className="absolute top-0 right-0 opacity-0 hover:opacity-100 p-1">
+                              <span className="text-xs text-blue-600 font-bold bg-white px-1 rounded shadow">✎ EDIT</span>
+                            </div>
+                            <p className="font-semibold">👤 {a.driver_name || "Assign Driver..."}</p>
+                            <p className="text-sm text-gray-700">🚗 {a.vehicle_type || "Vehicle"} • {a.reg_number || "Assign..."}</p>
+                            <span className={`text-xs px-2 py-1 rounded ${a.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {a.status || "pending"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return groups.map((dg, gi) => (
+                    <div key={gi} className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-500 rounded-lg p-3">
+                      <div className="text-sm font-semibold text-gray-800 mb-2">👤 {dg.driver}</div>
+                      <div className="space-y-2">
+                        {dg.assignments.map(a => (
+                          <div
+                            key={a.id}
+                            className={`border rounded p-2 transition-colors ${editingAssignments[a.id] ? 'bg-blue-50 border-blue-300' : 'bg-white hover:bg-gray-50 cursor-pointer'}`}
+                          >
+                            {editingAssignments[a.id] ? (
+                              <div className="space-y-2">
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-500 uppercase">Driver</label>
+                                  <select
+                                    className="w-full border rounded p-1 text-xs bg-white"
+                                    value={editDriver[a.id] !== undefined ? editDriver[a.id] : (a.driver_name || "")}
+                                    onChange={(e) => setEditDriver(prev => ({ ...prev, [a.id]: e.target.value }))}
+                                  >
+                                    <option value="">Select Driver...</option>
+                                    {drivers.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-500 uppercase">Vehicle</label>
+                                  <select
+                                    className="w-full border rounded p-1 text-xs bg-white"
+                                    value={editVehicle[a.id] !== undefined ? editVehicle[a.id] : (a.vehicle_id || "")}
+                                    onChange={(e) => setEditVehicle(prev => ({ ...prev, [a.id]: e.target.value }))}
+                                  >
+                                    <option value="">Select Vehicle...</option>
+                                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.type} - {v.reg_number}</option>)}
+                                  </select>
+                                </div>
+                                <div className="flex justify-end gap-2 pt-1">
+                                  <button onClick={(e) => { e.stopPropagation(); setEditingAssignments(prev => ({ ...prev, [a.id]: false })); setPermissionError(null); }} className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200 rounded">Cancel</button>
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      setSaving(prev => ({ ...prev, [a.id]: true }));
+                                      setPermissionError(null);
+                                      try {
+                                        const updates = {};
+                                        const dName = editDriver[a.id];
+                                        if (dName !== undefined && dName !== a.driver_name) updates.driver_name = dName;
+                                        const vId = editVehicle[a.id];
+                                        if (vId !== undefined && vId !== a.vehicle_id) updates.vehicle_id = vId;
+                                        if (Object.keys(updates).length > 0) {
+                                          await updateRoster(a.id, updates);
+                                          window.location.reload();
+                                        } else {
+                                          setEditingAssignments(prev => ({ ...prev, [a.id]: false }));
+                                        }
+                                      } catch (err) {
+                                        if (err.response?.status === 403) setPermissionError(err.response.data?.error || "Permission Denied");
+                                        else alert("Failed to update: " + (err.message || "Unknown error"));
+                                      } finally {
+                                        setSaving(prev => ({ ...prev, [a.id]: false }));
+                                      }
+                                    }}
+                                    disabled={saving[a.id]}
+                                    className="px-2 py-1 text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 rounded"
+                                  >{saving[a.id] ? "Saving..." : "Save"}</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div
+                                onClick={() => {
+                                  setEditingAssignments(prev => ({ ...prev, [a.id]: true }));
+                                  setEditDriver(prev => ({ ...prev, [a.id]: a.driver_name }));
+                                  setEditVehicle(prev => ({ ...prev, [a.id]: a.vehicle_id }));
+                                }}
+                              >
+                                <p className="text-sm font-medium text-gray-800">🚗 {a.vehicle_type || "Vehicle"} • {a.reg_number || "Assign..."}</p>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${a.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{a.status || "pending"}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
             </div>
           ))}
         </div>
