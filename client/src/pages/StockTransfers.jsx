@@ -91,7 +91,7 @@ const StockTransfers = () => {
             const inv = inventory.find(i => i.id === parseInt(newItem.inventory_id));
             if (inv) {
                 const qtyToAdd = parseInt(newItem.quantity) || 1;
-                const existingIdx = currentFormData.items.findIndex(i => i.inventory_id === inv.id);
+                const existingIdx = currentFormData.items.findIndex(i => String(i.inventory_id) === String(inv.id));
 
                 if (existingIdx > -1) {
                     const newItems = [...currentFormData.items];
@@ -144,7 +144,7 @@ const StockTransfers = () => {
         const qtyToAdd = parseInt(newItem.quantity) || 1;
 
         setFormData(prev => {
-            const existingIdx = prev.items.findIndex(i => i.inventory_id === inv.id);
+            const existingIdx = prev.items.findIndex(i => String(i.inventory_id) === String(inv.id));
             if (existingIdx > -1) {
                 // Merge quantities
                 const newItems = [...prev.items];
@@ -182,7 +182,10 @@ const StockTransfers = () => {
         try {
             await receiveTransferRequest(id);
             loadData();
-        } catch (e) { alert(e.message); }
+        } catch (e) {
+            const msg = e.response?.data?.error || e.response?.data?.details || e.message;
+            alert('Failed to receive transfer: ' + (typeof msg === 'string' ? msg : JSON.stringify(msg)));
+        }
     };
 
     const handlePrintGatePass = (transfer) => {
@@ -283,7 +286,15 @@ const StockTransfers = () => {
                                     <label className="block text-xs font-semibold text-gray-500 uppercase">From</label>
                                     <select
                                         value={formData.from_location}
-                                        onChange={e => setFormData({ ...formData, from_location: e.target.value })}
+                                        onChange={e => {
+                                            const newLoc = e.target.value;
+                                            if (formData.items.length > 0 && newLoc !== formData.from_location) {
+                                                if (!window.confirm('Changing the source location will clear your current item list. Continue?')) return;
+                                                setFormData({ ...formData, from_location: newLoc, items: [] });
+                                            } else {
+                                                setFormData({ ...formData, from_location: newLoc });
+                                            }
+                                        }}
                                         className="w-full border p-2 rounded focus:ring-red-500 focus:border-red-500 disabled:bg-gray-100 disabled:text-gray-500"
                                         disabled={editingId && transfers.find(t => t.id === editingId)?.status === 'in_transit'}
                                     >
@@ -312,13 +323,16 @@ const StockTransfers = () => {
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase">Driver</label>
                                 <select
-                                    value={formData.driver_id}
-                                    onChange={e => setFormData({ ...formData, driver_id: e.target.value })}
+                                    value={formData.driver_id === null || formData.driver_id === undefined ? '' : String(formData.driver_id)}
+                                    onChange={e => {
+                                        const v = e.target.value;
+                                        setFormData({ ...formData, driver_id: v === '' ? '' : (parseInt(v, 10) || v) });
+                                    }}
                                     className="w-full border p-2 rounded focus:ring-red-500 focus:border-red-500"
                                 >
                                     <option value="">Select Driver (Optional)</option>
                                     {drivers.map(d => (
-                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                        <option key={d.id} value={String(d.id)}>{d.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -334,11 +348,13 @@ const StockTransfers = () => {
                                             onChange={e => setNewItem({ ...newItem, inventory_id: e.target.value })}
                                         >
                                             <option value="">Select Item</option>
-                                            {inventory.map(i => (
-                                                <option key={i.id} value={i.id}>
-                                                    {i.name} {i.model && `(${i.model})`} {i.color && `[${i.color}]`} - Stock: {i.stock_quantity}
-                                                </option>
-                                            ))}
+                                            {inventory
+                                                .filter(i => i.location === formData.from_location)
+                                                .map(i => (
+                                                    <option key={i.id} value={i.id}>
+                                                        {i.name} {i.model && `(${i.model})`} {i.color && `[${i.color}]`} - Stock: {i.stock_quantity}
+                                                    </option>
+                                                ))}
                                         </select>
                                         <input
                                             type="number"

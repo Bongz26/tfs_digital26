@@ -1338,7 +1338,10 @@ exports.updateTransfer = async (req, res) => {
         const updates = {};
         if (from_location !== undefined) updates.from_location = from_location;
         if (to_location !== undefined) updates.to_location = to_location;
-        if (driver_id !== undefined) updates.driver_id = driver_id === '' ? null : driver_id;
+        if (driver_id !== undefined) {
+            const v = driver_id === '' || driver_id === null ? null : (parseInt(driver_id, 10) || null);
+            updates.driver_id = v;
+        }
         if (items !== undefined) updates.items = items;
         if (notes !== undefined) updates.notes = notes;
 
@@ -1397,18 +1400,35 @@ exports.dispatchTransfer = async (req, res) => {
             }
         }
 
-        // Update Transfer Status
-        const { data: updated, error: updateError } = await supabase
+        // Update Transfer Status (reserved_on_dispatch = true for new flow)
+        const dispatchUpdate = {
+            status: 'in_transit',
+            dispatched_at: new Date().toISOString(),
+            reserved_on_dispatch: true
+        };
+        let updated;
+        const { data: updateData, error: updateError } = await supabase
             .from('stock_transfers')
-            .update({
-                status: 'in_transit',
-                dispatched_at: new Date().toISOString()
-            })
+            .update(dispatchUpdate)
             .eq('id', id)
             .select()
             .single();
 
-        if (updateError) throw updateError;
+        if (updateError && /reserved_on_dispatch|column.*does not exist/i.test(updateError.message || '')) {
+            const { reserved_on_dispatch, ...fallback } = dispatchUpdate;
+            const { data: fallbackData, error: fallbackErr } = await supabase
+                .from('stock_transfers')
+                .update(fallback)
+                .eq('id', id)
+                .select()
+                .single();
+            if (fallbackErr) throw fallbackErr;
+            updated = fallbackData;
+        } else if (updateError) {
+            throw updateError;
+        } else {
+            updated = updateData;
+        }
 
         // --- NEW: Notify Driver via SMS ---
         if (transfer.driver_id) {
@@ -1434,12 +1454,18 @@ exports.dispatchTransfer = async (req, res) => {
 
 // RECEIVE Transfer (Deduct from Source, Add to Destination)
 exports.receiveTransfer = async (req, res) => {
+    const { id } = req.params;
+    const log = (step, msg, data) => console.log(`[Receive ${id}] ${step}: ${msg}`, data !== undefined ? JSON.stringify(data) : '');
     try {
-        const { id } = req.params;
         const supabase = req.app.locals.supabase;
+        if (!supabase) {
+            log('init', 'No supabase client');
+            return res.status(500).json({ success: false, error: 'Database not configured' });
+        }
 
         const { releaseStock, decrementStock } = require('../utils/dbUtils');
         const userEmail = req.user ? req.user.email : 'system';
+        log('start', 'Fetching transfer');
 
         const { data: transfer, error: fetchError } = await supabase
             .from('stock_transfers')
@@ -1447,14 +1473,22 @@ exports.receiveTransfer = async (req, res) => {
             .eq('id', id)
             .single();
 
-        if (fetchError || !transfer) return res.status(404).json({ success: false, error: 'Transfer not found' });
+        if (fetchError) {
+            log('fetch', 'Transfer fetch error', { message: fetchError.message, code: fetchError.code, details: fetchError.details });
+            return res.status(404).json({ success: false, error: 'Transfer not found', details: fetchError.message });
+        }
+        if (!transfer) return res.status(404).json({ success: false, error: 'Transfer not found' });
         if (transfer.status !== 'in_transit') return res.status(400).json({ success: false, error: 'Transfer not in transit' });
 
+        const useNewFlow = transfer.reserved_on_dispatch === true;
         const items = transfer.items || [];
-        for (const item of items) {
+        log('items', 'Processing items', { count: items.length, useNewFlow, to_location: transfer.to_location });
+
+        for (let idx = 0; idx < items.length; idx++) {
+            const item = items[idx];
+            log(`item[${idx}]`, 'Processing', { inventory_id: item.inventory_id, name: item.name, quantity: item.quantity });
             const qty = Math.abs(item.quantity || 0);
-            if (qty > 0) {
-                // 1. Release reservation at source (Makeng)
+            if (qty > 0 && useNewFlow && item.inventory_id) {
                 try {
                     await releaseStock(
                         item.inventory_id,
@@ -1465,7 +1499,6 @@ exports.receiveTransfer = async (req, res) => {
                 } catch (relErr) {
                     console.warn(`⚠️ Release reservation failed for item ${item.inventory_id}:`, relErr.message);
                 }
-                // 2. Deduct from source (Makeng) - physical removal confirmed
                 try {
                     await decrementStock(
                         item.inventory_id,
@@ -1480,57 +1513,107 @@ exports.receiveTransfer = async (req, res) => {
             }
             // Find equivalent item at Dest
             // Matching by Name + Category + Model + Color + Location = Dest
-            let query = supabase.from('inventory')
+            const itemName = item.name || '';
+            if (!itemName && !item.inventory_id) {
+                console.warn('⚠️ Transfer item missing name and inventory_id, skipping');
+                continue;
+            }
+            let destQuery = supabase.from('inventory')
                 .select('id, stock_quantity')
                 .eq('location', transfer.to_location)
-                .ilike('name', item.name) // Name match
                 .eq('category', 'coffin');
+            if (itemName) destQuery = destQuery.ilike('name', itemName);
+            if (item.model) destQuery = destQuery.ilike('model', item.model);
+            if (item.color) destQuery = destQuery.ilike('color', item.color);
 
-            if (item.model) query = query.ilike('model', item.model);
-            if (item.color) query = query.ilike('color', item.color);
-
-            const { data: matches } = await query;
+            const { data: matches, error: matchErr } = await destQuery;
+            if (matchErr) {
+                log(`item[${idx}]`, 'Dest lookup error', { message: matchErr.message, code: matchErr.code });
+                throw matchErr;
+            }
             let destItemId = null;
             let prevQty = 0;
 
             if (matches && matches.length > 0) {
-                // Found existing pile
                 destItemId = matches[0].id;
                 prevQty = matches[0].stock_quantity;
+                log(`item[${idx}]`, 'Found existing dest', { destItemId, prevQty });
             } else {
-                // Create new item pile at Dest
-                const { data: sourceItem } = await supabase.from('inventory').select('*').eq('id', item.inventory_id).single();
-                const newItem = {
-                    ...sourceItem,
-                    id: undefined,
-                    created_at: undefined,
-                    updated_at: undefined,
-                    location: transfer.to_location,
-                    stock_quantity: 0,
-                    reserved_quantity: 0
-                };
-                const { data: created } = await supabase.from('inventory').insert(newItem).select().single();
+                // Create new item pile at Dest - use source item if it exists, else use transfer item data (source may have been deleted)
+                if (!itemName && !item.inventory_id) throw new Error(`Transfer item has no name or inventory_id`);
+                let newItem;
+                const { data: sourceItem, error: srcErr } = await supabase.from('inventory').select('name, category, sku, unit_price, low_stock_threshold, model, color, notes').eq('id', item.inventory_id).maybeSingle();
+                if (srcErr) {
+                    log(`item[${idx}]`, 'Source lookup error', { message: srcErr.message });
+                    throw new Error(`Source inventory lookup failed: ${srcErr.message}`);
+                }
+                if (sourceItem) {
+                    newItem = {
+                        name: sourceItem.name,
+                        category: sourceItem.category || 'coffin',
+                        sku: sourceItem.sku,
+                        unit_price: sourceItem.unit_price,
+                        low_stock_threshold: sourceItem.low_stock_threshold,
+                        model: sourceItem.model,
+                        color: sourceItem.color,
+                        notes: sourceItem.notes,
+                        location: transfer.to_location,
+                        stock_quantity: 0,
+                        reserved_quantity: 0
+                    };
+                } else {
+                    // Source item no longer exists (e.g. deleted) - create from transfer line item data
+                    log(`item[${idx}]`, 'Source item missing, using transfer item data', { inventory_id: item.inventory_id, name: itemName });
+                    newItem = {
+                        name: itemName || `Item ${item.inventory_id}`,
+                        category: 'coffin',
+                        sku: null,
+                        unit_price: null,
+                        low_stock_threshold: 1,
+                        model: item.model || null,
+                        color: item.color || null,
+                        notes: null,
+                        location: transfer.to_location,
+                        stock_quantity: 0,
+                        reserved_quantity: 0
+                    };
+                }
+                const { data: created, error: createErr } = await supabase.from('inventory').insert(newItem).select().single();
+                if (createErr) {
+                    log(`item[${idx}]`, 'Create dest item error', { message: createErr.message, code: createErr.code, details: createErr.details });
+                    throw new Error(`Failed to create dest item: ${createErr.message}`);
+                }
                 destItemId = created.id;
+                log(`item[${idx}]`, 'Created dest item', { destItemId });
             }
 
-            // Increment
-            const newQty = prevQty + (item.quantity || 0);
-            await supabase.from('inventory').update({ stock_quantity: newQty }).eq('id', destItemId);
+            // Increment (ensure numeric to avoid string concat)
+            const addQty = Number(item.quantity) || 0;
+            const newQty = Number(prevQty) + addQty;
+            const { error: updInvErr } = await supabase.from('inventory').update({ stock_quantity: newQty, updated_at: new Date() }).eq('id', destItemId);
+            if (updInvErr) {
+                log(`item[${idx}]`, 'Update dest stock error', { message: updInvErr.message, code: updInvErr.code });
+                throw new Error(`Failed to update dest stock: ${updInvErr.message}`);
+            }
 
-            // Log Movement
-            await supabase.from('stock_movements').insert({
+            // Log Movement (only columns that exist in base schema - driver_id/transfer_id may not exist)
+            const movementPayload = {
                 inventory_id: destItemId,
-                movement_type: 'transfer_in',
-                quantity_change: item.quantity,
-                previous_quantity: prevQty,
+                movement_type: 'adjustment', // DB constraint may not allow 'transfer_in'; reason records transfer
+                quantity_change: addQty,
+                previous_quantity: Number(prevQty),
                 new_quantity: newQty,
                 reason: `Transfer ${transfer.transfer_number} from ${transfer.from_location}`,
-                driver_id: transfer.driver_id,
-                transfer_id: transfer.id,
                 recorded_by: req.user ? req.user.email : 'system'
-            });
+            };
+            const { error: movErr } = await supabase.from('stock_movements').insert(movementPayload);
+            if (movErr) {
+                log(`item[${idx}]`, 'Stock movement insert error', { message: movErr.message, code: movErr.code, details: movErr.details });
+                throw movErr;
+            }
         }
 
+        log('complete', 'Updating transfer status to completed');
         // Complete Transfer
         const { data: updated, error: updateError } = await supabase
             .from('stock_transfers')
@@ -1543,13 +1626,24 @@ exports.receiveTransfer = async (req, res) => {
             .select()
             .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+            log('complete', 'Transfer status update error', { message: updateError.message, code: updateError.code });
+            throw updateError;
+        }
 
+        log('done', 'Receive completed successfully');
         res.json({ success: true, transfer: updated });
 
     } catch (err) {
-        console.error('❌ Receive Transfer Error:', err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error('❌ Receive Transfer Error:', err.message, err.stack);
+        console.error('❌ Receive Transfer Error (full):', { message: err.message, code: err.code, details: err.details, hint: err.hint });
+        const message = err.message || 'Receive failed';
+        const details = err.details || err.hint || err.code;
+        res.status(500).json({
+            success: false,
+            error: message,
+            details: details || (typeof err.toString === 'function' ? err.toString() : undefined)
+        });
     }
 };
 

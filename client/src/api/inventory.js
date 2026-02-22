@@ -213,7 +213,10 @@ export const receiveTransferRequest = async (id) => {
         });
         return res.data;
     } catch (err) {
-        console.error("Error receiving transfer:", err.response || err);
+        const res = err.response;
+        console.error("[Receive Transfer] Failed:", res?.status, res?.statusText);
+        if (res?.data) console.error("[Receive Transfer] Response body:", JSON.stringify(res.data, null, 2));
+        console.error("[Receive Transfer] Full error:", err.message, err);
         throw err;
     }
 };

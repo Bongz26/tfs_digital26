@@ -166,10 +166,54 @@ router.patch('/:id', async (req, res) => {
       return res.status(400).json({ success: false, error: 'No valid fields to update' });
     }
 
+    // ================== GLOBAL LIVE-ROSTER PROTECTION ==================
+    // Disallow any non-admin edits to roster entries that belong to a "live" case
+    const isAdmin = req.user && String(req.user.role).toLowerCase() === 'admin';
+    let caseStatus = null;
+    let caseName = null;
+    if (supabase) {
+      const { data: rosterData, error: rosterErr } = await supabase
+        .from('roster')
+        .select('case_id, cases:case_id (status, deceased_name, case_number)')
+        .eq('id', id)
+        .limit(1);
+      if (rosterErr) {
+        console.error('Error fetching roster/case via Supabase:', rosterErr);
+        throw rosterErr;
+      }
+      const rosterEntry = Array.isArray(rosterData) ? rosterData[0] : rosterData;
+      if (rosterEntry && rosterEntry.cases) {
+        caseStatus = rosterEntry.cases.status;
+        caseName = rosterEntry.cases.deceased_name || rosterEntry.cases.case_number;
+      }
+    } else {
+      const caseRes = await query(
+        `SELECT c.status, c.deceased_name, c.case_number 
+         FROM cases c 
+         JOIN roster r ON r.case_id = c.id 
+         WHERE r.id = $1`,
+        [id]
+      );
+      if (caseRes.rows.length > 0) {
+        caseStatus = caseRes.rows[0].status;
+        caseName = caseRes.rows[0].deceased_name || caseRes.rows[0].case_number;
+      }
+    }
+
+    const lockedStatuses = ['scheduled', 'in_progress', 'completed'];
+    const isLocked = caseStatus && lockedStatuses.includes(String(caseStatus).toLowerCase());
+    if (isLocked && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: `This roster entry belongs to a live case (${caseName}). Only administrators may modify live roster or vehicle calendar entries.`,
+        case_status: caseStatus,
+        requires_admin: true
+      });
+    }
+    // ================== END GLOBAL LIVE-ROSTER PROTECTION ==================
+
     // ================== ADMIN-ONLY OVERRIDE CHECK ==================
     // Check if updating driver or vehicle and if case is already submitted/scheduled
-    const isAdmin = req.user && String(req.user.role).toLowerCase() === 'admin';
-
     if (driver_name != null || vehicle_id != null) {
       // Get the case associated with this roster entry
       let caseStatus = null;
@@ -380,10 +424,46 @@ router.delete('/:id', async (req, res) => {
     const supabase = req.app.locals.supabase;
     const id = parseInt(req.params.id, 10);
 
-    // Only allow admins or dispatchers to delete?
-    // For now, allow logged in users as per app logic (auth middleware handles basic login)
-    // Ideally check if user has permission, but let's stick to consistent pattern.
+    // Only allow admins to delete roster entries that belong to a live case
+    const isAdmin = req.user && String(req.user.role).toLowerCase() === 'admin';
+    let caseStatus = null;
+    let caseName = null;
+    if (supabase) {
+      const { data: rosterData, error: rosterErr } = await supabase
+        .from('roster')
+        .select('case_id, cases:case_id (status, deceased_name, case_number)')
+        .eq('id', id)
+        .limit(1);
+      if (rosterErr) throw rosterErr;
+      const rosterEntry = Array.isArray(rosterData) ? rosterData[0] : rosterData;
+      if (rosterEntry && rosterEntry.cases) {
+        caseStatus = rosterEntry.cases.status;
+        caseName = rosterEntry.cases.deceased_name || rosterEntry.cases.case_number;
+      }
+    } else {
+      const caseRes = await query(
+        `SELECT c.status, c.deceased_name, c.case_number 
+         FROM cases c 
+         JOIN roster r ON r.case_id = c.id 
+         WHERE r.id = $1`,
+        [id]
+      );
+      if (caseRes.rows.length > 0) {
+        caseStatus = caseRes.rows[0].status;
+        caseName = caseRes.rows[0].deceased_name || caseRes.rows[0].case_number;
+      }
+    }
 
+    const lockedStatuses = ['scheduled', 'in_progress', 'completed'];
+    const isLocked = caseStatus && lockedStatuses.includes(String(caseStatus).toLowerCase());
+    if (isLocked && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: `This roster entry belongs to a live case (${caseName}). Only administrators may delete live roster or vehicle calendar entries.`,
+        case_status: caseStatus,
+        requires_admin: true
+      });
+    }
     if (supabase) {
       const { error } = await supabase
         .from('roster')

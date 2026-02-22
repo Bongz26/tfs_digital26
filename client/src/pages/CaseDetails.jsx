@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchCaseById, assignVehicle, updateCase } from '../api/cases';
+import { fetchCaseById, assignVehicle, updateCase, fetchCaseAuditLog } from '../api/cases';
 import { fetchDrivers } from '../api/drivers';
 import { fetchVehicles } from '../api/vehicles';
 import { fetchRoster, updateRoster } from '../api/roster';
@@ -22,6 +22,7 @@ export default function CaseDetails() {
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [caseRoster, setCaseRoster] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -37,15 +38,17 @@ export default function CaseDetails() {
         setCaseData(data);
 
         try {
-          // Load drivers, roster, and vehicles in parallel
-          const [drv, rost, veh] = await Promise.all([
+          // Load drivers, roster, vehicles, and audit logs in parallel
+          const [drv, rost, veh, logs] = await Promise.all([
             fetchDrivers(),
             fetchRoster(),
-            fetchVehicles() // Use the imported, authenticated fetcher
+            fetchVehicles(),
+            fetchCaseAuditLog(id)
           ]);
           setDrivers(drv);
           setCaseRoster((rost || []).filter(r => String(r.case_id) === String(id)));
           setVehicles(veh);
+          setAuditLogs(logs || []);
         } catch (innerErr) {
           console.warn("Error loading auxiliary data:", innerErr);
         }
@@ -437,6 +440,48 @@ export default function CaseDetails() {
         )}
       </div>
 
+      <div className="mt-10 p-4 sm:p-6 rounded-xl shadow bg-white">
+        <h2 className="font-bold text-lg mb-4">Activity History</h2>
+        {auditLogs.length === 0 ? (
+          <div className="text-sm text-gray-500 italic">No activity recorded yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="p-2 font-semibold text-gray-600">Action</th>
+                  <th className="p-2 font-semibold text-gray-600">Details</th>
+                  <th className="p-2 font-semibold text-gray-600">User</th>
+                  <th className="p-2 font-semibold text-gray-600">Date/Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.map((log) => (
+                  <tr key={log.id} className="border-b hover:bg-gray-50 transition">
+                    <td className="p-2 align-top font-medium uppercase text-xs text-gray-700">
+                      {log.action.replace(/_/g, ' ')}
+                    </td>
+                    <td className="p-2 align-top text-gray-600">
+                      {log.notes || (
+                        <div className="text-xs">
+                          {log.action === 'case_create' ? 'Case Created' : 'Details updated'}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-2 align-top text-gray-500 text-xs">
+                      {log.user_email || 'System'}
+                    </td>
+                    <td className="p-2 align-top text-gray-500 text-xs whitespace-nowrap">
+                      {new Date(log.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <AssignVehicleModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -446,6 +491,7 @@ export default function CaseDetails() {
         caseNumber={caseData.case_number}
         caseId={id}
       />
+
     </div >
   );
 }
