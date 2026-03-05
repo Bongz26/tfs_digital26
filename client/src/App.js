@@ -332,27 +332,37 @@ function Navigation() {
 }
 
 function AppContent() {
-  axios.interceptors.request.use((config) => {
-    const token = getAccessToken();
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  });
-  axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      const status = error?.response?.status;
-      if (status === 401) {
-        clearAuthData();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const requestInterceptor = axios.interceptors.request.use((config) => {
+      const token = getAccessToken();
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
       }
-      return Promise.reject(error);
-    }
-  );
+      return config;
+    });
+
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const status = error?.response?.status;
+        if (status === 401) {
+          clearAuthData();
+          navigate('/login');
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptors on unmount to prevent stacking
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, [navigate]);
+
   return (
     <>
       <Navigation />
