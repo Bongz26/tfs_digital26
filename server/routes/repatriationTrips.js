@@ -72,8 +72,8 @@ router.post('/', async (req, res) => {
 
     console.log('Received Repatriation Payload:', req.body); // DEBUG LOG
 
-    // If collection_type is 'ems' or 'police' or 'family', vehicle and odometer are not required
-    const isExternalTransport = ['ems', 'police', 'family'].includes((collection_type || '').toLowerCase());
+    // If collection_type is 'ems' or 'police' or 'family' or 'private', vehicle and odometer are not required
+    const isExternalTransport = ['ems', 'police', 'family', 'private'].includes((collection_type || '').toLowerCase());
 
     if (!isExternalTransport && (!vehicle_id || odometer_closing === undefined || odometer_closing === null)) {
       return res.status(400).json({ success: false, error: 'vehicle_id and odometer_closing are required for internal fleet trips' });
@@ -226,20 +226,20 @@ router.post('/', async (req, res) => {
        RETURNING *`,
       [
         finalCaseId,
-        vehicle_id ? parseInt(vehicle_id) : null,
-        driver_id ? parseInt(driver_id) : null,
-        from_location || null,
-        from_address || null,
-        to_location || null,
-        to_address || null,
+        vehicle_id !== undefined && vehicle_id !== null ? parseInt(vehicle_id) : null,
+        driver_id !== undefined && driver_id !== null ? parseInt(driver_id) : null,
+        from_location === undefined ? null : from_location,
+        from_address === undefined ? null : from_address,
+        to_location === undefined ? null : to_location,
+        to_address === undefined ? null : to_address,
         closingVal,
         kmTraveled,
-        time_out || null,
-        time_in,
-        finalNotes,
+        time_out === undefined ? null : time_out,
+        time_in === undefined ? null : time_in,
+        finalNotes === undefined ? null : finalNotes,
         req.user?.full_name || req.user?.email || created_by || 'system',
-        tag_number || null,
-        collection_type || null
+        tag_number === undefined ? null : tag_number,
+        collection_type === undefined ? null : collection_type
       ]
     );
 
