@@ -237,7 +237,7 @@ router.post('/', async (req, res) => {
         time_out || null,
         time_in,
         finalNotes,
-        created_by || null,
+        req.user?.full_name || req.user?.email || created_by || 'system',
         tag_number || null,
         collection_type || null
       ]

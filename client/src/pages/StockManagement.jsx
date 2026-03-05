@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { API_HOST } from '../api/config';
 import { getAccessToken, clearAuthData } from '../api/auth';
 import StockTakeModal from '../components/StockTake/StockTakeModal';
@@ -61,6 +62,7 @@ const generateStockReportPDF = (inventory) => {
 
 
 export default function StockManagement() {
+  const navigate = useNavigate();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -114,7 +116,7 @@ export default function StockManagement() {
       if (response.status === 401) {
         // Session expired
         clearAuthData();
-        window.location.href = '/login';
+        navigate('/login');
         return;
       }
 
@@ -136,7 +138,7 @@ export default function StockManagement() {
     } finally {
       setLoading(false);
     }
-  }, [API_URL]);
+  }, [API_URL, navigate]);
 
   const fetchMovements = useCallback(async () => {
     try {
@@ -357,7 +359,7 @@ export default function StockManagement() {
 
       if (response.status === 401) {
         clearAuthData();
-        window.location.href = '/login';
+        navigate('/login');
         return;
       }
 

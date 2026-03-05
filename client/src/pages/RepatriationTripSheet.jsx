@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { API_HOST } from '../api/config';
-import { getAccessToken } from '../api/auth';
+import { Link } from 'react-router-dom';
+import { fetchVehicles } from '../api/vehicles';
+import { fetchDrivers } from '../api/drivers';
+import { saveRepatriationTrip, fetchLastClosingOdo } from '../api/repatriationTrips';
 
 export default function RepatriationTripSheet() {
   const [form, setForm] = useState({
@@ -54,53 +56,41 @@ export default function RepatriationTripSheet() {
 
   useEffect(() => {
     // Load vehicles and drivers for selection
-    (async () => {
+    const loadInitialData = async () => {
       try {
-        const token = getAccessToken();
-        const vRes = await fetch(`${API_HOST}/api/vehicles`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
-        if (vRes.status === 401) {
+        const [vData, dData] = await Promise.all([
+          fetchVehicles(),
+          fetchDrivers()
+        ]);
+        setVehicles(vData);
+        setDrivers(dData);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        if (error.response?.status === 401) {
           setAuthError('Your session has expired. Please login again to load vehicles and drivers.');
-          return;
         }
-        const vJson = await vRes.json();
-        setVehicles(Array.isArray(vJson.vehicles) ? vJson.vehicles : []);
-      } catch (e) { }
-      try {
-        const token2 = getAccessToken();
-        const dRes = await fetch(`${API_HOST}/api/drivers`, {
-          headers: token2 ? { Authorization: `Bearer ${token2}` } : {}
-        });
-        if (dRes.status === 401) {
-          setAuthError('Your session has expired. Please login again to load vehicles and drivers.');
-          return;
-        }
-        const dJson = await dRes.json();
-        setDrivers(Array.isArray(dJson.drivers) ? dJson.drivers : []);
-      } catch (e) { }
-    })();
+      }
+    };
+    loadInitialData();
   }, []);
 
   useEffect(() => {
     // When vehicle changes, fetch last closing from API
-    (async () => {
+    const loadLastClosing = async () => {
       if (!form.vehicle_id) return;
       try {
-        const token = getAccessToken();
-        const res = await fetch(`${API_HOST}/api/repatriation-trips/last-closing?vehicleId=${form.vehicle_id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
-        if (res.status === 401) {
+        const data = await fetchLastClosingOdo(form.vehicle_id);
+        if (data && data.success) {
+          setLastClosingOdo(data.last_closing ?? '');
+        }
+      } catch (error) {
+        console.error('Error loading last odometer closing:', error);
+        if (error.response?.status === 401) {
           setAuthError('Your session has expired. Please login again to load last odometer closing.');
-          return;
         }
-        const json = await res.json();
-        if (json && json.success) {
-          setLastClosingOdo(json.last_closing ?? '');
-        }
-      } catch (e) { }
-    })();
+      }
+    };
+    loadLastClosing();
   }, [form.vehicle_id]);
 
   return (
@@ -113,7 +103,7 @@ export default function RepatriationTripSheet() {
 
         {authError && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {authError} <a href="/login" className="underline ml-1">Login</a>
+            {authError} <Link to="/login" className="underline ml-1">Login</Link>
           </div>
         )}
 
@@ -294,16 +284,9 @@ export default function RepatriationTripSheet() {
                   tag_number: form.tag_number || null,
                   created_by: 'system'
                 };
-                const token = getAccessToken();
-                const res = await fetch(`${API_HOST}/api/repatriation-trips`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {})
-                  },
-                  body: JSON.stringify(payload)
-                });
-                const json = await res.json();
+
+                const json = await saveRepatriationTrip(payload);
+
                 if (json && json.success) {
                   const last = json.last_closing ?? '';
                   setLastClosingOdo(last);
@@ -337,8 +320,10 @@ export default function RepatriationTripSheet() {
                 } else {
                   alert(`Error: ${json.error || 'Failed to save trip'}`);
                 }
-              } catch (e) {
-                alert('Error saving trip');
+              } catch (error) {
+                console.error('Error saving trip:', error);
+                const errorMsg = error.response?.data?.error || error.message || 'Error saving trip';
+                alert(`Error: ${errorMsg}`);
               }
             }} className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold">Save Trip</button>
             <button onClick={handlePrint} className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold">Print</button>

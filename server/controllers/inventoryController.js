@@ -1518,15 +1518,48 @@ exports.receiveTransfer = async (req, res) => {
                 console.warn('⚠️ Transfer item missing name and inventory_id, skipping');
                 continue;
             }
-            let destQuery = supabase.from('inventory')
-                .select('id, stock_quantity')
-                .eq('location', transfer.to_location)
+            // Destination matching strategy (to avoid duplicates):
+            // 1) Try strict match by (location + category + model + color), including NULL color/model handling.
+            // 2) Fallback to name-only match if strict match finds nothing (older data may not have model/color filled).
+            const baseDestQuery = () => supabase
+                .from('inventory')
+                .select('id, stock_quantity, name, model, color')
+                // case-insensitive exact match for location to avoid "Head Office" vs "HEAD OFFICE"
+                .ilike('location', transfer.to_location)
                 .eq('category', 'coffin');
-            if (itemName) destQuery = destQuery.ilike('name', itemName);
-            if (item.model) destQuery = destQuery.ilike('model', item.model);
-            if (item.color) destQuery = destQuery.ilike('color', item.color);
 
-            const { data: matches, error: matchErr } = await destQuery;
+            const modelVal = (item.model || '').trim();
+            const colorVal = (item.color || '').trim();
+
+            let matches = [];
+            let matchErr = null;
+
+            // (1) Strict match by model/color when we have a model (preferred)
+            if (modelVal) {
+                let q = baseDestQuery().ilike('model', modelVal);
+                if (colorVal) q = q.ilike('color', colorVal);
+                else q = q.is('color', null);
+                const r = await q;
+                matches = r.data || [];
+                matchErr = r.error || null;
+            }
+
+            // (2) Fallback to exact-ish name match when strict match didn't find anything
+            if (!matchErr && (!matches || matches.length === 0) && itemName) {
+                let q2 = baseDestQuery().ilike('name', itemName);
+                // If we have color/model, try to use them, but don't block match if destination has NULLs
+                if (modelVal) q2 = q2.or(`model.is.null,model.ilike.${modelVal}`);
+                if (colorVal) q2 = q2.or(`color.is.null,color.ilike.${colorVal}`);
+                const r2 = await q2;
+                matches = r2.data || [];
+                matchErr = r2.error || null;
+            }
+
+            if (!matchErr && (!matches || matches.length === 0) && !modelVal && !itemName && item.inventory_id) {
+                // last-ditch: no identifying fields - this shouldn't really happen, but don't silently create junk rows
+                throw new Error(`No matching fields to locate destination item (inventory_id=${item.inventory_id})`);
+            }
+
             if (matchErr) {
                 log(`item[${idx}]`, 'Dest lookup error', { message: matchErr.message, code: matchErr.code });
                 throw matchErr;

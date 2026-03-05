@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { API_HOST } from "../api/config";
 import { getAccessToken } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
@@ -212,7 +213,7 @@ export default function VehicleCalendar() {
     <div>
       {authError && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {authError} <a href="/login" className="underline ml-1">Login</a>
+          {authError} <Link to="/login" className="underline ml-1">Login</Link>
         </div>
       )}
 

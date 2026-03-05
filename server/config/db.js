@@ -34,6 +34,19 @@ const initPool = async () => {
 
   try {
     const url = new URL(databaseUrl);
+
+    // Skip manual IP resolution for connection poolers - they require the hostname for routing
+    if (url.hostname.includes('pooler')) {
+      console.log(`ℹ️ Using connection pooler: ${url.hostname} (skipping manual IP resolution)`);
+      return new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        connectionTimeoutMillis: 30000,
+        idleTimeoutMillis: 30000,
+        max: 20
+      });
+    }
+
     console.log(`🔍 Resolving IP for ${url.hostname}...`);
     const ip = await resolveIP(url.hostname);
     console.log(`✅ Resolved ${url.hostname} to: ${ip}`);
@@ -49,7 +62,7 @@ const initPool = async () => {
   const pool = new Pool({
     connectionString,
     ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 10000,
+    connectionTimeoutMillis: 30000,
     idleTimeoutMillis: 30000,
     max: 20
   });

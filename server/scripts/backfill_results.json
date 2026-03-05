@@ -1,0 +1,82 @@
+[
+  {
+    "case_number": "THS-2026-053",
+    "service_date": "2026-02-20",
+    "casket_type": "PONGEE - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-058",
+    "service_date": "2026-02-20",
+    "casket_type": "1/4 View - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-059",
+    "service_date": "2026-02-20",
+    "casket_type": "1/4 View - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-062",
+    "service_date": "2026-02-20",
+    "casket_type": "1/4 View - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-066",
+    "service_date": "2026-02-20",
+    "casket_type": "ECONO - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-067",
+    "service_date": "2026-02-20",
+    "casket_type": "RAISED HALFVIEW - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-068",
+    "service_date": "2026-02-20",
+    "casket_type": "3 Tier - COFFIN",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-069",
+    "service_date": "2026-02-20",
+    "casket_type": "1/4 View - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-070",
+    "service_date": "2026-02-20",
+    "casket_type": "1/4 View - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  },
+  {
+    "case_number": "THS-2026-073",
+    "service_date": "2026-02-20",
+    "casket_type": "1/4 View - CASKET",
+    "branch": "Head Office",
+    "status": "Unknown",
+    "details": "No backfill or existing sale found (check casket_type)"
+  }
+]

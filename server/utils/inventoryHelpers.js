@@ -31,7 +31,7 @@ exports.findOrCreateInventoryItem = async (supabase, { name, color, branch, cate
         .from('inventory')
         .select('id, stock_quantity, reserved_quantity, name, model, color, unit_price, low_stock_threshold, sku, description, supplier, location')
         .eq('category', category)
-        .eq('location', selectedBranch)
+        .ilike('location', selectedBranch) // Case-insensitive search
         .ilike('name', primaryName)
         .order('stock_quantity', { ascending: false });
 
@@ -76,18 +76,20 @@ exports.findOrCreateInventoryItem = async (supabase, { name, color, branch, cate
 
     const template = templates && templates.length > 0 ? templates[0] : {};
 
-    // B. Insert new item (Strict Column Mapping)
+    // B. Insert new item (Use normalized branch for creation)
+    const normalizedBranch = (branch || 'Head Office').trim(); // Preserve original casing or use standard
+
     const newItemObj = {
         name: primaryName,
         model: modelMatch || template.model || '',
         color: colorStr || template.color || '',
         category: category,
-        location: selectedBranch, // Already uppercased
+        location: normalizedBranch,
         stock_quantity: 0,
         reserved_quantity: 0,
         low_stock_threshold: 5,
         unit_price: template.unit_price || 0,
-        sku: template.sku ? `${template.sku}-${selectedBranch.substring(0, 3).toUpperCase()}` : `AUTO-${Date.now()}`,
+        sku: template.sku ? `${template.sku}-${normalizedBranch.substring(0, 3).toUpperCase()}` : `AUTO-${Date.now()}`,
         notes: `Auto-created for Case ${caseNumber || 'Unknown'}`
     };
 

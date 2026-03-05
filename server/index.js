@@ -27,12 +27,14 @@ const authRoutes = require('./routes/auth');
 
 const { scheduleWeeklyReport } = require('./cron/weeklyReport');
 const { scheduleStockReport } = require('./cron/weeklyStockEmail');
+const { scheduleKeepAlive } = require('./cron/keepAlive');
 
 const app = express();
 
 // Initialize Services
 scheduleWeeklyReport();
 scheduleStockReport();
+scheduleKeepAlive();
 
 // Initialize Supabase client for routes that need it
 // Initialize Supabase client for routes that need it

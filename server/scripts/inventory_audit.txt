@@ -1,0 +1,12 @@
+--- Inventory Schema Check ---
+Columns: id (integer), name (character varying), category (character varying), stock_quantity (integer), reserved_quantity (integer), location (character varying), low_stock_threshold (integer), unit_price (numeric), sku (character varying), barcode (character varying), supplier (character varying), expiry_date (date), last_stock_count (date), image_url (text), notes (text), created_at (timestamp without time zone), updated_at (timestamp without time zone), supplier_id (integer), created_by_user_id (uuid), updated_by_user_id (uuid), model (character varying), color (character varying)
+
+--- Duplicate Detection (1/4 View) ---
+ID: 150 | Name: 1/4 View | Model: CASKET | Color: KIAAT | Loc: Head Office | Qty: 6/0 | SKU: null | Notes: 
+ID: 81 | Name: 1/4 View | Model: CASKET | Color: CHERRY | Loc: Makeneng | Qty: 0/0 | SKU: null | Notes: null
+ID: 5 | Name: 1/4 View | Model: CASKET | Color: KIAAT | Loc: Makeneng | Qty: 5/0 | SKU: null | Notes: 
+
+--- All Unique Locations and Counts ---
+- Bethlehem Branch: 3
+- Head Office: 43
+- Makeneng: 37
