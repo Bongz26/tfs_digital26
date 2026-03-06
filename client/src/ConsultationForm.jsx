@@ -161,12 +161,12 @@ const PLAN_BENEFITS = {
     cover: 5000,
     juice_liters: 15,
     cakes_liters: 40,
-    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"]
+    grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"]
   },
   Silver: {
     casket: "Economy Casket",
     cover: 10000,
-    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
+    grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
     table: 1,
     toilet: 1,
@@ -179,7 +179,7 @@ const PLAN_BENEFITS = {
   Gold: {
     casket: "Pongee Casket",
     cover: 15000,
-    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
+    grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
     table: 2,
     toilet: 1,
@@ -194,7 +194,7 @@ const PLAN_BENEFITS = {
   Platinum: {
     casket: "Raised HalfView Casket",
     cover: 20000,
-    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
+    grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -208,7 +208,7 @@ const PLAN_BENEFITS = {
   Black: {
     casket: "Four Tier Casket",
     cover: 30000,
-    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
+    grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -222,7 +222,7 @@ const PLAN_BENEFITS = {
   Pearl: {
     casket: "Princeton Dome Casket",
     cover: 40000,
-    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
+    grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -236,7 +236,7 @@ const PLAN_BENEFITS = {
   Ivory: {
     casket: "Four CNR Figurine",
     cover: 50000,
-    grocery_items: ["Rice", "Maize","Samp", "Sugar", "Oil", "Tea", "Cremora","Juice"],
+    grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -273,7 +273,7 @@ const SPECIAL_PLAN_BENEFITS = {
       "Full Service (Includes Fleet & Graveyard Setup)",
       "Tent, Table & Toilet",
       "80 Chairs",
-      "Grocery (Rice, Maize, Sugar, Oil, Tea, Cremora)",
+      "Grocery (Rice, Maize,Samp, Sugar, Oil, Tea, Cremora,Juice)",
       "80 Programmes",
       "R100 Airtime",
       "Crucifix",
