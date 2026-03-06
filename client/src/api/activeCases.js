@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_HOST } from "./config";
+import { getAccessToken } from "./auth";
 
 const BASE_URL = `${API_HOST}/api/active-cases`;
 
@@ -15,7 +16,12 @@ export const fetchActiveCases = async (params = {}) => {
         if (params.age_filter) searchParams.append('age_filter', params.age_filter);
 
         const url = searchParams.toString() ? `${BASE_URL}?${searchParams.toString()}` : BASE_URL;
-        const res = await axios.get(url);
+
+        const token = getAccessToken();
+        const res = await axios.get(url, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+
         return {
             cases: res.data.cases || [],
             vehicles: res.data.vehicles || [],
@@ -34,7 +40,11 @@ export const sendActiveCasesAlerts = async (toEmail) => {
         if (process.env.REACT_APP_ENABLE_ALERTS !== 'true') {
             return { success: false, disabled: true };
         }
-        const res = await axios.post(`${BASE_URL}/alerts`, { to: toEmail });
+
+        const token = getAccessToken();
+        const res = await axios.post(`${BASE_URL}/alerts`, { to: toEmail }, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         return res.data;
     } catch (err) {
         console.error("Error sending active cases alerts:", err.response || err);
