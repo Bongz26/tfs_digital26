@@ -8,7 +8,9 @@ export default function AssignVehicleModal({
     vehicles = [],
     drivers = [],
     caseNumber,
-    caseId
+    caseId,
+    initialData = null,
+    isEditing = false
 }) {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [selectedDriver, setSelectedDriver] = useState(null);
@@ -21,15 +23,31 @@ export default function AssignVehicleModal({
     // Reset state when modal opens/closes or case changes
     useEffect(() => {
         if (isOpen) {
-            setSelectedVehicle(null);
-            setSelectedDriver(null);
-            setAssignmentRole("");
-            setIsHired(false);
-            setExternalVehicle("");
-            setManualDriver("");
+            if (isEditing && initialData) {
+                // Populate for editing
+                setIsHired(!!initialData.external_vehicle);
+                setExternalVehicle(initialData.external_vehicle || "");
+                setManualDriver(initialData.external_vehicle ? (initialData.driver_name || "") : "");
+                setAssignmentRole(initialData.assignment_role || "");
+
+                if (!initialData.external_vehicle) {
+                    const d = drivers.find(drv => drv.name === initialData.driver_name || drv.id === initialData.driver_id);
+                    setSelectedDriver(d || null);
+
+                    const v = vehicles.find(veh => veh.id === initialData.vehicle_id || veh.reg_number === initialData.reg_number);
+                    setSelectedVehicle(v || null);
+                }
+            } else {
+                setSelectedVehicle(null);
+                setSelectedDriver(null);
+                setAssignmentRole("");
+                setIsHired(false);
+                setExternalVehicle("");
+                setManualDriver("");
+            }
             setIsAssigning(false);
         }
-    }, [isOpen, caseId]);
+    }, [isOpen, caseId, initialData, isEditing, drivers, vehicles]);
 
     if (!isOpen) return null;
 
@@ -67,7 +85,7 @@ export default function AssignVehicleModal({
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-6 w-96 animate-in fade-in zoom-in duration-200">
-                <h3 className="font-bold text-lg mb-1">Assign Transport</h3>
+                <h3 className="font-bold text-lg mb-1">{isEditing ? "Edit Transport" : "Assign Transport"}</h3>
                 {caseNumber && <p className="text-sm text-gray-500 mb-4">Case: {caseNumber}</p>}
 
                 <div className="mb-4">
@@ -175,7 +193,7 @@ export default function AssignVehicleModal({
                             disabled={isAssigning || (!isHired && (!selectedVehicle || !selectedDriver)) || (isHired && (!externalVehicle || !manualDriver))}
                             onClick={handleConfirm}
                         >
-                            {isAssigning ? "Assigning..." : "Confirm"}
+                            {isAssigning ? "Saving..." : "Confirm"}
                         </button>
                         <button
                             className="flex-1 bg-gray-100 text-gray-700 py-2 rounded hover:bg-gray-200 font-semibold text-sm transition"

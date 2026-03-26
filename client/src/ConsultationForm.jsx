@@ -1,7 +1,7 @@
 // src/components/ConsultationForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { createCase, lookupCase, updateCase } from './api/cases';
+import { createCase, lookupCase, updateCase, fetchCaseById } from './api/cases';
 import { createAirtimeRequest } from './api/sms';
 import { fetchInventory } from './api/inventory';
 import { saveDraft as saveDraftServer, getDraftByPolicy as getDraftServer, getLastDraft as getLastDraftServer, deleteDraftByPolicy as deleteDraftServer, listDrafts as listDraftsServer, getDraftHistory } from './api/claimDrafts';
@@ -421,13 +421,31 @@ export default function ConsultationForm() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const policy = params.get('policy');
+    const caseId = params.get('caseId');
     const openDrafts = params.get('openDrafts');
 
     if (openDrafts) {
       setDraftsOpen(true);
     }
 
-    if (policy) {
+    if (caseId) {
+      const loadExistingCase = async () => {
+        try {
+          const found = await fetchCaseById(caseId);
+          if (found) {
+            setForm(prev => ({
+              ...prev,
+              ...found,
+              id: found.id
+            }));
+            setMessage('Case loaded for viewing or reprinting');
+          }
+        } catch (e) {
+          setMessage('Failed to load case details for reprinting');
+        }
+      };
+      loadExistingCase();
+    } else if (policy) {
       const load = async () => {
         try {
           const serverDraft = await getDraftServer(policy);
@@ -444,7 +462,6 @@ export default function ConsultationForm() {
   useEffect(() => {
     const timeout = setTimeout(async () => {
       const idCandidate = (form.deceased_id || '').trim();
-      const policyCandidate = (form.policy_number || '').trim();
       const nameCandidate = (form.deceased_name || '').trim();
       const contactCandidate = (form.nok_contact || '').trim();
       const hasNameContact = nameCandidate && contactCandidate;
@@ -477,8 +494,6 @@ export default function ConsultationForm() {
             plan_name: found.plan_name || prev.plan_name,
             plan_members: found.plan_members != null ? found.plan_members : prev.plan_members,
             plan_age_bracket: found.plan_age_bracket || prev.plan_age_bracket,
-            venue_name: found.venue_name || prev.venue_name,
-            venue_address: found.venue_address || prev.venue_address,
             venue_name: found.venue_name || prev.venue_name,
             venue_address: found.venue_address || prev.venue_address,
             burial_place: found.burial_place || prev.burial_place,
@@ -516,7 +531,6 @@ export default function ConsultationForm() {
             cleansing_date: found.cleansing_date || prev.cleansing_date,
             cleansing_time: found.cleansing_time || prev.cleansing_time,
             delivery_date: found.delivery_date || prev.delivery_date,
-            delivery_time: found.delivery_time || prev.delivery_time,
             delivery_time: found.delivery_time || prev.delivery_time,
             intake_day: found.intake_day || prev.intake_day
           }));
@@ -920,12 +934,6 @@ export default function ConsultationForm() {
     }) || null;
   };
 
-  const formatDateForBoxes = (dateStr) => {
-    if (!dateStr) return Array(8).fill(' ');
-    const [y, m, d] = dateStr.split('-');
-    return [d[0] || ' ', d[1] || ' ', m[0] || ' ', m[1] || ' ', y[0] || ' ', y[1] || ' ', y[2] || ' ', y[3] || ' '];
-  };
-
   const handleSaveDraft = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -973,6 +981,19 @@ export default function ConsultationForm() {
       legacy_plan_name: getLegacyPlanName() || null
     };
 
+    // Purge book/policy data if saving as a private case
+    if (data.service_type === 'private') {
+      data.plan_name = null;
+      data.plan_category = null;
+      data.plan_members = null;
+      data.plan_age_bracket = null;
+      data.benefit_mode = null;
+      data.benefit_exchange = null;
+      data.pearl_bonus = null;
+      data.cover_amount = 0;
+      data.cashback_amount = 0;
+    }
+
     try {
       try {
         await saveDraftServer({ policy_number: data.policy_number, data, department: 'claims' });
@@ -1014,6 +1035,19 @@ export default function ConsultationForm() {
       status: 'confirmed',
       legacy_plan_name: getLegacyPlanName() || null
     };
+
+    // Purge book/policy data if saving as a private case
+    if (data.service_type === 'private') {
+      data.plan_name = null;
+      data.plan_category = null;
+      data.plan_members = null;
+      data.plan_age_bracket = null;
+      data.benefit_mode = null;
+      data.benefit_exchange = null;
+      data.pearl_bonus = null;
+      data.cover_amount = 0;
+      data.cashback_amount = 0;
+    }
 
     try {
       if (form.benefit_exchange === 'standard') {
@@ -1543,8 +1577,8 @@ export default function ConsultationForm() {
                 <label>Branch / Location <span className="text-red-600">*</span></label>
                 <select required value={form.branch} onChange={e => handleInputChange('branch', e.target.value)} className="w-full px-4 py-3 border rounded-lg">
                   <option value="Head Office">Head Office</option>
-                  <option value="Bethlehem Branch">Bethlehem Branch</option>
-                  <option value="Reitz Branch">Reitz Branch</option>
+                  <option value="Bethlehem">Bethlehem</option>
+                  <option value="Reitz">Reitz</option>
                 </select>
               </div>
               <div><label>Deceased Full Name <span className="text-red-600">*</span></label><input required value={form.deceased_name} onChange={e => handleInputChange('deceased_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg" placeholder="Enter deceased name" /></div>
@@ -2221,16 +2255,34 @@ export default function ConsultationForm() {
           </div>
 
           {/* SUBMIT BUTTONS */}
-          <div className="p-8 bg-gray-50 border-t flex flex-wrap gap-4">
-            <button type="button" onClick={handleSaveDraft} disabled={submitting} className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white font-bold py-5 rounded-xl text-xl transition shadow-lg">
-              {submitting ? "Saving..." : "Save Draft & Print Receipt"}
-            </button>
-            <button type="button" onClick={handlePrintSupplier} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-xl text-xl transition shadow-lg">
-              Print Supplier Order
-            </button>
-            <button type="submit" onClick={handleFinalSubmit} disabled={submitting} className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-5 rounded-xl text-xl transition shadow-lg">
-              {submitting ? "Submitting..." : "Confirm & Print Checklist"}
-            </button>
+          <div className="p-8 bg-gray-50 border-t flex flex-col gap-4">
+            <div className="flex flex-wrap gap-4">
+              <button type="button" onClick={handleSaveDraft} disabled={submitting} className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white font-bold py-5 rounded-xl text-xl transition shadow-lg">
+                {submitting ? "Saving..." : "Save Draft & Print Receipt"}
+              </button>
+              <button type="button" onClick={handlePrintSupplier} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-xl text-xl transition shadow-lg">
+                Print Supplier Order
+              </button>
+              <button type="submit" onClick={handleFinalSubmit} disabled={submitting} className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-5 rounded-xl text-xl transition shadow-lg">
+                {submitting ? "Submitting..." : (form.id ? "Update Case & Print Checklist" : "Confirm & Print Checklist")}
+              </button>
+            </div>
+            {form.id && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-gray-700 font-bold mb-3">🖨️ Reprint Options (Without modifying case):</h4>
+                <div className="flex flex-wrap gap-4">
+                  <button type="button" onClick={(e) => { e.preventDefault(); setPrintedData({ ...form }); setPrintMode('receipt'); setTimeout(() => window.print(), 500); }} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition shadow">
+                    Reprint Receipt
+                  </button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); setPrintedData({ ...form }); setPrintMode('supplier'); setTimeout(() => window.print(), 500); }} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition shadow">
+                    Reprint Supplier Order
+                  </button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); setPrintedData({ ...form }); setPrintMode('full'); setTimeout(() => window.print(), 500); }} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition shadow">
+                    Reprint Checklist
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {message && (
             <div className={`p-4 rounded-lg text-center font-bold ${message.includes('success') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>

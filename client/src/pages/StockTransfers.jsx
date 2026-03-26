@@ -28,7 +28,7 @@ const StockTransfers = () => {
     // Form State
     const [newItem, setNewItem] = useState({ inventory_id: '', quantity: 1 });
     const [formData, setFormData] = useState({
-        from_location: 'Manekeng',
+        from_location: 'Makeneng',
         to_location: 'Head Office',
         driver_id: '',
         items: [],
@@ -129,7 +129,7 @@ const StockTransfers = () => {
             }
             setShowCreateModal(false);
             setEditingId(null);
-            setFormData({ from_location: 'Manekeng', to_location: 'Head Office', driver_id: '', items: [], notes: '' });
+            setFormData({ from_location: 'Makeneng', to_location: 'Head Office', driver_id: '', items: [], notes: '' });
             loadData();
         } catch (error) {
             alert('Failed to save transfer: ' + (error.response?.data?.error || error.message));
@@ -407,7 +407,7 @@ const StockTransfers = () => {
                                 onClick={() => {
                                     setShowCreateModal(false);
                                     setEditingId(null);
-                                    setFormData({ from_location: 'Manekeng', to_location: 'Head Office', driver_id: '', items: [], notes: '' });
+                                    setFormData({ from_location: 'Makeneng', to_location: 'Head Office', driver_id: '', items: [], notes: '' });
                                 }}
                                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition"
                             >

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { fetchActiveCases } from "../api/activeCases";
@@ -8,6 +8,9 @@ import { fetchVehicles } from "../api/vehicles";
 import { getNextStatuses, getStatusConfig, CASE_STATUSES } from "../utils/caseStatus";
 import AssignVehicleModal from "../components/AssignVehicleModal";
 import AssignedTransportList from "../components/AssignedTransportList";
+import { updateRoster, deleteRoster } from "../api/roster";
+import { useReactToPrint } from "react-to-print";
+import DriverTripSheet from "../components/DriverTripSheet";
 
 export default function ActiveCases() {
   const { user } = useAuth();
@@ -33,7 +36,28 @@ export default function ActiveCases() {
   const limit = 50;
 
   const [modalCase, setModalCase] = useState(null); // Case currently being assigned
+  const [editingAssignment, setEditingAssignment] = useState(null); // Existing assignment to edit
   const [changingStatus, setChangingStatus] = useState({});
+  const [selectedForPrint, setSelectedForPrint] = useState(new Set());
+
+  const multiPrintRef = useRef(null);
+  const handleMultiPrint = useReactToPrint({
+      contentRef: multiPrintRef,
+      documentTitle: `Batch_Trip_Sheets_${new Date().toLocaleDateString('en-ZA').replace(/\//g, '-')}`
+  });
+
+  const printBatchData = [];
+  cases.forEach(c => {
+      if (selectedForPrint.has(c.id) && c.roster) {
+          c.roster.forEach(r => {
+              printBatchData.push({
+                  caseData: c,
+                  assignment: r,
+                  groupName: r.group_name || 'Transport'
+              });
+          });
+      }
+  });
 
   const isAdmin = () => user?.role === "admin";
 
@@ -82,13 +106,28 @@ export default function ActiveCases() {
 
   const handleAssignVehicle = async (caseId, assignmentData) => {
     try {
-      await assignVehicle(caseId, assignmentData);
+      if (editingAssignment) {
+        await updateRoster(editingAssignment.id, assignmentData);
+      } else {
+        await assignVehicle(caseId, assignmentData);
+      }
 
       await loadData();
       setModalCase(null);
+      setEditingAssignment(null);
     } catch (err) {
       alert("Failed to assign vehicle: " + (err.response?.data?.message || err.message));
       throw err; // Propagate error so modal knows it failed
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId) => {
+    if (!window.confirm("Are you sure you want to remove this vehicle assignment?")) return;
+    try {
+      await deleteRoster(assignmentId);
+      await loadData();
+    } catch (err) {
+      alert("Failed to delete assignment: " + (err.response?.data?.error || err.response?.data?.message || err.message));
     }
   };
 
@@ -217,9 +256,27 @@ export default function ActiveCases() {
 
             {/* HEADER */}
             <div className="border-b pb-3 flex justify-between items-start">
-              <div>
-                <div className="font-bold text-lg text-gray-900">{c.case_number}</div>
-                <div className="text-sm font-medium text-gray-700">{c.deceased_name}</div>
+              <div className="flex gap-3">
+                <div className="pt-1">
+                  <input 
+                    type="checkbox" 
+                    className="w-5 h-5 cursor-pointer accent-red-600 rounded"
+                    checked={selectedForPrint.has(c.id)}
+                    onChange={() => {
+                        setSelectedForPrint(prev => {
+                            const next = new Set(prev);
+                            if (next.has(c.id)) next.delete(c.id);
+                            else next.add(c.id);
+                            return next;
+                        });
+                    }}
+                    title="Select for batch printing"
+                  />
+                </div>
+                <div>
+                  <div className="font-bold text-lg text-gray-900 leading-tight">{c.case_number}</div>
+                  <div className="text-sm font-medium text-gray-700">{c.deceased_name}</div>
+                </div>
               </div>
               <div className="text-xs text-right text-gray-500">
                 <div className="font-semibold text-red-600">
@@ -299,7 +356,10 @@ export default function ActiveCases() {
             <div className="pt-3">
               <button
                 className="w-full bg-red-600 hover:bg-red-700 text-yellow-300 py-2 rounded font-semibold text-sm shadow-sm transition"
-                onClick={() => setModalCase(c)}
+                onClick={() => {
+                  setEditingAssignment(null);
+                  setModalCase(c);
+                }}
               >
                 Assign Vehicle & Driver
               </button>
@@ -308,7 +368,16 @@ export default function ActiveCases() {
 
             {/* DISPLAY ASSIGNED */}
             {c.roster && c.roster.length > 0 && (
-              <AssignedTransportList roster={c.roster} formatVehicleType={formatVehicleType} />
+              <AssignedTransportList
+                roster={c.roster}
+                formatVehicleType={formatVehicleType}
+                onEdit={(assignment) => {
+                  setEditingAssignment(assignment);
+                  setModalCase(c);
+                }}
+                onDelete={(assignment) => handleDeleteAssignment(assignment.id)}
+                caseData={c}
+              />
             )}
 
 
@@ -384,7 +453,34 @@ export default function ActiveCases() {
         drivers={drivers}
         caseNumber={modalCase?.case_number}
         caseId={modalCase?.id}
+        initialData={editingAssignment}
+        isEditing={!!editingAssignment}
       />
+
+      {/* FLOATING ACTION BAR FOR BATCH PRINT */}
+      {selectedForPrint.size > 0 && (
+          <div className="fixed bottom-6 right-6 z-50 p-4 bg-white border-2 border-red-600 rounded-xl shadow-2xl flex items-center gap-4">
+              <div className="font-bold text-gray-800">
+                  {selectedForPrint.size} Case{selectedForPrint.size !== 1 ? 's' : ''} Selected
+              </div>
+              <button
+                  onClick={handleMultiPrint}
+                  className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-md hover:bg-red-700 transition hover:-translate-y-0.5"
+                  disabled={printBatchData.length === 0}
+              >
+                  Print {printBatchData.length} Receipts
+              </button>
+              <button
+                  onClick={() => setSelectedForPrint(new Set())}
+                  className="text-gray-500 hover:text-red-600 font-semibold text-sm"
+              >
+                  Clear All
+              </button>
+          </div>
+      )}
+      <div style={{ display: 'none' }}>
+          <DriverTripSheet ref={multiPrintRef} batch={printBatchData} />
+      </div>
     </div>
   );
 }

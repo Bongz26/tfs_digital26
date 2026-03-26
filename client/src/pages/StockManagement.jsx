@@ -77,7 +77,7 @@ export default function StockManagement() {
     stock_quantity: 0,
     unit_price: 0,
     low_stock_threshold: 1,
-    location: 'Manekeng Showroom',
+    location: 'Makeneng',
     notes: '',
     model: '',
     color: ''
@@ -394,7 +394,7 @@ export default function StockManagement() {
           stock_quantity: 0,
           unit_price: 0,
           low_stock_threshold: 1,
-          location: 'Manekeng Showroom',
+          location: 'Makeneng',
           notes: '',
           model: '',
           color: ''
@@ -467,7 +467,7 @@ export default function StockManagement() {
       stock_quantity: item.stock_quantity || 0,
       unit_price: item.unit_price || 0,
       low_stock_threshold: item.low_stock_threshold ?? 1,
-      location: item.location || 'Manekeng',
+      location: item.location || 'Makeneng',
       notes: item.notes || '',
       model: item.model || '',
       color: item.color || ''
@@ -500,9 +500,20 @@ export default function StockManagement() {
   };
 
   // Extract unique values for suggestions
-  const existingNames = [...new Set(inventory.map(i => i.name).filter(Boolean))].sort();
-  const existingModels = [...new Set(inventory.map(i => i.model).filter(Boolean))].sort();
-  const existingColors = [...new Set(inventory.map(i => i.color).filter(Boolean))].sort();
+  const uniqueNormalized = (items) => {
+    const map = new Map();
+    items.forEach(item => {
+      if (!item) return;
+      const trimmed = item.trim();
+      if (!trimmed) return;
+      map.set(trimmed.toUpperCase(), trimmed);
+    });
+    return Array.from(map.values()).sort();
+  };
+
+  const existingNames = uniqueNormalized(inventory.map(i => i.name));
+  const existingModels = uniqueNormalized(inventory.map(i => i.model));
+  const existingColors = uniqueNormalized(inventory.map(i => i.color));
 
   useEffect(() => {
     fetchInventory();
@@ -802,10 +813,11 @@ export default function StockManagement() {
                     onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
                   >
-                    <option value="Manekeng Showroom">Manekeng Showroom</option>
+                    <option value="Makeneng">Makeneng</option>
                     <option value="Head Office">Head Office</option>
-                    <option value="Bethlehem Branch">Bethlehem Branch</option>
-                    {locationsList.filter(l => !["Head Office", "Manekeng Showroom", "Bethlehem Branch"].includes(l.name)).map(loc => (
+                    <option value="Bethlehem">Bethlehem</option>
+                    <option value="Reitz">Reitz</option>
+                    {locationsList.filter(l => !["Makeneng", "Head Office", "Bethlehem", "Reitz"].includes(l.name)).map(loc => (
                       <option key={loc.id} value={loc.name}>{loc.name}</option>
                     ))}
                   </select>

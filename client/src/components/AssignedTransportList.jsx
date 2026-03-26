@@ -1,6 +1,32 @@
-import React from "react";
+import React, { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
+import DriverTripSheet from "./DriverTripSheet";
 
-export default function AssignedTransportList({ roster = [], formatVehicleType }) {
+const PrintTripSheetButton = ({ group, caseData, isSimplified }) => {
+    const printRef = useRef(null);
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: `TripSheet_${caseData?.case_number || 'Case'}`,
+    });
+
+    return (
+        <React.Fragment>
+            <div className={isSimplified ? "absolute top-8 right-3" : "absolute top-8 right-3"}>
+                <button
+                    onClick={handlePrint}
+                    className="text-xs bg-gray-800 text-white px-2 py-1 rounded hover:bg-gray-700 font-semibold shadow-sm"
+                >
+                    {isSimplified ? "Print Trip Sheet" : "Print"}
+                </button>
+            </div>
+            <div style={{ display: "none" }}>
+                <DriverTripSheet ref={printRef} group={group} caseData={caseData} />
+            </div>
+        </React.Fragment>
+    );
+};
+
+export default function AssignedTransportList({ roster = [], formatVehicleType, onEdit, onDelete, caseData }) {
     if (!roster || roster.length === 0) return null;
 
     const innerFormatVehicleType = formatVehicleType || ((type) => {
@@ -50,7 +76,26 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
                 <div className="text-xs uppercase font-bold text-yellow-600 tracking-wide mb-2">
                     Assigned Transport
                 </div>
-                <div className="text-sm text-gray-900">
+                {onEdit && (
+                    <button
+                        onClick={() => onEdit(driverGroups[0].assignments[0])}
+                        className="text-xs text-blue-600 hover:text-blue-800 absolute top-3 right-16"
+                    >
+                        Edit
+                    </button>
+                )}
+                {onDelete && (
+                    <button
+                        onClick={() => onDelete(driverGroups[0].assignments[0])}
+                        className="text-xs text-red-600 hover:text-red-800 absolute top-3 right-3"
+                    >
+                        Remove
+                    </button>
+                )}
+                {caseData?.status === 'scheduled' && (
+                    <PrintTripSheetButton group={driverGroups[0]} caseData={caseData} isSimplified={true} />
+                )}
+                <div className="text-sm text-gray-900 mt-6">
                     {r.assignment_role && (
                         <div className="text-xs font-bold text-red-600 uppercase mb-1">
                             {r.assignment_role}
@@ -96,8 +141,15 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
                                 </div>
                             </div>
                         </div>
-                        <div className="text-xs bg-red-600 text-white px-2 py-1 rounded-full font-semibold">
-                            {group.assignments.length} vehicle{group.assignments.length !== 1 ? 's' : ''}
+                        <div className="flex items-center gap-3">
+                            <div className="text-xs bg-red-600 text-white px-2 py-1 rounded-full font-semibold">
+                                {group.assignments.length} vehicle{group.assignments.length !== 1 ? 's' : ''}
+                            </div>
+                            {caseData?.status === 'scheduled' && (
+                                <div className="relative" style={{ minWidth: '100px', minHeight: '30px' }}>
+                                    <PrintTripSheetButton group={group} caseData={caseData} isSimplified={false} />
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -106,8 +158,24 @@ export default function AssignedTransportList({ roster = [], formatVehicleType }
                         {group.assignments.map((r, i) => (
                             <div
                                 key={i}
-                                className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition"
+                                className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition relative"
                             >
+                                {onEdit && (
+                                    <button
+                                        onClick={() => onEdit(r)}
+                                        className="text-xs text-blue-600 hover:text-blue-800 absolute top-3 right-16"
+                                    >
+                                        Edit
+                                    </button>
+                                )}
+                                {onDelete && (
+                                    <button
+                                        onClick={() => onDelete(r)}
+                                        className="text-xs text-red-600 hover:text-red-800 absolute top-3 right-3"
+                                    >
+                                        Remove
+                                    </button>
+                                )}
                                 {r.assignment_role && (
                                     <div className="text-xs font-bold text-red-600 uppercase mb-2 flex items-center gap-1">
                                         <span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span>

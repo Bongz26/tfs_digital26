@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchCaseById, assignVehicle, updateCase, fetchCaseAuditLog } from '../api/cases';
 import { fetchDrivers } from '../api/drivers';
 import { fetchVehicles } from '../api/vehicles';
-import { fetchRoster, updateRoster } from '../api/roster';
+import { fetchRoster, updateRoster, deleteRoster } from '../api/roster';
 import { API_HOST } from '../api/config';
 import AssignVehicleModal from '../components/AssignVehicleModal';
 import AssignedTransportList from '../components/AssignedTransportList';
@@ -24,6 +24,7 @@ export default function CaseDetails() {
   const [caseRoster, setCaseRoster] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -132,6 +133,7 @@ export default function CaseDetails() {
         setEditForm(prev => ({ ...prev, casket_colour: colorList[0] }));
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editForm.casket_type, casketInventory]);
 
   const handleSaveEdit = async (e) => {
@@ -140,7 +142,22 @@ export default function CaseDetails() {
 
     try {
       if (!window.confirm("Are you sure you want to update the case details?")) return;
-      const updated = await updateCase(id, editForm);
+
+      const payload = { ...editForm };
+      // Purge book/policy data if switching to a private case
+      if (payload.service_type === 'private') {
+        payload.plan_name = null;
+        payload.plan_category = null;
+        payload.plan_members = null;
+        payload.plan_age_bracket = null;
+        payload.benefit_mode = null;
+        payload.benefit_exchange = null;
+        payload.pearl_bonus = null;
+        payload.cover_amount = 0;
+        payload.cashback_amount = 0;
+      }
+
+      const updated = await updateCase(id, payload);
       setCaseData(updated);
       setIsEditing(false);
 
@@ -156,18 +173,37 @@ export default function CaseDetails() {
 
   const handleAssignVehicle = async (caseId, assignmentData) => {
     try {
-      await assignVehicle(caseId, assignmentData);
+      if (editingAssignment) {
+        await updateRoster(editingAssignment.id, assignmentData);
+        alert('Vehicle assignment updated successfully');
+      } else {
+        await assignVehicle(caseId, assignmentData);
+        alert('Vehicle assigned successfully');
+      }
 
       // Refresh roster
       const rost = await fetchRoster();
       setCaseRoster((rost || []).filter(r => String(r.case_id) === String(id)));
 
       setModalOpen(false);
-      alert('Vehicle assigned successfully');
+      setEditingAssignment(null);
     } catch (err) {
       const msg = err.response?.data?.error || err.message || 'Failed to assign';
       alert(msg);
       throw err;
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId) => {
+    if (!window.confirm("Are you sure you want to remove this vehicle assignment?")) return;
+    try {
+      await deleteRoster(assignmentId);
+      // Refresh roster
+      const rost = await fetchRoster();
+      setCaseRoster((rost || []).filter(r => String(r.case_id) === String(id)));
+      alert('Vehicle assignment removed successfully');
+    } catch (err) {
+      alert("Failed to delete assignment: " + (err.response?.data?.error || err.response?.data?.message || err.message));
     }
   };
 
@@ -186,16 +222,24 @@ export default function CaseDetails() {
         <div>
           {/* Admin Edit Button */}
           {user?.role === 'admin' && !isEditing && (
-            <button
-              onClick={() => {
-                // Transform database data to HTML input-compatible formats
-                setEditForm(prepareCaseForEdit(caseData));
-                setIsEditing(true);
-              }}
-              className="bg-gray-800 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition"
-            >
-              Edit Details
-            </button>
+            <>
+              <Link
+                to={`/?caseId=${id}`}
+                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition mr-2 inline-block"
+              >
+                Reprint Case Forms
+              </Link>
+              <button
+                onClick={() => {
+                  // Transform database data to HTML input-compatible formats
+                  setEditForm(prepareCaseForEdit(caseData));
+                  setIsEditing(true);
+                }}
+                className="bg-gray-800 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition"
+              >
+                Edit Details
+              </button>
+            </>
           )}
           {isEditing && (
             <div className="flex gap-2">
@@ -378,8 +422,8 @@ export default function CaseDetails() {
               <div>
                 <label className="text-xs font-semibold text-gray-500">Service Type</label>
                 <select className="w-full border rounded p-1" value={editForm.service_type || 'book'} onChange={e => setEditForm({ ...editForm, service_type: e.target.value })}>
-                  <option value="book">Book Only</option>
-                  <option value="full_service">Full Service</option>
+                  <option value="book">Book (Plan Price)</option>
+                  <option value="private">Private (Manual Price)</option>
                 </select>
               </div>
             </div>
@@ -426,7 +470,10 @@ export default function CaseDetails() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-lg">Vehicle & Driver Assignment</h2>
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              setEditingAssignment(null);
+              setModalOpen(true);
+            }}
             className="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 transition"
           >
             + Assign Transport
@@ -436,7 +483,15 @@ export default function CaseDetails() {
         {caseRoster.length === 0 ? (
           <div className="text-sm text-gray-500 italic">No transport assigned yet.</div>
         ) : (
-          <AssignedTransportList roster={caseRoster} />
+          <AssignedTransportList
+            roster={caseRoster}
+            onEdit={(assignment) => {
+              setEditingAssignment(assignment);
+              setModalOpen(true);
+            }}
+            onDelete={(assignment) => handleDeleteAssignment(assignment.id)}
+            caseData={caseData}
+          />
         )}
       </div>
 
@@ -490,6 +545,8 @@ export default function CaseDetails() {
         drivers={drivers}
         caseNumber={caseData.case_number}
         caseId={id}
+        initialData={editingAssignment}
+        isEditing={!!editingAssignment}
       />
 
     </div >

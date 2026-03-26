@@ -24,21 +24,22 @@ exports.findOrCreateInventoryItem = async (supabase, { name, color, branch, cate
         modelMatch = nameStr.substring(lastDashIndex + 3).trim();
     }
 
-    // 1. STRICT SEARCH: Look for item in Case Branch ONLY
+    // 1. BROAD SEARCH: Get matching names, then filter location in memory to avoid Supabase ilike edgecases
     let invItem = null;
 
     let query = supabase
         .from('inventory')
         .select('id, stock_quantity, reserved_quantity, name, model, color, unit_price, low_stock_threshold, sku, description, supplier, location')
         .eq('category', category)
-        .ilike('location', selectedBranch) // Case-insensitive search
-        .ilike('name', primaryName)
+        .ilike('name', `%${primaryName}%`)
         .order('stock_quantity', { ascending: false });
 
     const { data: matches, error: fetchErr } = await query;
 
     if (matches && matches.length > 0) {
-        let candidates = matches;
+        // Filter location in memory strictly case-insensitive
+        let candidates = matches.filter(i => (i.location || '').trim().toUpperCase() === selectedBranch);
+
 
         // Filter by model if specified
         if (modelMatch) {
