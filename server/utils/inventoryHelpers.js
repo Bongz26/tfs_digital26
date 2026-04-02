@@ -29,7 +29,7 @@ exports.findOrCreateInventoryItem = async (supabase, { name, color, branch, cate
 
     let query = supabase
         .from('inventory')
-        .select('id, stock_quantity, reserved_quantity, name, model, color, unit_price, low_stock_threshold, sku, description, supplier, location')
+        .select('id, stock_quantity, reserved_quantity, name, model, color, unit_price, low_stock_threshold, sku, supplier, location')
         .eq('category', category)
         .ilike('name', `%${primaryName}%`)
         .order('stock_quantity', { ascending: false });
@@ -39,7 +39,6 @@ exports.findOrCreateInventoryItem = async (supabase, { name, color, branch, cate
     if (matches && matches.length > 0) {
         // Filter location in memory strictly case-insensitive
         let candidates = matches.filter(i => (i.location || '').trim().toUpperCase() === selectedBranch);
-
 
         // Filter by model if specified
         if (modelMatch) {
