@@ -965,7 +965,7 @@ export default function ConsultationForm() {
     }
 
     // Require cleansing details (ONLY for standard service)
-    if (form.benefit_exchange === 'standard' && (!form.cleansing_date || !form.cleansing_time)) {
+    if ((!form.benefit_exchange || form.benefit_exchange === 'standard') && (!form.cleansing_date || !form.cleansing_time)) {
       setMessage('Please fill Cleansing (Ho Hlapisa) date and time');
       setSubmitting(false);
       return;
@@ -1050,7 +1050,7 @@ export default function ConsultationForm() {
     }
 
     try {
-      if (form.benefit_exchange === 'standard') {
+      if (!form.benefit_exchange || form.benefit_exchange === 'standard') {
         if (!form.intake_day) {
           setMessage('Intake day is required and must be a Wednesday');
           setSubmitting(false);
@@ -1444,7 +1444,7 @@ export default function ConsultationForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-6 md:py-8">
+    <div className="min-h-screen print:min-h-0 bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-6 md:py-8 print:py-0 print:bg-white">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 print:hidden">
         <div className="text-center mb-8">
           <p className="text-yellow-600 text-xl font-semibold mb-6">Live from QwaQwa • Re tšotella sechaba sa rona</p>
@@ -2017,7 +2017,7 @@ export default function ConsultationForm() {
 
           </div>
 
-          {form.benefit_exchange === 'standard' && form.benefit_mode !== 'cashback' && (
+          {(!form.benefit_exchange || form.benefit_exchange === 'standard') && form.benefit_mode !== 'cashback' && (
             <>
               {/* SCHEDULE DETAILS */}
               <div className="p-8 border-b border-gray-200">
@@ -2302,6 +2302,7 @@ export default function ConsultationForm() {
           <style>{`@media print {
             @page { size: A4; margin: 5mm; }
             html, body { margin: 0; padding: 0; height: auto; overflow: visible; }
+            #root, .min-h-screen { min-height: 0 !important; height: auto !important; padding: 0 !important; margin: 0 !important; }
             body * { visibility: hidden !important; }
             #tfs-print-root, #tfs-print-root * { visibility: visible !important; }
             #tfs-print-root {
@@ -2365,10 +2366,15 @@ export default function ConsultationForm() {
                   {renderBenefitsList(printedData)}
 
                   <div className="mt-8 pt-4 border-t-2 border-gray-400 break-inside-avoid">
-                    <p className="text-[10px] italic mb-8">I acknowledge that all details above are correct and confirmed similar to what is on the case receipt.</p>
-                    <div className="flex justify-between mt-8">
-                      <div className="border-t border-black w-1/3 pt-1 text-center font-bold text-xs">Office Personnel</div>
-                      <div className="border-t border-black w-1/3 pt-1 text-center font-bold text-xs">Client Signature</div>
+                    <div className="mb-6 border border-red-800 p-3 text-[10px] bg-red-50 text-red-900 font-semibold rounded break-inside-avoid">
+                      <p className="mb-2 uppercase text-red-800 font-bold text-[11px]">Time Management / Service Discipline Agreement</p>
+                      <p>Respectfully, our drivers operate on a strict schedule to ensure all families receive timely, dignified service. I acknowledge that if the service or departure is delayed by more than <strong className="uppercase underline">20 minutes</strong> from the scheduled time, Thusanang drivers reserve the right to depart to attend to other scheduled services.</p>
+                    </div>
+                    <p className="text-[10px] italic mb-6">I acknowledge that all details above are correct and confirmed similar to what is on the case receipt.</p>
+                    <div className="flex justify-between mt-10 gap-6">
+                      <div className="border-t border-black flex-1 pt-1 text-center font-bold text-xs">Office Personnel</div>
+                      <div className="border-t border-black flex-1 pt-1 text-center font-bold text-xs">Client Signature</div>
+                      <div className="border-t border-black flex-1 pt-1 text-center font-bold text-xs">Pastor / Chairperson</div>
                     </div>
                   </div>
                 </div>
@@ -2488,8 +2494,8 @@ export default function ConsultationForm() {
 
                   {/* Right Column: Logistics or Exchange Info */}
                   <div className="print-section">
-                    <div className="print-section-title">{printedData.benefit_exchange === 'standard' ? 'LOGISTICS' : 'BENEFIT EXCHANGE'}</div>
-                    {printedData.benefit_exchange === 'standard' ? (
+                    <div className="print-section-title">{!printedData.benefit_exchange || printedData.benefit_exchange === 'standard' ? 'LOGISTICS' : 'BENEFIT EXCHANGE'}</div>
+                    {!printedData.benefit_exchange || printedData.benefit_exchange === 'standard' ? (
                       <>
 
                         <div className="print-row"><div className="print-label">DELIVERY</div><div className="print-value">{printedData.delivery_date} {printedData.delivery_time}</div></div>
@@ -2532,7 +2538,7 @@ export default function ConsultationForm() {
                         );
                       }
 
-                      if (printedData.benefit_exchange === 'standard') {
+                      if (!printedData.benefit_exchange || printedData.benefit_exchange === 'standard') {
                         return (
                           <>
                             <div className="checklist-item"><span className="checklist-label">Casket Type</span> <span className="checklist-val">{printedData.casket_type}</span></div>
