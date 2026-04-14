@@ -173,3 +173,35 @@ export const searchCases = async (term, limit = 10) => {
         throw err;
     }
 };
+
+export const fetchCaseDocuments = async (id) => {
+    try {
+        const token = getAccessToken();
+        const res = await axios.get(`${BASE_URL}/${id}/documents`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        return res.data.documents || [];
+    } catch (err) {
+        console.error(`Error fetching case documents ${id}:`, err.response || err);
+        throw err;
+    }
+};
+
+export const uploadCaseDocument = async (id, file) => {
+    try {
+        const token = getAccessToken();
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const res = await axios.post(`${BASE_URL}/${id}/documents`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+        });
+        return res.data.document;
+    } catch (err) {
+        console.error(`Error uploading case document for case ${id}:`, err.response || err);
+        throw err;
+    }
+};

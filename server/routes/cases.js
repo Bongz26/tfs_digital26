@@ -43,6 +43,18 @@ router.get('/audit/:id', casesController.getCaseAuditLog);
 // PUT full update of case details
 router.put('/:id', casesController.updateCaseDetails);
 
+const multer = require('multer');
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// POST to upload a document to a case
+router.post('/:id/documents', upload.single('file'), casesController.uploadDocument);
+
+// GET documents for a case
+router.get('/:id/documents', casesController.getDocuments);
+
 // GET single case by ID (must come last to avoid conflicts with /assign/:caseId)
 router.get('/:id', casesController.getCaseById);
 

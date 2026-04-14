@@ -24,7 +24,7 @@ const repatriationTripsRoutes = require('./routes/repatriationTrips');
 const claimDraftsRoutes = require('./routes/claimDrafts');
 const { requireAuth, requireMinRole } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
-
+const whatsappRoutes = require('./routes/whatsapp');
 const { scheduleWeeklyReport } = require('./cron/weeklyReport');
 const { scheduleStockReport } = require('./cron/weeklyStockEmail');
 const { scheduleKeepAlive } = require('./cron/keepAlive');
@@ -96,6 +96,7 @@ app.use('/api/directions', requireAuth, directionsRoutes);
 app.use('/api/repatriation-trips', requireAuth, repatriationTripsRoutes);
 app.use('/api/claim-drafts', requireAuth, requireMinRole('staff'), claimDraftsRoutes);
 app.use('/api/locations', requireAuth, require('./routes/locations'));
+app.use('/api/whatsapp', whatsappRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

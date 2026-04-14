@@ -1729,7 +1729,7 @@ exports.updateCaseDetails = async (req, res) => {
                 resource_type: 'case',
                 resource_id: id,
                 old_values: oldValues,
-                new_values: req.body,
+                new_values: updatedCase,
                 ip_address: req.ip,
                 user_agent: req.headers['user-agent']
             });
@@ -1740,5 +1740,105 @@ exports.updateCaseDetails = async (req, res) => {
     } catch (err) {
         console.error('Error updating case details:', err);
         res.status(500).json({ success: false, error: 'Failed to update case', details: err.message });
+    }
+};
+
+// --- DOCUMENT UPLOAD ---
+exports.uploadDocument = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const file = req.file;
+        const uploaderName = req.user?.name || req.user?.email || 'System';
+
+        if (!file) {
+            return res.status(400).json({ success: false, error: 'No file uploaded' });
+        }
+
+        const supabase = req.app.locals.supabase;
+        if (!supabase) {
+            return res.status(500).json({ success: false, error: 'Database not configured' });
+        }
+
+        // 1. Ensure the case exists
+        const { data: caseRecord, error: caseErr } = await supabase
+            .from('cases')
+            .select('id, case_number')
+            .eq('id', id)
+            .single();
+
+        if (caseErr || !caseRecord) {
+            return res.status(404).json({ success: false, error: 'Case not found' });
+        }
+
+        // 2. Upload to Supabase Storage
+        const fileExt = file.originalname.split('.').pop();
+        const fileName = `${id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from('case_documents')
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype,
+                upsert: false
+            });
+
+        if (uploadErr) {
+            console.error('Storage upload error:', uploadErr);
+            throw uploadErr;
+        }
+
+        // 3. Get Public URL
+        const { data: urlData } = supabase.storage
+            .from('case_documents')
+            .getPublicUrl(uploadData.path);
+
+        const fileUrl = urlData.publicUrl;
+
+        // 4. Insert DB Record
+        const newDoc = {
+            case_id: id,
+            file_name: file.originalname,
+            file_url: fileUrl,
+            file_type: file.mimetype,
+            file_size: file.size,
+            uploaded_by: uploaderName
+        };
+
+        const { data: docRecord, error: insertErr } = await supabase
+            .from('case_documents')
+            .insert([newDoc])
+            .select()
+            .single();
+
+        if (insertErr) throw insertErr;
+
+        return res.json({ success: true, document: docRecord });
+    } catch (err) {
+        console.error('Error uploading document:', err);
+        return res.status(500).json({ success: false, error: 'Failed to upload document', details: err.message });
+    }
+};
+
+// --- GET DOCUMENTS BY CASE ---
+exports.getDocuments = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const supabase = req.app.locals.supabase;
+        if (!supabase) {
+            return res.status(500).json({ success: false, error: 'Database not configured' });
+        }
+
+        const { data, error } = await supabase
+            .from('case_documents')
+            .select('*')
+            .eq('case_id', id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        return res.json({ success: true, documents: data });
+    } catch (err) {
+        console.error('Error fetching documents:', err);
+        return res.status(500).json({ success: false, error: 'Failed to fetch documents', details: err.message });
     }
 };

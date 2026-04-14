@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchCaseById, assignVehicle, updateCase, fetchCaseAuditLog } from '../api/cases';
+import { getAccessToken } from '../api/auth';
+import { fetchCaseById, assignVehicle, updateCase, fetchCaseAuditLog, fetchCaseDocuments, uploadCaseDocument } from '../api/cases';
 import { fetchDrivers } from '../api/drivers';
 import { fetchVehicles } from '../api/vehicles';
 import { fetchRoster, updateRoster, deleteRoster } from '../api/roster';
@@ -26,11 +27,16 @@ export default function CaseDetails() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
 
+  const [documents, setDocuments] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [casketOptions, setCasketOptions] = useState([]);
   const [casketInventory, setCasketInventory] = useState([]);
   const [availableColors, setAvailableColors] = useState([]);
+  const [locationsList, setLocationsList] = useState([]);
 
   useEffect(() => {
     const loadCase = async () => {
@@ -39,17 +45,19 @@ export default function CaseDetails() {
         setCaseData(data);
 
         try {
-          // Load drivers, roster, vehicles, and audit logs in parallel
-          const [drv, rost, veh, logs] = await Promise.all([
+          // Load drivers, roster, vehicles, logs, and documents in parallel
+          const [drv, rost, veh, logs, docs] = await Promise.all([
             fetchDrivers(),
             fetchRoster(),
             fetchVehicles(),
-            fetchCaseAuditLog(id)
+            fetchCaseAuditLog(id),
+            fetchCaseDocuments(id)
           ]);
           setDrivers(drv);
           setCaseRoster((rost || []).filter(r => String(r.case_id) === String(id)));
           setVehicles(veh);
           setAuditLogs(logs || []);
+          setDocuments(docs || []);
         } catch (innerErr) {
           console.warn("Error loading auxiliary data:", innerErr);
         }
@@ -87,6 +95,29 @@ export default function CaseDetails() {
       }
     };
     if (isEditing) loadCaskets();
+  }, [isEditing]);
+
+  // Effect: Load branches for the dropdown
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const token = getAccessToken();
+        const response = await fetch(`${API_HOST}/api/locations`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setLocationsList(data.locations || []);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch locations:', err);
+      }
+    };
+    if (isEditing) {
+      fetchLocations();
+    }
   }, [isEditing]);
 
   // Effect: Filter colors when Casket Type changes in Edit Mode
@@ -204,6 +235,24 @@ export default function CaseDetails() {
       alert('Vehicle assignment removed successfully');
     } catch (err) {
       alert("Failed to delete assignment: " + (err.response?.data?.error || err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      setUploadError('');
+      const newDoc = await uploadCaseDocument(id, file);
+      setDocuments(prev => [newDoc, ...prev]);
+    } catch (err) {
+      console.error(err);
+      setUploadError('Failed to upload document');
+      alert('Document upload failed.');
+    } finally {
+      setUploading(false);
+      e.target.value = null; // reset input
     }
   };
 
@@ -451,7 +500,20 @@ export default function CaseDetails() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500">Branch</label>
-                <input className="w-full border rounded p-1" value={editForm.branch || ''} onChange={e => setEditForm({ ...editForm, branch: e.target.value })} />
+                <select 
+                  className="w-full border rounded p-1" 
+                  value={editForm.branch || ''} 
+                  onChange={e => setEditForm({ ...editForm, branch: e.target.value })}
+                >
+                  <option value="">Select Branch</option>
+                  {locationsList.map(loc => (
+                    <option key={loc.id} value={loc.name}>{loc.name}</option>
+                  ))}
+                  {/* Fallback option if current branch somehow isn't in DB */}
+                  {editForm.branch && !locationsList.find(l => l.name === editForm.branch) && (
+                    <option value={editForm.branch}>{editForm.branch}</option>
+                  )}
+                </select>
               </div>
             </div>
           ) : (
@@ -533,6 +595,54 @@ export default function CaseDetails() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-10 p-4 sm:p-6 rounded-xl shadow bg-white border border-gray-100">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="font-bold text-lg text-gray-800">Attached Documents</h2>
+          <label className="bg-red-700 text-white px-4 py-2 rounded shadow hover:bg-red-800 transition cursor-pointer text-sm font-semibold flex items-center gap-2">
+            {uploading ? 'Uploading...' : '+ Upload Document'}
+            <input 
+              type="file" 
+              className="hidden" 
+              accept=".pdf,.png,.jpg,.jpeg" 
+              onChange={handleFileUpload} 
+              disabled={uploading} 
+            />
+          </label>
+        </div>
+        {uploadError && <div className="text-red-500 text-sm mb-4 bg-red-50 p-2 rounded">{uploadError}</div>}
+        
+        {documents.length === 0 ? (
+          <div className="text-sm text-gray-500 italic py-4 bg-gray-50 text-center rounded border border-dashed border-gray-300">
+            No documents attached to this case.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {documents.map(doc => (
+              <a 
+                href={doc.file_url} 
+                target="_blank" 
+                rel="noreferrer" 
+                key={doc.id} 
+                className="block p-4 border border-gray-200 rounded hover:shadow-md transition bg-blue-50/20 hover:bg-blue-50 group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-red-100 text-red-800 rounded group-hover:bg-red-200 transition">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-sm font-bold text-gray-800 truncate" title={doc.file_name}>{doc.file_name}</p>
+                    <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">
+                      {new Date(doc.created_at).toLocaleDateString()}
+                    </p>
+                    <p className="text-xs text-blue-600 mt-2 font-semibold">View File →</p>
+                  </div>
+                </div>
+              </a>
+            ))}
           </div>
         )}
       </div>

@@ -94,7 +94,7 @@ export default function RepatriationTripSheet() {
   }, [form.vehicle_id]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6">
+    <div className="min-h-screen print:min-h-0 print:py-0 print:bg-white bg-gradient-to-br from-gray-50 to-gray-100 py-6">
       <div className="max-w-4xl mx-auto px-4 print:hidden">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-red-700">Repatriation Trip Sheet</h1>
@@ -333,7 +333,7 @@ export default function RepatriationTripSheet() {
 
       {printMode && (
         <div id="tfs-print-root" className="p-6">
-          <style>{`@media print { body, html { margin:0; } @page { size: A4; margin: 10mm; } body * { visibility: hidden !important; } #tfs-print-root, #tfs-print-root * { visibility: visible !important; } #tfs-print-root { position: absolute; left: 0; top: 0; width: 100%; } }`}</style>
+          <style>{`@media print { body, html { margin:0; padding: 0; height: auto; overflow: visible; } @page { size: A4; margin: 10mm; } #root, .min-h-screen { min-height: 0 !important; height: auto !important; padding: 0 !important; margin: 0 !important; } body * { visibility: hidden !important; } #tfs-print-root, #tfs-print-root * { visibility: visible !important; } #tfs-print-root { position: absolute; left: 0; top: 0; width: 100%; } }`}</style>
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-4">
               <img src="/logo_full.png" alt="Thusanang Logo" className="h-20 mx-auto object-contain" />

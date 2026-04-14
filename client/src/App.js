@@ -20,6 +20,7 @@ import ResetPassword from './pages/ResetPassword';
 import UserManagement from './pages/UserManagement';
 import AirtimeRequests from './pages/AirtimeRequests';
 import Roster from './pages/Roster';
+import WhatsAppChat from './pages/WhatsAppChat';
 import './index.css';
 
 function Navigation() {
@@ -188,6 +189,13 @@ function Navigation() {
           >
             Airtime Requests
           </Link>
+          <Link
+            to="/whatsapp"
+            className={`px-3 py-2 rounded transition flex items-center ${isActive('/whatsapp') ? 'bg-red-700 text-yellow-400' : 'hover:text-yellow-500 hover:bg-red-700'
+              }`}
+          >
+            <span className="mr-2">💬</span> Chats
+          </Link>
           {/* Admin-only: Users link */}
           {isAuthenticated && user?.role === 'admin' && (
             <Link
@@ -283,6 +291,14 @@ function Navigation() {
                 }`}
             >
               Airtime Requests
+            </Link>
+            <Link
+              to="/whatsapp"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-3 rounded transition flex items-center ${isActive('/whatsapp') ? 'bg-red-700 text-yellow-400' : 'hover:text-yellow-500 hover:bg-red-700'
+                }`}
+            >
+              <span className="mr-2">💬</span> WA Chats
             </Link>
             {/* Admin-only: Users link (mobile) */}
             {isAuthenticated && user?.role === 'admin' && (
@@ -431,6 +447,11 @@ function AppContent() {
         <Route path="/roster" element={
           <ProtectedRoute>
             <Roster />
+          </ProtectedRoute>
+        } />
+        <Route path="/whatsapp" element={
+          <ProtectedRoute>
+            <WhatsAppChat />
           </ProtectedRoute>
         } />
 
