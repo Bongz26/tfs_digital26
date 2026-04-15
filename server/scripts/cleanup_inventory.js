@@ -1,72 +1,83 @@
-const { Pool } = require('pg');
-require('dotenv').config();
-
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-});
+const { query } = require('../config/db');
 
 async function cleanupInventory() {
     try {
-        console.log('--- STARTING INVENTORY CLEANUP ---');
-
-        // 1. Normalize Location Casing (Standardize to 'Head Office' and 'Makeneng')
-        console.log('Normalizing location casing...');
-        await pool.query("UPDATE inventory SET location = 'Head Office' WHERE location ILIKE 'Head Office'");
-        await pool.query("UPDATE inventory SET location = 'Makeneng' WHERE location ILIKE 'Makeneng'");
-        await pool.query("UPDATE inventory SET location = 'Bethlehem Branch' WHERE location ILIKE 'Bethlehem Branch'");
-
-        // 2. Identify Ghost Items to Merge
-        const ghostItemsRes = await pool.query(`
-            SELECT id, name, model, color, category, location, sku 
-            FROM inventory 
-            WHERE sku LIKE 'AUTO-%'
-        `);
-        const ghostItems = ghostItemsRes.rows;
-        console.log(`Found ${ghostItems.length} ghost items to merge.`);
-
-        for (const ghost of ghostItems) {
-            // Find the primary matching item (one without AUTO-* SKU, or earliest ID)
-            const primaryMatchRes = await pool.query(`
-                SELECT id 
-                FROM inventory 
-                WHERE name = $1 
-                  AND (model = $2 OR (model IS NULL AND $2 = ''))
-                  AND (color = $3 OR (color IS NULL AND $3 = ''))
-                  AND category = $4 
-                  AND location = $5
-                  AND (sku IS NULL OR sku NOT LIKE 'AUTO-%')
-                ORDER BY id ASC
-                LIMIT 1
-            `, [ghost.name, ghost.model, ghost.color, ghost.category, ghost.location]);
-
-            if (primaryMatchRes.rows.length > 0) {
-                const primaryId = primaryMatchRes.rows[0].id;
-                console.log(`Merging Ghost ID ${ghost.id} into Primary ID ${primaryId} (${ghost.name})`);
-
-                // A. Update stock movements to point to primary ID
-                const moveUpdate = await pool.query(
-                    "UPDATE stock_movements SET inventory_id = $1 WHERE inventory_id = $2",
-                    [primaryId, ghost.id]
-                );
-                console.log(` - Re-linked ${moveUpdate.rowCount} stock movements.`);
-
-                // B. Delete the ghost item
-                await pool.query("DELETE FROM inventory WHERE id = $1", [ghost.id]);
-                console.log(` - Deleted ghost item ${ghost.id}.`);
-            } else {
-                console.log(`⚠️ No primary match found for Ghost ID ${ghost.id} (${ghost.name} - ${ghost.location}). Keeping it for now but normalizing SKU...`);
-                // If it's the only one, maybe remove the AUTO prefix if they want to keep it? 
-                // For now, just leave it as is but it's a "ghost" with no parent.
+        console.log('--- Inventory Cleanup & Consolidation ---');
+        
+        // 1. Fetch all items
+        const res = await query('SELECT * FROM inventory');
+        const items = res.rows;
+        
+        // 2. Normalize and Split names that have " - "
+        let splitCount = 0;
+        for (const item of items) {
+            if (item.name && item.name.includes(' - ')) {
+                const parts = item.name.split(' - ');
+                const newName = parts[0].trim().toUpperCase();
+                const newModel = parts[1].trim().toUpperCase();
+                
+                console.log(`Splitting ID ${item.id}: "${item.name}" -> Name: "${newName}", Model: "${newModel}"`);
+                await query('UPDATE inventory SET name = $1, model = $2 WHERE id = $3', [newName, newModel, item.id]);
+                
+                // Update local object for the next phase
+                item.name = newName;
+                item.model = newModel;
+                splitCount++;
             }
         }
+        console.log(`Step 1 Complete: Split ${splitCount} item names.`);
 
-        console.log('\n--- CLEANUP COMPLETE ---');
+        // 3. Find and Merge Duplicates
+        // Group by Normalized (Name, Model, Color, Location)
+        const groups = {};
+        for (const item of items) {
+            const key = `${(item.name || '').trim().toUpperCase()}|${(item.model || '').trim().toUpperCase()}|${(item.color || '').trim().toUpperCase()}|${(item.location || '').trim().toUpperCase()}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
+        }
 
-    } catch (err) {
-        console.error('❌ CLEANUP FAILED:', err.message);
-    } finally {
-        await pool.end();
+        let mergeCount = 0;
+        for (const [key, group] of Object.entries(groups)) {
+            if (group.length > 1) {
+                console.log(`\nFound group of ${group.length} duplicates for [${key}]`);
+                
+                // Sort by ID (usually oldest is original) or those with existing notes/good SKU
+                // We'll prefer the one that is NOT a ghost stock (sku doesn't start with AUTO-)
+                group.sort((a, b) => {
+                    const aIsGhost = (a.sku || '').startsWith('AUTO-');
+                    const bIsGhost = (b.sku || '').startsWith('AUTO-');
+                    if (aIsGhost && !bIsGhost) return 1;
+                    if (!aIsGhost && bIsGhost) return -1;
+                    return a.id - b.id; // Older first
+                });
+
+                const parent = group[0];
+                const duplicates = group.slice(1);
+
+                for (const dupe of duplicates) {
+                    console.log(`Merging ID ${dupe.id} into Parent ID ${parent.id}...`);
+                    
+                    // Sum up quantities
+                    const newStock = (parseInt(parent.stock_quantity) || 0) + (parseInt(dupe.stock_quantity) || 0);
+                    const newReserved = (parseInt(parent.reserved_quantity) || 0) + (parseInt(dupe.reserved_quantity) || 0);
+                    
+                    // Update parent
+                    await query('UPDATE inventory SET stock_quantity = $1, reserved_quantity = $2 WHERE id = $3', [newStock, newReserved, parent.id]);
+                    parent.stock_quantity = newStock;
+                    parent.reserved_quantity = newReserved;
+
+                    // Delete dupe
+                    await query('DELETE FROM inventory WHERE id = $1', [dupe.id]);
+                    mergeCount++;
+                }
+            }
+        }
+        
+        console.log(`\nStep 2 Complete: Merged ${mergeCount} duplicate items.`);
+        process.exit(0);
+    } catch (e) {
+        console.error('Error during cleanup:', e);
+        process.exit(1);
     }
 }
 

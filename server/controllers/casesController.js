@@ -436,19 +436,10 @@ exports.createCase = async (req, res) => {
             const nameStr = String(casket_type || '').trim();
             const colorStr = String(casket_colour || '').trim();
             if (nameStr) {
-                let primaryName = nameStr;
-                let modelMatch = null;
-                if (nameStr.includes(' - ')) {
-                    const lastDashIndex = nameStr.lastIndexOf(' - ');
-                    primaryName = nameStr.substring(0, lastDashIndex).trim();
-                    modelMatch = nameStr.substring(lastDashIndex + 3).trim();
-                }
-
-                const selectedBranch = (branch || 'Head Office').trim();
-
                 // --- STRICT BRANCH ACCOUNTING LOGIC (Using Helper) ---
                 const invItem = await findOrCreateInventoryItem(supabase, {
                     name: nameStr,
+                    model: 'CASKET', // Derived from field context (casket_type)
                     color: colorStr,
                     branch: selectedBranch,
                     category: 'coffin',
@@ -935,7 +926,6 @@ exports.updateCaseStatus = async (req, res) => {
             const { commitStock, releaseStock } = require('../utils/dbUtils');
             const userEmail = req.user?.email || 'system';
 
-            // 1. COMMIT STOCK (Finalized/Completed)
             if (status === 'completed' && oldStatus !== 'completed') {
                 const nameStr = String(updatedCase.casket_type || '').trim();
                 const colorStr = String(updatedCase.casket_colour || '').trim();
@@ -944,6 +934,7 @@ exports.updateCaseStatus = async (req, res) => {
                 if (nameStr) {
                     const invData = await findOrCreateInventoryItem(supabase, {
                         name: nameStr,
+                        model: 'CASKET',
                         color: colorStr,
                         branch: caseBranch,
                         category: 'coffin',
@@ -955,25 +946,22 @@ exports.updateCaseStatus = async (req, res) => {
                             const result = await commitStock(invData.id, 1, id, userEmail, `Case Completed: ${updatedCase.case_number}`);
                             console.log(`✅ Stock COMMITTED for case ${id}: ${result.message}`);
                             try { await maybeNotifyLowStock(1, supabase); } catch (_) { }
-                        } catch (e) { console.error('❌ Commit failed:', e.message); }
+                        } catch (e) {
+                            console.error('❌ Commit failed:', e.message);
+                        }
                     } else {
                         console.warn(`⚠️ Casket '${nameStr}' creation failed in ${caseBranch} for completion`);
                     }
                 }
-            }
-            // 2. RELEASE STOCK (Cancelled)
-            else if (status === 'cancelled' && oldStatus !== 'cancelled') {
+            } else if (status === 'cancelled' && oldStatus !== 'cancelled') {
                 const nameStr = String(updatedCase.casket_type || '').trim();
                 const colorStr = String(updatedCase.casket_colour || '').trim();
                 const caseBranch = updatedCase.branch || 'Head Office';
 
                 if (nameStr) {
-                    // Note: For release, strict creation might be weird if it never existed, but safe.
-                    // If we are cancelling, we are releasing the reservation. 
-                    // If item doesn't exist, we probably shouldn't create it just to release?
-                    // BUT for consistency, findOrCreate ensures we get an ID.
                     const invData = await findOrCreateInventoryItem(supabase, {
                         name: nameStr,
+                        model: 'CASKET',
                         color: colorStr,
                         branch: caseBranch,
                         category: 'coffin',
@@ -990,7 +978,6 @@ exports.updateCaseStatus = async (req, res) => {
                     }
                 }
             }
-
         } catch (e) {
             console.error('Error in status update reservation logic:', e);
         }
@@ -1649,6 +1636,7 @@ exports.updateCaseDetails = async (req, res) => {
                 const targetBranch = b || updatedCase.branch || 'Head Office';
                 return await findOrCreateInventoryItem(supabase, {
                     name: n,
+                    model: 'CASKET', // Contextual default for casket_type field
                     color: c,
                     branch: targetBranch,
                     category: 'coffin',

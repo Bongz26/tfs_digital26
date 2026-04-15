@@ -6,6 +6,7 @@ const smsService = require('../utils/smsService');
 const { query } = require('../config/db');
 
 const { sendEmail } = require('../utils/emailService');
+const { findOrCreateInventoryItem } = require('../utils/inventoryHelpers');
 
 async function maybeNotifyLowStock(threshold = 1, supabaseClient = null) {
     try {
@@ -1511,114 +1512,30 @@ exports.receiveTransfer = async (req, res) => {
                     throw new Error(`Failed to deduct stock from source: ${decErr.message}`);
                 }
             }
-            // Find equivalent item at Dest
-            // Matching by Name + Category + Model + Color + Location = Dest
-            const itemName = item.name || '';
-            if (!itemName && !item.inventory_id) {
-                console.warn('⚠️ Transfer item missing name and inventory_id, skipping');
-                continue;
-            }
-            // Destination matching strategy (to avoid duplicates):
-            // 1) Try strict match by (location + category + model + color), including NULL color/model handling.
-            // 2) Fallback to name-only match if strict match finds nothing (older data may not have model/color filled).
-            const baseDestQuery = () => supabase
-                .from('inventory')
-                .select('id, stock_quantity, name, model, color')
-                // case-insensitive exact match for location to avoid "Head Office" vs "HEAD OFFICE"
-                .ilike('location', transfer.to_location)
-                .eq('category', 'coffin');
-
-            const modelVal = (item.model || '').trim();
-            const colorVal = (item.color || '').trim();
-
-            let matches = [];
-            let matchErr = null;
-
-            // (1) Strict match by model/color when we have a model (preferred)
-            if (modelVal) {
-                let q = baseDestQuery().ilike('model', modelVal);
-                if (colorVal) q = q.ilike('color', colorVal);
-                else q = q.is('color', null);
-                const r = await q;
-                matches = r.data || [];
-                matchErr = r.error || null;
+            // Find or Create equivalent item at Dest using our standardized helper
+            // This handles Name/Model splitting for legacy transfers and ensures we match the clean database structure.
+            let destItem = null;
+            try {
+                destItem = await findOrCreateInventoryItem(supabase, {
+                    name: item.name,
+                    model: item.model || 'CASKET', // Defaulting to CASKET if not specified in transfer item
+                    color: item.color,
+                    branch: transfer.to_location,
+                    category: 'coffin',
+                    caseNumber: `TRF-${transfer.transfer_number}`
+                });
+            } catch (findErr) {
+                log(`item[${idx}]`, 'Dest lookup/create error', { message: findErr.message });
+                throw new Error(`Failed to locate or create destination item: ${findErr.message}`);
             }
 
-            // (2) Fallback to exact-ish name match when strict match didn't find anything
-            if (!matchErr && (!matches || matches.length === 0) && itemName) {
-                let q2 = baseDestQuery().ilike('name', itemName);
-                // If we have color/model, try to use them, but don't block match if destination has NULLs
-                if (modelVal) q2 = q2.or(`model.is.null,model.ilike.${modelVal}`);
-                if (colorVal) q2 = q2.or(`color.is.null,color.ilike.${colorVal}`);
-                const r2 = await q2;
-                matches = r2.data || [];
-                matchErr = r2.error || null;
+            if (!destItem) {
+                throw new Error(`Could not resolve destination item for '${item.name}'`);
             }
 
-            if (!matchErr && (!matches || matches.length === 0) && !modelVal && !itemName && item.inventory_id) {
-                // last-ditch: no identifying fields - this shouldn't really happen, but don't silently create junk rows
-                throw new Error(`No matching fields to locate destination item (inventory_id=${item.inventory_id})`);
-            }
-
-            if (matchErr) {
-                log(`item[${idx}]`, 'Dest lookup error', { message: matchErr.message, code: matchErr.code });
-                throw matchErr;
-            }
-            let destItemId = null;
-            let prevQty = 0;
-
-            if (matches && matches.length > 0) {
-                destItemId = matches[0].id;
-                prevQty = matches[0].stock_quantity;
-                log(`item[${idx}]`, 'Found existing dest', { destItemId, prevQty });
-            } else {
-                // Create new item pile at Dest - use source item if it exists, else use transfer item data (source may have been deleted)
-                if (!itemName && !item.inventory_id) throw new Error(`Transfer item has no name or inventory_id`);
-                let newItem;
-                const { data: sourceItem, error: srcErr } = await supabase.from('inventory').select('name, category, sku, unit_price, low_stock_threshold, model, color, notes').eq('id', item.inventory_id).maybeSingle();
-                if (srcErr) {
-                    log(`item[${idx}]`, 'Source lookup error', { message: srcErr.message });
-                    throw new Error(`Source inventory lookup failed: ${srcErr.message}`);
-                }
-                if (sourceItem) {
-                    newItem = {
-                        name: sourceItem.name,
-                        category: sourceItem.category || 'coffin',
-                        sku: sourceItem.sku,
-                        unit_price: sourceItem.unit_price,
-                        low_stock_threshold: sourceItem.low_stock_threshold,
-                        model: sourceItem.model,
-                        color: sourceItem.color,
-                        notes: sourceItem.notes,
-                        location: transfer.to_location,
-                        stock_quantity: 0,
-                        reserved_quantity: 0
-                    };
-                } else {
-                    // Source item no longer exists (e.g. deleted) - create from transfer line item data
-                    log(`item[${idx}]`, 'Source item missing, using transfer item data', { inventory_id: item.inventory_id, name: itemName });
-                    newItem = {
-                        name: itemName || `Item ${item.inventory_id}`,
-                        category: 'coffin',
-                        sku: null,
-                        unit_price: null,
-                        low_stock_threshold: 1,
-                        model: item.model || null,
-                        color: item.color || null,
-                        notes: null,
-                        location: transfer.to_location,
-                        stock_quantity: 0,
-                        reserved_quantity: 0
-                    };
-                }
-                const { data: created, error: createErr } = await supabase.from('inventory').insert(newItem).select().single();
-                if (createErr) {
-                    log(`item[${idx}]`, 'Create dest item error', { message: createErr.message, code: createErr.code, details: createErr.details });
-                    throw new Error(`Failed to create dest item: ${createErr.message}`);
-                }
-                destItemId = created.id;
-                log(`item[${idx}]`, 'Created dest item', { destItemId });
-            }
+            const destItemId = destItem.id;
+            const prevQty = destItem.stock_quantity || 0;
+            log(`item[${idx}]`, 'Resolved destination item', { destItemId, prevQty });
 
             // Increment (ensure numeric to avoid string concat)
             const addQty = Number(item.quantity) || 0;
