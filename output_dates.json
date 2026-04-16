@@ -1,0 +1,29 @@
+[
+  {
+    "id": 110,
+    "name": "4 TIER",
+    "model": "CASKET",
+    "color": "ASH",
+    "location": "Head Office",
+    "created_at": "2026-02-10T05:35:22.492Z",
+    "notes": null
+  },
+  {
+    "id": 255,
+    "name": "4 TIER",
+    "model": "CASKET",
+    "color": "ASH",
+    "location": "HEAD OFFICE",
+    "created_at": "2026-03-04T09:35:59.431Z",
+    "notes": "Auto-created for Case THS-2026-087"
+  },
+  {
+    "id": 262,
+    "name": "4 TIER",
+    "model": "CASKET",
+    "color": "ASH",
+    "location": "Head Office",
+    "created_at": "2026-03-11T05:23:37.986Z",
+    "notes": "Auto-created for Case THS-2026-090"
+  }
+]

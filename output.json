@@ -1,0 +1,37 @@
+[
+  {
+    "id": 110,
+    "name": "4 TIER",
+    "model": "CASKET",
+    "color": "ASH",
+    "location": "Head Office"
+  },
+  {
+    "id": 48,
+    "name": "4 Tier",
+    "model": "CASKET",
+    "color": null,
+    "location": "Bethlehem Branch"
+  },
+  {
+    "id": 262,
+    "name": "4 TIER",
+    "model": "CASKET",
+    "color": "ASH",
+    "location": "Head Office"
+  },
+  {
+    "id": 255,
+    "name": "4 TIER",
+    "model": "CASKET",
+    "color": "ASH",
+    "location": "HEAD OFFICE"
+  },
+  {
+    "id": 79,
+    "name": "4 TIER",
+    "model": "CASKET",
+    "color": "ASH",
+    "location": "Makeneng"
+  }
+]

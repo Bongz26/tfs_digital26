@@ -1,41 +1,65 @@
-const handleBotResponse = async (supabase, phoneNumber, messageText) => {
+const handleBotResponse = async (supabase, session, messageText, messageObj) => {
     let responseText = "";
-    const textBase = messageText.trim().toLowerCase();
+    const textBase = (messageText || "").trim().toLowerCase();
+    const phoneNumber = session.phone_number;
 
-    // Check for "agent" or "0" escalation
-    if (textBase === '0' || textBase.includes('agent') || textBase.includes('help')) {
-        // Change session state to 'agent'
+    // Universal escalation or cancel (from any state)
+    if (messageObj.type === 'text' && (textBase === '0' || textBase.includes('agent') || textBase === 'cancel')) {
         await supabase
             .from('whatsapp_sessions')
             .update({ state: 'agent' })
-            .eq('phone_number', phoneNumber);
+            .eq('id', session.id);
         
-        return "I am connecting you to a live agent. Please hold on, they will read your previous messages and respond shortly. Type 'end' if you wish to close this chat.";
-    } 
-    
-    // Check for "application" or "1"
-    else if (textBase === '1' || textBase.includes('application')) {
-        responseText = "📝 *New Application*\nIf you are an agent logging an application, you can do it securely here: https://admintfs.onrender.com \n\nIf you are a client looking for a plan, reply with *3*.";
-    } 
-    
-    // Check for "claim" or "2"
-    else if (textBase === '2' || textBase.includes('claim')) {
-        responseText = "🛡️ *Claims*\nTo process a claim, we require the following documents:\n1. BI-1663 Form\n2. Copy of ID of deceased\n3. Copy of ID of claimant\n\nYou can reply with photos of these documents to store them, or ask for an agent by replying *0*.";
-    } 
-    
-    // Check for "plan" or "price" or "3"
-    else if (textBase === '3' || textBase.includes('plan') || textBase.includes('price')) {
-        responseText = "📜 *Plans & Pricing*\nWe offer various comprehensive funeral plans suited for different family sizes.\n\nReply *0* to speak to an agent who can give you a personalized quote!";
-    } 
-    
-    // Check for "pamphlet" or "brochure" or "4"
-    else if (textBase === '4' || textBase.includes('pamphlet') || textBase.includes('brochure')) {
-        responseText = "📖 *Pamphlet*\nOur digital brochure will be available to download here soon. For immediate info, reply *0* to chat with our staff.";
+        return "I am connecting you to a live agent. Please hold on, they will respond shortly. Type 'end' if you wish to close this chat.";
     }
 
-    // Default Main Menu
-    else {
-        responseText = `*Welcome to TFS Digital Assistance!*\nWe are here to help. Reply with a number to choose an option:\n\n1️⃣ 📝 New Application\n2️⃣ 🛡️ Claims Information\n3️⃣ 📜 Plans & Pricing\n4️⃣ 📖 Obtain Pamphlet\n0️⃣ 👨‍💻 Chat with an Agent\n\n_Powered by TFS Digital_`;
+    // STATE: Claims Document Intake Flow
+    if (session.state === 'bot_claims_intake') {
+        if (messageObj.type === 'image' || messageObj.type === 'document') {
+            return "Document received securely. Please upload the next document, or reply with 'done' when you have uploaded all of them.";
+        } else if (textBase === 'done') {
+            // User finished uploading documents
+            await supabase
+                .from('whatsapp_sessions')
+                .update({ state: 'agent' })
+                .eq('id', session.id);
+            return "Thank you. Your claim documents have been received and passed to our claims department for processing.\n\nYou have been connected to a live agent for final verification. Please hold on.";
+        } else {
+            return "Please upload photos or PDFs of the required documents directly here in this chat.\n\nReply with 'done' when you are finished, or '0' to chat with an agent immediately.";
+        }
+    }
+
+    // STATE: Default Main Menu (session.state === 'bot' or fallback)
+    if (session.state === 'bot' || !session.state) {
+        if (textBase === '1' || textBase.includes('application')) {
+            responseText = "*New Application*\nPlease use our secure online portal to log an application: https://admintfs.onrender.com\n\nIf you require assistance from an agent while filling it out, please reply with *0*.";
+        } 
+        else if (textBase === '2' || textBase.includes('claim')) {
+            // Transition to Claims Intake Flow
+            await supabase
+                .from('whatsapp_sessions')
+                .update({ state: 'bot_claims_intake' })
+                .eq('id', session.id);
+
+            responseText = "To expedite your claim, please provide the following required documents:\n\n" +
+                           "- Certified copy of the official death certificate\n" +
+                           "- Certified copy of the claimant/beneficiary's ID (both sides)\n" +
+                           "- Certified copy of the deceased's ID (both sides)\n" +
+                           "- Completed BI/DHA-1663 form (all 3 pages)\n" +
+                           "- Stamped bank statement of claimant (not older than 3 months)\n" +
+                           "*(Include BI-1680 if they died at home, and police/medical reports for unnatural cases/stillborns)*\n\n" +
+                           "Please upload photos or PDFs of these documents here. Reply with 'done' when you have uploaded all of them.";
+        } 
+        else if (textBase === '3' || textBase.includes('plan') || textBase.includes('price')) {
+            responseText = "*Plans & Pricing*\nThusanang offers a variety of comprehensive funeral plans tailored to accommodate different family sizes and needs.\n\nPlease reply with *0* to connect with an agent for a personalized consultation and quotation.";
+        } 
+        else if (textBase === '4' || textBase.includes('pamphlet') || textBase.includes('brochure')) {
+            responseText = "*Obtain Pamphlet*\nOur digital brochure will be available for download from this menu shortly. For immediate assistance and detailed information regarding our offerings, please reply with *0* to connect with an agent.";
+        }
+        else {
+            // Fallback Menu
+            responseText = `*Welcome to Thusanang Assistance!*\nHow can we assist you today? Please reply with a number to choose an option:\n\n1. New Application\n2. Claims Information\n3. Plans & Pricing\n4. Obtain Pamphlet\n\n0. Chat with an Agent\n\n_Powered by Thusanang_`;
+        }
     }
 
     return responseText;

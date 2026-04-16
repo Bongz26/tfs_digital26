@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "id": 209,
+      "case_number": "THS-2026-100",
+      "status": "completed",
+      "casket_type": "1.9 FEET - COFFIN",
+      "casket_colour": "WHITE",
+      "branch": "Head Office"
+    },
+    {
+      "id": 156,
+      "case_number": "THS-2026-052",
+      "status": "completed",
+      "casket_type": "1.9 FEET - COFFIN",
+      "casket_colour": "KIAAT",
+      "branch": "Head Office"
+    },
+    {
+      "id": 161,
+      "case_number": "THS-2026-057",
+      "status": "completed",
+      "casket_type": "1.9 FEET",
+      "casket_colour": "KIAAT",
+      "branch": "Head Office"
+    },
+    {
+      "id": 165,
+      "case_number": "THS-2026-061",
+      "status": "completed",
+      "casket_type": "1.9 FEET - COFFIN",
+      "casket_colour": "KIAAT",
+      "branch": "Head Office"
+    },
+    {
+      "id": 137,
+      "case_number": "THS-2026-033",
+      "status": "completed",
+      "casket_type": "1.9 Feet",
+      "casket_colour": "Brown",
+      "branch": "Head Office"
+    }
+  ]
+}

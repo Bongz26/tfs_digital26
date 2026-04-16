@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
 export default function WhatsAppChat() {
   const [sessions, setSessions] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
@@ -13,7 +15,7 @@ export default function WhatsAppChat() {
   // Fetch all sessions
   const fetchSessions = async () => {
     try {
-      const res = await axios.get('/api/whatsapp/sessions');
+      const res = await axios.get(`${API_BASE}/api/whatsapp/sessions`);
       setSessions(res.data || []);
     } catch (err) {
       console.error("Error fetching sessions:", err);
@@ -24,7 +26,7 @@ export default function WhatsAppChat() {
   const fetchMessages = async (sessionId) => {
     if (!sessionId) return;
     try {
-      const res = await axios.get(`/api/whatsapp/sessions/${sessionId}/messages`);
+      const res = await axios.get(`${API_BASE}/api/whatsapp/sessions/${sessionId}/messages`);
       setMessages(res.data || []);
       scrollToBottom();
     } catch (err) {
@@ -65,7 +67,7 @@ export default function WhatsAppChat() {
     setLoading(true);
 
     try {
-      await axios.post('/api/whatsapp/agent/send', {
+      await axios.post(`${API_BASE}/api/whatsapp/agent/send`, {
         sessionId: activeSession.id,
         phoneNumber: activeSession.phone_number,
         messageText
@@ -84,7 +86,7 @@ export default function WhatsAppChat() {
     
     if (window.confirm("Are you sure you want to close this ticket and return the user to the bot?")) {
       try {
-        await axios.post('/api/whatsapp/agent/close', {
+        await axios.post(`${API_BASE}/api/whatsapp/agent/close`, {
           sessionId: activeSession.id,
           phoneNumber: activeSession.phone_number
         });

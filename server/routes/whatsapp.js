@@ -74,9 +74,17 @@ router.post('/webhook', async (req, res) => {
         const phoneNumber = messageObj.from; 
         const userName = payload.contacts && payload.contacts[0].profile ? payload.contacts[0].profile.name : '';
         
-        // Handle incoming text 
-        if (messageObj.type === 'text') {
-          const messageText = messageObj.text.body;
+        // Handle incoming messages safely across text, images, and documents
+        const supportedTypes = ['text', 'image', 'document'];
+        if (supportedTypes.includes(messageObj.type)) {
+          let messageText = '';
+          if (messageObj.type === 'text') {
+             messageText = messageObj.text.body;
+          } else if (messageObj.type === 'image') {
+             messageText = `[Image Uploaded - ID: ${messageObj.image.id}]`;
+          } else if (messageObj.type === 'document') {
+             messageText = `[Document Uploaded - ID: ${messageObj.document.id}]`;
+          }
 
           // 1. Get or Create Session
           let { data: session } = await supabase
@@ -103,7 +111,7 @@ router.post('/webhook', async (req, res) => {
           }]);
 
           // Client exit command if in agent mode
-          if (session.state === 'agent' && messageText.trim().toLowerCase() === 'end') {
+          if (session.state === 'agent' && messageObj.type === 'text' && messageText.trim().toLowerCase() === 'end') {
              await supabase.from('whatsapp_sessions').update({ state: 'bot' }).eq('id', session.id);
              const endMsg = "You've successfully exited agent mode. You are back with the bot!";
              await supabase.from('whatsapp_messages').insert([{ session_id: session.id, sender: 'bot', message_text: endMsg }]);
@@ -111,9 +119,9 @@ router.post('/webhook', async (req, res) => {
              return;
           }
 
-          // 3. Process bot response if state is 'bot'
-          if (session.state === 'bot') {
-            const botReply = await handleBotResponse(supabase, phoneNumber, messageText);
+          // 3. Process bot response if state is 'bot' or any 'bot_' sub-state
+          if (session.state && session.state.startsWith('bot')) {
+            const botReply = await handleBotResponse(supabase, session, messageText, messageObj);
             
             // Log Bot's Reply
             await supabase.from('whatsapp_messages').insert([{
