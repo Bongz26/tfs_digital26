@@ -441,7 +441,7 @@ exports.createCase = async (req, res) => {
                     name: nameStr,
                     model: 'CASKET', // Derived from field context (casket_type)
                     color: colorStr,
-                    branch: selectedBranch,
+                    branch: created.branch,
                     category: 'coffin',
                     caseNumber: created.case_number
                 });
@@ -455,7 +455,7 @@ exports.createCase = async (req, res) => {
                             created.stock_warning = result.message;
                             console.warn(`⚠️ Reservation warning: ${result.message}`);
                         } else {
-                            console.log(`✅ Stock RESERVED: ${invItem.name} at ${selectedBranch}`);
+                            console.log(`✅ Stock RESERVED: ${invItem.name} at ${created.branch}`);
                         }
                     } catch (stockErr) {
                         created.stock_warning = `Failed to reserve: ${stockErr.message}`;
@@ -953,6 +953,35 @@ exports.updateCaseStatus = async (req, res) => {
                         console.warn(`⚠️ Casket '${nameStr}' creation failed in ${caseBranch} for completion`);
                     }
                 }
+            } else if (oldStatus === 'completed' && status !== 'completed') {
+                // REVERSAL: Case was completed, now moving back to live status
+                const nameStr = String(updatedCase.casket_type || '').trim();
+                const colorStr = String(updatedCase.casket_colour || '').trim();
+                const caseBranch = updatedCase.branch || 'Head Office';
+
+                if (nameStr) {
+                    const invData = await findOrCreateInventoryItem(supabase, {
+                        name: nameStr,
+                        model: 'CASKET',
+                        color: colorStr,
+                        branch: caseBranch,
+                        category: 'coffin',
+                        caseNumber: updatedCase.case_number
+                    });
+
+                    if (invData) {
+                        try {
+                            const { incrementStock, reserveStock } = require('../utils/dbUtils');
+                            // 1. Put back into stock
+                            await incrementStock(invData.id, 1, userEmail, `Status Reversal from Completed: ${updatedCase.case_number}`);
+                            // 2. Re-reserve it
+                            await reserveStock(invData.id, 1, userEmail, `Re-reserving after status reversal: ${updatedCase.case_number}`);
+                            console.log(`✅ Stock REVERSED/RE-RESERVED for case ${id}`);
+                        } catch (e) {
+                            console.error('❌ Reversal failed:', e.message);
+                        }
+                    }
+                }
             } else if (status === 'cancelled' && oldStatus !== 'cancelled') {
                 const nameStr = String(updatedCase.casket_type || '').trim();
                 const colorStr = String(updatedCase.casket_colour || '').trim();
@@ -974,6 +1003,32 @@ exports.updateCaseStatus = async (req, res) => {
                             console.log(`✅ Stock RELEASED for case ${id}: ${result.message}`);
                         } catch (releaseErr) {
                             console.error('❌ Stock release failed:', releaseErr.message);
+                        }
+                    }
+                }
+            } else if (oldStatus === 'cancelled' && status !== 'cancelled' && status !== 'completed') {
+                // REVERSAL: Case was cancelled, now moving back to live status
+                const nameStr = String(updatedCase.casket_type || '').trim();
+                const colorStr = String(updatedCase.casket_colour || '').trim();
+                const caseBranch = updatedCase.branch || 'Head Office';
+
+                if (nameStr) {
+                    const invData = await findOrCreateInventoryItem(supabase, {
+                        name: nameStr,
+                        model: 'CASKET',
+                        color: colorStr,
+                        branch: caseBranch,
+                        category: 'coffin',
+                        caseNumber: updatedCase.case_number
+                    });
+
+                    if (invData) {
+                        try {
+                            const { reserveStock } = require('../utils/dbUtils');
+                            await reserveStock(invData.id, 1, userEmail, `Status Reversal from Cancelled: ${updatedCase.case_number}`);
+                            console.log(`✅ Stock RE-RESERVED for case ${id}`);
+                        } catch (e) {
+                            console.error('❌ Re-reservation failed:', e.message);
                         }
                     }
                 }

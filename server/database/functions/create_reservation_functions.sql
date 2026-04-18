@@ -105,7 +105,7 @@ BEGIN
 
     -- Log Movement
     INSERT INTO stock_movements (inventory_id, movement_type, quantity_change, previous_quantity, new_quantity, reason, case_id, created_at)
-    VALUES (item_id, 'sale', -amount, current_stock, new_stock, reason_text, case_id_val, NOW());
+    VALUES (item_id, 'adjustment', -amount, current_stock, new_stock, reason_text, case_id_val, NOW());
 
     RETURN jsonb_build_object(
         'success', true, 

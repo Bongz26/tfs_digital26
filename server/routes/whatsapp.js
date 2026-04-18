@@ -14,24 +14,27 @@ async function sendWhatsAppMessage(to, messageText) {
     console.warn("⚠️ Cannot send WhatsApp message - Token or Phone Number ID missing in .env");
     return;
   }
-  try {
-    await axios({
-      method: "POST",
-      url: `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
-      headers: {
-        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      data: {
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: to,
-        type: "text",
-        text: { body: messageText },
-      },
-    });
-  } catch (err) {
-    console.error("❌ Error sending Meta message:", err.response ? JSON.stringify(err.response.data) : err.message);
+    try {
+      const response = await axios({
+        method: "POST",
+        url: `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: to,
+          type: "text",
+          text: { body: messageText },
+        },
+      });
+      console.log(`✅ Meta Msg Sent to ${to}:`, response.data.messages[0].id);
+    } catch (err) {
+    const errorData = err.response ? JSON.stringify(err.response.data) : err.message;
+    console.error(`❌ Meta Send Error [${to}]:`, errorData);
+    // Silent fail in UI but logged for admin diagnostics
   }
 }
 
@@ -54,8 +57,9 @@ router.post('/webhook', async (req, res) => {
   const supabase = req.app.locals.supabase;
   const body = req.body;
 
-  // Make sure it's a WhatsApp API payload
+  // Log incoming webhook for audit
   if (body.object === 'whatsapp_business_account') {
+    console.log("📥 WhatsApp Webhook Received:", JSON.stringify(body, null, 2));
 
     // Acknowledge receipt to Meta immediately
     res.sendStatus(200);
@@ -221,6 +225,27 @@ router.post('/agent/close', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Public Route: Privacy Policy (Required for Meta App Live Mode)
+router.get('/privacy', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>Privacy Policy - TFS Digital</title></head>
+      <body style="font-family: sans-serif; padding: 40px; line-height: 1.6;">
+        <h1>Privacy Policy</h1>
+        <p>At TFS Digital, we respect your privacy and are committed to protecting your personal data.</p>
+        <h2>1. Information We Collect</h2>
+        <p>We only collect information necessary to provide funeral assistance services via WhatsApp, including your phone number and chat history.</p>
+        <h2>2. How We Use Information</h2>
+        <p>Your data is used solely to facilitate communication between you and our agents or automated bot system.</p>
+        <h2>3. Data Security</h2>
+        <p>We implement industry-standard security measures to protect your information stored in our secure database.</p>
+        <h2>4. Contact Us</h2>
+        <p>If you have questions about this policy, contact us at manager@thusanangfs.co.za</p>
+      </body>
+    </html>
+  `);
 });
 
 module.exports = router;

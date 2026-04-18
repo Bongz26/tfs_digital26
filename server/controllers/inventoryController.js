@@ -293,49 +293,31 @@ exports.adjustStock = async (req, res) => {
     if (!supabase) return res.status(500).json({ success: false, error: 'Database not configured' });
 
     try {
-        const { data: item, error: fetchErr } = await supabase
-            .from('inventory')
-            .select('stock_quantity, low_stock_threshold')
-            .eq('id', id)
-            .single();
+        const { incrementStock, decrementStock } = require('../utils/dbUtils');
+        const user = recorded_by || (req.user?.email) || 'system';
+        const adjustReason = reason || 'Manual adjustment';
 
-        if (fetchErr || !item) {
-            return res.status(404).json({ success: false, error: 'Item not found' });
+        let result;
+        if (quantity_change > 0) {
+            result = await incrementStock(id, quantity_change, user, adjustReason);
+        } else if (quantity_change < 0) {
+            result = await decrementStock(id, Math.abs(quantity_change), user, adjustReason);
+        } else {
+            return res.json({ success: true, message: 'No change requested' });
         }
 
-        const previous_quantity = item.stock_quantity;
-        const new_quantity = previous_quantity + quantity_change;
-
-        const { error: updateErr } = await supabase
-            .from('inventory')
-            .update({ stock_quantity: new_quantity, updated_at: new Date() })
-            .eq('id', id);
-
-        if (updateErr) throw updateErr;
-
-        try {
-            const mType = (String(movement_type || '').toLowerCase() === 'sale') ? 'sale' : 'adjustment';
-            const logDate = req.body.created_at || new Date(); // Allow backdating
-
-            await supabase.from('stock_movements').insert({
-                inventory_id: id,
-                case_id: case_id || null,
-                movement_type: mType,
-                quantity_change,
-                previous_quantity,
-                new_quantity,
-                reason: reason || 'Manual adjustment',
-                recorded_by: recorded_by || 'system',
-                created_at: logDate
-            });
-        } catch (movementErr) {
-            console.warn('⚠️  Could not log stock movement:', movementErr.message);
+        if (!result.success) {
+            throw new Error(result.message || 'Stock adjustment failed');
         }
 
-        const is_low_stock = new_quantity <= (item.low_stock_threshold !== null ? item.low_stock_threshold : 0);
+        // Low stock alerts
         try { await maybeNotifyLowStock(1, supabase); } catch (_) { }
 
-        res.json({ success: true, new_quantity, is_low_stock });
+        res.json({ 
+            success: true, 
+            new_quantity: result.newQuantity,
+            message: result.message
+        });
     } catch (err) {
         console.error('❌ Error adjusting stock:', err);
         res.status(500).json({ success: false, error: 'Failed to adjust stock', details: err.message });
@@ -1537,29 +1519,23 @@ exports.receiveTransfer = async (req, res) => {
             const prevQty = destItem.stock_quantity || 0;
             log(`item[${idx}]`, 'Resolved destination item', { destItemId, prevQty });
 
-            // Increment (ensure numeric to avoid string concat)
+            // Atomic Increment at Destination
             const addQty = Number(item.quantity) || 0;
-            const newQty = Number(prevQty) + addQty;
-            const { error: updInvErr } = await supabase.from('inventory').update({ stock_quantity: newQty, updated_at: new Date() }).eq('id', destItemId);
-            if (updInvErr) {
-                log(`item[${idx}]`, 'Update dest stock error', { message: updInvErr.message, code: updInvErr.code });
-                throw new Error(`Failed to update dest stock: ${updInvErr.message}`);
-            }
-
-            // Log Movement (only columns that exist in base schema - driver_id/transfer_id may not exist)
-            const movementPayload = {
-                inventory_id: destItemId,
-                movement_type: 'adjustment', // DB constraint may not allow 'transfer_in'; reason records transfer
-                quantity_change: addQty,
-                previous_quantity: Number(prevQty),
-                new_quantity: newQty,
-                reason: `Transfer ${transfer.transfer_number} from ${transfer.from_location}`,
-                recorded_by: req.user ? req.user.email : 'system'
-            };
-            const { error: movErr } = await supabase.from('stock_movements').insert(movementPayload);
-            if (movErr) {
-                log(`item[${idx}]`, 'Stock movement insert error', { message: movErr.message, code: movErr.code, details: movErr.details });
-                throw movErr;
+            if (addQty > 0) {
+                const { incrementStock } = require('../utils/dbUtils');
+                try {
+                    await incrementStock(
+                        destItemId,
+                        addQty,
+                        userEmail,
+                        `Transfer ${transfer.transfer_number} from ${transfer.from_location}`,
+                        transfer.transfer_number
+                    );
+                    log(`item[${idx}]`, 'Atomic increment at dest successful');
+                } catch (incErr) {
+                    log(`item[${idx}]`, 'Atomic increment at dest failed', { message: incErr.message });
+                    throw new Error(`Failed to increment dest stock: ${incErr.message}`);
+                }
             }
         }
 

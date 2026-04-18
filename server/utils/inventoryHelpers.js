@@ -89,7 +89,7 @@ exports.findOrCreateInventoryItem = async (supabase, { name, model, color, branc
     const template = templates && templates.length > 0 ? templates[0] : {};
 
     // B. Insert new item (Use normalized branch for creation)
-    const normalizedBranch = (branch || 'Head Office').trim();
+    const normalizedBranch = selectedBranch;
 
     const newItemObj = {
         name: nameStr,
