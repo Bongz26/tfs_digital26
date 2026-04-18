@@ -54,6 +54,7 @@ router.get('/webhook', (req, res) => {
 
 // POST /api/whatsapp/webhook - Incoming messages from users
 router.post('/webhook', async (req, res) => {
+  console.log("🔔 WEBHOOK PING: Request received at", new Date().toISOString());
   const supabase = req.app.locals.supabase;
   const body = req.body;
 
