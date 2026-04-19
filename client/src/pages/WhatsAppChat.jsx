@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
@@ -9,8 +10,25 @@ export default function WhatsAppChat() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('chats'); // 'chats' or 'leads'
+  const [leads, setLeads] = useState([]);
+  const [fetchingLeads, setFetchingLeads] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Fetch all leads
+  const fetchLeads = async () => {
+    setFetchingLeads(true);
+    try {
+      const res = await axios.get(`${API_BASE}/api/claim-drafts?department=sales`);
+      setLeads(res.data.drafts || []);
+    } catch (err) {
+      console.error("Error fetching leads:", err);
+    } finally {
+      setFetchingLeads(false);
+    }
+  };
 
   // Fetch all sessions
   const fetchSessions = async () => {
@@ -37,15 +55,17 @@ export default function WhatsAppChat() {
   // Setup basic polling so staff can see new incoming messages
   useEffect(() => {
     fetchSessions();
+    fetchLeads();
     const interval = setInterval(() => {
       fetchSessions();
+      if (activeTab === 'leads') fetchLeads();
       if (activeSession) {
         fetchMessages(activeSession.id);
       }
     }, 5000); // Check every 5 seconds
     
     return () => clearInterval(interval);
-  }, [activeSession]);
+  }, [activeSession, activeTab]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -104,37 +124,72 @@ export default function WhatsAppChat() {
       
       {/* Sessions Sidebar */}
       <div className="w-1/3 bg-white shadow-xl rounded-l-lg border-r border-gray-200 flex flex-col">
-        <div className="p-4 bg-red-800 text-white font-bold text-lg rounded-tl-lg">
-          📱 WhatsApp Queries
+        <div className="p-4 bg-red-800 text-white font-bold text-lg rounded-tl-lg flex justify-between items-center">
+          <span>📱 WhatsApp</span>
+          <div className="flex bg-red-900 rounded-md p-1 items-center">
+             <button 
+                onClick={() => setActiveTab('chats')}
+                className={`px-2 py-1 text-xs rounded ${activeTab === 'chats' ? 'bg-yellow-500 text-red-900' : 'text-white'}`}
+             >Chats</button>
+             <button 
+                onClick={() => setActiveTab('leads')}
+                className={`px-2 py-1 text-xs rounded ${activeTab === 'leads' ? 'bg-yellow-500 text-red-900' : 'text-white'}`}
+             >Leads</button>
+          </div>
         </div>
+
         <div className="flex-1 overflow-y-auto w-full">
-          {sessions.length === 0 ? (
-            <div className="p-4 text-gray-500 text-sm">No ongoing conversations.</div>
-          ) : (
-            sessions.map((s) => (
-              <div 
-                key={s.id} 
-                onClick={() => selectSession(s)}
-                className={`p-4 border-b cursor-pointer transition flex items-center justify-between ${
-                  activeSession?.id === s.id ? 'bg-red-50 border-l-4 border-red-800' : 'hover:bg-gray-50'
-                }`}
-              >
-                <div>
-                  <div className="font-semibold">{s.user_name || s.phone_number}</div>
-                  <div className="text-xs text-gray-500">{new Date(s.updated_at).toLocaleString()}</div>
+          {activeTab === 'chats' ? (
+            sessions.length === 0 ? (
+              <div className="p-4 text-gray-500 text-sm">No ongoing conversations.</div>
+            ) : (
+              sessions.map((s) => (
+                <div 
+                  key={s.id} 
+                  onClick={() => selectSession(s)}
+                  className={`p-4 border-b cursor-pointer transition flex items-center justify-between ${
+                    activeSession?.id === s.id ? 'bg-red-50 border-l-4 border-red-800' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold">{s.user_name || s.phone_number}</div>
+                    <div className="text-xs text-gray-500">{new Date(s.updated_at).toLocaleString()}</div>
+                  </div>
+                  {s.state === 'agent' && (
+                    <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">
+                      WAITING
+                    </span>
+                  )}
                 </div>
-                {s.state === 'agent' && (
-                  <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">
-                    WAITING
-                  </span>
-                )}
-                {s.state === 'bot' && (
-                  <span className="bg-gray-100 text-gray-800 text-xs font-bold px-2 py-1 rounded">
-                    BOT
-                  </span>
-                )}
-              </div>
-            ))
+              ))
+            )
+          ) : (
+            leads.length === 0 ? (
+              <div className="p-4 text-gray-500 text-sm">No captured leads yet.</div>
+            ) : (
+              leads.map((l) => (
+                <div 
+                  key={l.policy_number}
+                  className="p-4 border-b hover:bg-gray-50 transition"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="font-bold text-red-800">{l.data?.deceased_name || 'Anonymous'}</div>
+                    <span className="text-[10px] bg-green-100 text-green-800 px-1 rounded font-bold">LEAD</span>
+                  </div>
+                  <div className="text-xs text-gray-600 mb-1">ID: {l.data?.deceased_id || 'N/A'}</div>
+                  <div className="text-xs text-gray-600 mb-2">Plan: {l.data?.plan_name} (R{l.data?.total_price})</div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-gray-400">{new Date(l.updated_at).toLocaleDateString()}</span>
+                    <button 
+                      onClick={() => navigate(`/?policy=${l.policy_number}`)}
+                      className="text-[10px] bg-red-800 text-white px-2 py-1 rounded font-bold hover:bg-red-700"
+                    >
+                      APPLY
+                    </button>
+                  </div>
+                </div>
+              ))
+            )
           )}
         </div>
       </div>

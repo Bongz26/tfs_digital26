@@ -317,8 +317,8 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
 
             await supabase.from('claim_drafts').insert([{
                 policy_number: draftData.policy_number,
-                department: 'claims',
-                data: draftData
+                department: 'sales',
+                data: { ...draftData, status: 'whatsapp_lead' }
             }]);
 
             // TRIGGER REFERRAL REWARD
