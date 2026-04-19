@@ -13,6 +13,8 @@ export default function WhatsAppChat() {
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' or 'leads'
   const [leads, setLeads] = useState([]);
   const [fetchingLeads, setFetchingLeads] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [updatingLead, setUpdatingLead] = useState(false);
   
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
@@ -118,6 +120,47 @@ export default function WhatsAppChat() {
       }
     }
   };
+  
+  const updateLeadStatus = async (policyNumber, newStatus, notes = null) => {
+    setUpdatingLead(true);
+    try {
+      const lead = leads.find(l => l.policy_number === policyNumber);
+      const updatedData = { 
+        ...lead.data, 
+        status: newStatus,
+        sales_notes: notes !== null ? notes : lead.data.sales_notes || ""
+      };
+      
+      await axios.post(`${API_BASE}/api/claim-drafts`, {
+        policy_number: policyNumber,
+        department: 'sales',
+        data: updatedData
+      });
+      
+      await fetchLeads();
+      if (selectedLead?.policy_number === policyNumber) {
+        setSelectedLead({ ...lead, data: updatedData });
+      }
+    } catch (err) {
+      console.error("Failed to update lead", err);
+    } finally {
+      setUpdatingLead(false);
+    }
+  };
+
+  const copyForPolicy24 = (lead) => {
+    const text = `--- POLICY24 HANDOFF ---
+Full Name: ${lead.data.deceased_name}
+ID Number: ${lead.data.deceased_id}
+Phone: ${lead.policy_number.split('-')[1] || 'Unknown'} 
+Plan: ${lead.data.plan_name}
+Price: R${lead.data.total_price}
+Date Captured: ${new Date(lead.updated_at).toLocaleString()}
+-----------------------`;
+    
+    navigator.clipboard.writeText(text);
+    alert("Data copied! You can now paste this into Policy24.");
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 flex h-[calc(100vh-100px)]">
@@ -181,10 +224,10 @@ export default function WhatsAppChat() {
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] text-gray-400">{new Date(l.updated_at).toLocaleDateString()}</span>
                     <button 
-                      onClick={() => navigate(`/?policy=${l.policy_number}`)}
+                      onClick={() => setSelectedLead(l)}
                       className="text-[10px] bg-red-800 text-white px-2 py-1 rounded font-bold hover:bg-red-700"
                     >
-                      APPLY
+                      VIEW
                     </button>
                   </div>
                 </div>
@@ -194,9 +237,98 @@ export default function WhatsAppChat() {
         </div>
       </div>
 
-      {/* Chat Window */}
-      <div className="w-2/3 bg-gray-50 shadow-xl rounded-r-lg flex flex-col relative">
-        {activeSession ? (
+      {/* Main Content Area (Chat or CRM Card) */}
+      <div className="w-2/3 bg-gray-50 shadow-xl rounded-r-lg flex flex-col relative overflow-hidden">
+        
+        {/* LEAD DETAILS VIEW (CRM CARD) */}
+        {activeTab === 'leads' && selectedLead && (
+          <div className="flex-1 p-8 bg-white overflow-y-auto">
+             <div className="flex justify-between items-start mb-8">
+                <div>
+                   <h2 className="text-3xl font-bold text-red-800">{selectedLead.data?.deceased_name}</h2>
+                   <p className="text-gray-500 font-medium italic">Prospecting since {new Date(selectedLead.updated_at).toLocaleDateString()}</p>
+                </div>
+                <div className="flex gap-2">
+                   <button 
+                      onClick={() => copyForPolicy24(selectedLead)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-red-900 px-4 py-2 rounded-lg font-bold shadow flex items-center gap-2 transition"
+                   >
+                     📋 Copy for Policy24
+                   </button>
+                   <button 
+                      onClick={() => setSelectedLead(null)}
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-bold transition"
+                   >Close</button>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-2 gap-8">
+                {/* Details Card */}
+                <div className="bg-red-50 p-6 rounded-2xl border border-red-100 shadow-sm">
+                   <h3 className="text-red-800 font-bold mb-4 uppercase text-sm tracking-wider">Acquisition Details</h3>
+                   <div className="space-y-4">
+                      <div>
+                         <label className="block text-[10px] text-red-400 font-bold uppercase">ID Number</label>
+                         <p className="text-lg font-mono font-bold text-gray-800">{selectedLead.data?.deceased_id || 'NOT PROVIDED'}</p>
+                      </div>
+                      <div>
+                         <label className="block text-[10px] text-red-400 font-bold uppercase">Target Plan</label>
+                         <p className="text-lg font-bold text-gray-800">{selectedLead.data?.plan_name} (R{selectedLead.data?.total_price}/pm)</p>
+                      </div>
+                      <div>
+                         <label className="block text-[10px] text-red-400 font-bold uppercase">Policy Type</label>
+                         <p className="text-lg font-bold text-gray-800 capitalize">{selectedLead.data?.plan_category}</p>
+                      </div>
+                   </div>
+                </div>
+
+                {/* Status & Pipeline */}
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                   <h3 className="text-gray-400 font-bold mb-4 uppercase text-sm tracking-wider">Funnel Status</h3>
+                   <select 
+                      className="w-full p-4 border rounded-xl font-bold text-gray-800 bg-gray-50 focus:ring-2 focus:ring-red-500"
+                      value={selectedLead.data?.status || 'new_lead'}
+                      onChange={(e) => updateLeadStatus(selectedLead.policy_number, e.target.value)}
+                      disabled={updatingLead}
+                   >
+                      <option value="new_lead">🔴 NEW LEAD (WhatsApp)</option>
+                      <option value="contacted">🟡 CONTACTED / PENDING</option>
+                      <option value="p24_awaiting">🔵 AWAITING POLICY24</option>
+                      <option value="converted">🟢 REGISTERED (FINISHED)</option>
+                      <option value="lost">⚪ CLOSED (LOST)</option>
+                   </select>
+                   <p className="mt-4 text-xs text-gray-400 italic">Updating status syncs the record for all sales staff.</p>
+                </div>
+             </div>
+
+             {/* Interaction Notes */}
+             <div className="mt-8">
+                <h3 className="text-gray-800 font-bold mb-4 flex items-center gap-2">
+                  ✍️ Interaction Notes
+                </h3>
+                <textarea 
+                   className="w-full h-40 p-4 border rounded-2xl focus:ring-red-500 font-medium text-gray-700 bg-gray-50"
+                   placeholder="Log your conversation results here... (e.g. 'Customer will pay via debit order on the 1st')"
+                   value={selectedLead.data?.sales_notes || ''}
+                   onChange={(e) => {
+                      const val = e.target.value;
+                      // Update local state immediately for responsiveness
+                      const updatedLeads = leads.map(l => l.policy_number === selectedLead.policy_number 
+                        ? { ...l, data: { ...l.data, sales_notes: val } } 
+                        : l
+                      );
+                      setLeads(updatedLeads);
+                      setSelectedLead({ ...selectedLead, data: { ...selectedLead.data, sales_notes: val } });
+                   }}
+                   onBlur={(e) => updateLeadStatus(selectedLead.policy_number, selectedLead.data.status, e.target.value)}
+                />
+             </div>
+          </div>
+        )}
+
+        {/* Chat Window */}
+        {activeTab === 'chats' && (
+          activeSession ? (
           <>
             {/* Header */}
             <div className="p-4 bg-white border-b flex justify-between items-center rounded-tr-lg">
