@@ -117,7 +117,7 @@ router.post('/webhook', async (req, res) => {
 
           // Client exit command if in agent mode
           if (session.state === 'agent' && messageObj.type === 'text' && messageText.trim().toLowerCase() === 'end') {
-             await supabase.from('whatsapp_sessions').update({ state: 'bot' }).eq('id', session.id);
+             await supabase.from('whatsapp_sessions').update({ state: 'bot_language_selection' }).eq('id', session.id);
              const endMsg = "You've successfully exited agent mode. You are back with the bot!";
              await supabase.from('whatsapp_messages').insert([{ session_id: session.id, sender: 'bot', message_text: endMsg }]);
              await sendWhatsAppMessage(phoneNumber, endMsg);
