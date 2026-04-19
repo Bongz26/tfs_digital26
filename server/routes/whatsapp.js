@@ -101,7 +101,7 @@ router.post('/webhook', async (req, res) => {
           if (!session) {
             const { data: newSession, error: createErr } = await supabase
               .from('whatsapp_sessions')
-              .insert([{ phone_number: phoneNumber, user_name: userName, state: 'bot' }])
+              .insert([{ phone_number: phoneNumber, user_name: userName, state: 'bot_language_selection' }])
               .select().single();
             
             if (createErr) throw createErr;
