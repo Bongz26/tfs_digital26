@@ -149,15 +149,17 @@ router.post('/webhook', async (req, res) => {
           if (session.state && session.state.startsWith('bot')) {
             const botReply = await handleBotResponse(supabase, session, messageText, messageObj);
             
-            // Log Bot's Reply
-            await supabase.from('whatsapp_messages').insert([{
-              session_id: session.id,
-              sender: 'bot',
-              message_text: botReply
-            }]);
+            if (botReply) {
+              // Log Bot's Reply
+              await supabase.from('whatsapp_messages').insert([{
+                session_id: session.id,
+                sender: 'bot',
+                message_text: botReply
+              }]);
 
-            // Dispatch Meta API POST
-            await sendWhatsAppMessage(phoneNumber, botReply);
+              // Dispatch Meta API POST
+              await sendWhatsAppMessage(phoneNumber, botReply);
+            }
           }
         }
       }
@@ -246,6 +248,37 @@ router.post('/agent/close', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin Route: Get temporary Media URL from Meta
+router.get('/media/:id', async (req, res) => {
+  const mediaId = req.params.id;
+  if (!WHATSAPP_TOKEN) return res.status(500).json({ error: "WhatsApp Token missing" });
+
+  try {
+    // 1. Get the media URL from Meta
+    const metaRes = await axios({
+      method: "GET",
+      url: `https://graph.facebook.com/v19.0/${mediaId}`,
+      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` },
+    });
+
+    const mediaUrl = metaRes.data.url;
+    
+    // 2. Stream the media from Meta to the client
+    const response = await axios({
+      method: "GET",
+      url: mediaUrl,
+      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` },
+      responseType: 'stream'
+    });
+
+    res.setHeader('Content-Type', response.headers['content-type']);
+    response.data.pipe(res);
+  } catch (err) {
+    console.error("❌ Meta Media Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch media from Meta" });
   }
 });
 

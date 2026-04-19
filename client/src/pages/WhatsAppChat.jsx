@@ -162,6 +162,46 @@ Date Captured: ${new Date(lead.updated_at).toLocaleString()}
     alert("Data copied! You can now paste this into Policy24.");
   };
 
+  const renderMessageContent = (text) => {
+    // Detect image ID pattern: [Image Uploaded - ID: 123456]
+    const imgMatch = text.match(/\[Image Uploaded - ID: (\d+)\]/);
+    const docMatch = text.match(/\[Document Uploaded - ID: (\d+)\]/);
+
+    if (imgMatch) {
+      const mediaId = imgMatch[1];
+      const mediaUrl = `${API_BASE}/api/whatsapp/media/${mediaId}`;
+      return (
+        <div className="mt-2 group relative">
+          <img 
+            src={mediaUrl} 
+            alt="WhatsApp Attachment" 
+            className="rounded-lg max-w-full h-auto shadow-md border hover:opacity-90 transition cursor-pointer"
+            onClick={() => window.open(mediaUrl, '_blank')}
+          />
+          <div className="mt-1 text-[10px] text-gray-400 italic">Click to expand document</div>
+        </div>
+      );
+    }
+
+    if (docMatch) {
+      const mediaId = docMatch[1];
+      const mediaUrl = `${API_BASE}/api/whatsapp/media/${mediaId}`;
+      return (
+        <a 
+          href={mediaUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 p-3 bg-red-50 text-red-800 rounded-lg border border-red-200 mt-2 hover:bg-red-100 transition"
+        >
+          <span>📄</span>
+          <span className="font-bold text-xs uppercase">View Document Account</span>
+        </a>
+      );
+    }
+
+    return <div className="text-sm whitespace-pre-wrap">{text}</div>;
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4 flex h-[calc(100vh-100px)]">
       
@@ -361,7 +401,7 @@ Date Captured: ${new Date(lead.updated_at).toLocaleString()}
                     {msg.sender === 'bot' && <div className="text-[10px] uppercase font-bold text-gray-500 mb-1">BOT 🤖</div>}
                     {msg.sender === 'agent' && <div className="text-[10px] uppercase font-bold text-red-700 mb-1">AGENT 👨‍💻</div>}
                     
-                    <div className="text-sm whitespace-pre-wrap">{msg.message_text}</div>
+                    {renderMessageContent(msg.message_text)}
                   </div>
                   <span className="text-[10px] text-gray-400 mt-1">
                     {new Date(msg.timestamp).toLocaleTimeString()}

@@ -342,6 +342,15 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
 
     if (session.state === 'bot_claims_intake') {
         if (messageObj.type === 'image' || messageObj.type === 'document') {
+            const now = Date.now();
+            const lastAck = funnel.last_media_ack_at || 0;
+            
+            // 10 second cooldown for acknowledgment messages during bursts
+            if (now - lastAck < 10000) {
+                return ""; 
+            }
+            
+            await updateFunnel({ last_media_ack_at: now });
             return t.docReceived;
         } else if (textBase === 'done') {
             await supabase.from('whatsapp_sessions').update({ state: 'agent' }).eq('id', session.id);
