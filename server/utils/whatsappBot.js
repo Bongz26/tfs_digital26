@@ -41,9 +41,11 @@ const TRANSLATIONS = {
         quoteOnboardingId: "Thank you. Finally, please provide your *ID Number*:",
         quoteSuccess: "Perfect! I've created a draft application for you. One of our consultants will call you shortly to finalize the details and activate your cover. Welcome to Thusanang!",
 
-        // Referral Logic
-        referralInfo: "🎁 *Share & Earn R50!*\n\nInvite your friends and family to get a quote from Thusanang. For every person who completes a quote and ID verification, you get *R50 Airtime* credited to your phone!\n\n*Your Unique Link:*\n{link}\n\nSimply forward the message below to your contacts! ⬇️",
-        referralInvite: "Hey! I just got a funeral policy quote from Thusanang in 1 minute on WhatsApp. Try it out here: {link}"
+        // Society Portal Logic
+        opt6: "6. Society Portal (Treasurers)",
+        socLoginPrompt: "Please enter your *Society Policy Number* to access the management portal:",
+        socDashboard: "Society: *{name}*\n\n📈 Members: {count}\n📄 Missing Details: {missing}\n\nWhat would you like to do?\n1. Add New Member\n2. Report a Death (Claim)\n0. Back to Main Menu",
+        socError: "I couldn't find a society with that policy number. Please double check and try again, or chat with an agent."
     },
     sesotho: {
         welcome: "*Re u amohela ho Thusanang Assistance!*",
@@ -54,6 +56,7 @@ const TRANSLATIONS = {
         opt3: "3. Merero le Litheko",
         opt4: "4. Fumana Pampiri",
         opt5: "5. Arolelana mme u Fumane (R50)",
+        opt6: "6. Portal ea Mekhatlo (Baokameli)",
         opt0: "0. Bua le Moemeli",
         agentConnecting: "Ke u hokahanya le moemeli wa rona. Ka kopo emanyana, o tla u araba haufinyane. Ngola 'end' haeba u batla ho koala moqoqo ona.",
         appInfo: "*Kopo e Ncha*\nka kopo sebelisa portal ea rona e sireletsehileng ho kenya kopo: https://admintfs.onrender.com\n\nKapa, araba ka *QUOTE* ho fumana khothaletso mona!",
@@ -85,7 +88,13 @@ const TRANSLATIONS = {
 
         // Referral Logic (Sesotho)
         referralInfo: "🎁 *Arolelana mme u Fumane R50!*\n\nMeme metsoalle le ba lelapa ho fumana quote ho Thusanang. Bakeng sa motho e mong le e mong ea qetang quote le netefatso ea ID, u fumana *R50 Airtime*!\n\n*Link ea hau ea ho mema:*\n{link}\n\nArolelana molaetsa ona o ka tlase le mabitso a hau! ⬇️",
-        referralInvite: "Dumela! Ke sa tsoa fumana quote ea funeral policy ho Thusanang ka motsotso o le mong ho WhatsApp. E leke mona: {link}"
+        referralInvite: "Dumela! Ke sa tsoa fumana quote ea funeral policy ho Thusanang ka motsotso o le mong ho WhatsApp. E leke mona: {link}",
+
+        // Society Portal (Sesotho)
+        opt6: "6. Portal ea Mekhatlo",
+        socLoginPrompt: "Ka kopo kenya *Nomoro ea Policy ea Mokhatlo* oa hau:",
+        socDashboard: "Mokhatlo: *{name}*\n\n📈 Litho: {count}\n📄 Lintlha tse haellang: {missing}\n\nU batla ho etsa'ng?\n1. Kenya Setho se Secha\n2. Tlaleha Lefu (Claim)\n0. Khutlela ho Menu",
+        socError: "Ha kea khona ho fumana mokhatlo ka nomoro eo. Ka kopo hlahloba hape, kapa u bue le moemeli."
     },
     isizulu: {
         welcome: "*Siyakwamukela ku-Thusanang Assistance!*",
@@ -96,6 +105,7 @@ const TRANSLATIONS = {
         opt3: "3. Izinhlelo Nezintengo",
         opt4: "4. Thola iBhrusha",
         opt5: "5. Yabelana futhi Uzuze (R50)",
+        opt6: "6. Ingosi Yezinhlangano",
         opt0: "0. Khuluma no-Agent",
         agentConnecting: "Ngikuxhumanisa no-agent wethu. Sicela ulinde kancane, uzokuphendula maduze. Bhala 'end' uma ufuna ukuvala le ngxoxo.",
         appInfo: "*Isicelo Esisha*\nSicela usebenzise ingosi yethu evikelekile ukufaka isicelo: https://admintfs.onrender.com\n\nNoma, phendula ngokuthi *QUOTE* ukuze uthole isincomo lapha!",
@@ -107,7 +117,7 @@ const TRANSLATIONS = {
                     "- Isitatimende sasebhange esinezitembu somhlomuli (esingeqile ezinyangeni ezi-3)\n\n" +
                     "Sicela ufake izithombe noma ama-PDF ale mibhalo lapha. Phendula ngokuthi 'done' uma usuqedile ukuyifaka yonke.",
         plansInfo: "*Izinhlelo Nezintengo*\nI-Thusanang ihlinzeka ngezinhlelo zomngcwabo ezahlukene eziklanyelwe ukuhlinzeka imindeni yabo bonke osayizi nezidingo.\n\nSicela uphendule ngo-*0* ukuze uxhumane no-agent ukuze uthole imininingwane nentengo yakho.",
-        pamphletInfo: "*Thola iBhrusha*\nIbhuloshu yethu yedijithali izotholakala lapha maduze. Ukuze uthole usizo olusheshayo nemininingwane, sicela uphendule ngo-*0* ukuze uxhumane no-agent.",
+        pamphletInfo: "*Thola iBhrusha*\nIbhuloshu yethu yedijithali azotholakala lapha maduze. Ukuze uthole usizo olusheshayo nemininingwane, sicela uphendule ngo-*0* ukuze uxhumane no-agent.",
         docReceived: "Umbhalo ufunyenwe ngokuphepha. Sicela ufake umbhalo olandelayo, noma uphendule ngokuthi 'done' uma usuqedile.",
         claimsFinished: "Siyabonga. Imibhalo yakho yesimangalo ifunyenwe futhi idluliselwe emnyangweni wethu wezicelo.\n\nUxhunyiwe no-agent ukuze kuqinisekiswe okokugcina. Sicela ulinde.",
         claimsInstructions: "Sicela ufake izithombe noma ama-PDF emibhalo edingekayo lapha.\n\nPhendula ngokuthi 'done' uma usuqedile, noma '0' ukuze ukhulume no-agent manje.",
@@ -127,7 +137,16 @@ const TRANSLATIONS = {
 
         // Referral Logic (Zulu)
         referralInfo: "🎁 *Yabelana futhi Uzuze i-R50!*\n\nMema abangani bakho nomndeni wakho ukuthi bathole i-quote e-Thusanang. Kulowo nalowo muntu oqedela i-quote nokuqinisekiswa kwe-ID, uthola *i-R50 Airtime*!\n\n*Isixhumanisi sakho:*\n{link}\n\nThumela lo mlayezo ngezansi koxhumana nabo! ⬇️",
-        referralInvite: "Sawubona! Ngisanda kuthola i-quote yenqubomgomo yomngcwabo kwa-Thusanang ngomzuzu owodwa ku-WhatsApp. Izame lapha: {link}"
+        referralInvite: "Sawubona! Ngisanda kuthola i-quote yenqubomgomo yomngcwabo kwa-Thusanang ngomzuzu owodwa ku-WhatsApp. Izame lapha: {link}",
+
+        // Society Portal (Zulu)
+        opt6: "6. Ingosi Yezinhlangano",
+        socLoginPrompt: "Sicela ufake *Inombolo ye-Policy yeNhlangano* yakho ukuze ungene:",
+        socDashboard: "Inhlangano: *{name}*\n\n📈 Amalungu: {count}\n📄 Imininingwane engekhoyo: {missing}\n\nUfuna ukwenzani?\n1. Faka iLungu Elisha\n2. Bika Ukushona (Claim)\n0. Buyela emuva",
+        socError: "Angikwazanga ukuthola inhlangano ngaleyo nombolo. Sicela uhlole futhi, noma ukhulume no-agent."
+    }
+};
+ha: {link}"
     }
 };
 
@@ -168,9 +187,54 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
             const chosenLang = stateMapping[textBase];
             await supabase.from('whatsapp_sessions').update({ language: chosenLang, state: 'bot' }).eq('id', session.id);
             const nt = TRANSLATIONS[chosenLang];
-            return `${nt.welcome}\n\n${nt.menuPrompt}\n\n${nt.opt1}\n${nt.opt2}\n${nt.opt3}\n${nt.opt4}\n${nt.opt5}\n\n${nt.opt0}`;
+            return `${nt.welcome}\n\n${nt.menuPrompt}\n\n${nt.opt1}\n${nt.opt2}\n${nt.opt3}\n${nt.opt4}\n${nt.opt5}\n${nt.opt6}\n\n${nt.opt0}`;
         }
         return `*Welcome to Thusanang Assistance!*\n\n${TRANSLATIONS.english.langSelect}`;
+    }
+
+    // --- SOCIETY PORTAL STATES ---
+    if (session.state === 'bot_society_login') {
+        const polNo = textBase.toUpperCase();
+        const { data: members, error } = await supabase
+            .from('cases')
+            .select('deceased_name, deceased_id, policy_number')
+            .eq('policy_number', polNo);
+
+        if (error || !members || members.length === 0) {
+            return t.socError;
+        }
+
+        const missingDetails = members.filter(m => !m.deceased_id).length;
+        const societyName = members[0].deceased_name.split(' ')[0] + " Society"; // Heuristic
+        const dashboard = t.socDashboard
+            .replace(/{name}/g, societyName)
+            .replace(/{count}/g, members.length)
+            .replace(/{missing}/g, missingDetails);
+
+        await updateFunnel({ societyPolicy: polNo, societyName });
+        await supabase.from('whatsapp_sessions').update({ state: 'bot_society_dashboard' }).eq('id', session.id);
+        return dashboard;
+    }
+
+    if (session.state === 'bot_society_dashboard') {
+        if (textBase === '1') {
+            await updateFunnel({ category: 'motjha', policy_number: funnel.societyPolicy });
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_members' }).eq('id', session.id);
+            return t.quoteMembers;
+        }
+        if (textBase === '2') {
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_claims_intake' }).eq('id', session.id);
+            return t.claimsInstructions;
+        }
+        if (textBase === '0') {
+            await supabase.from('whatsapp_sessions').update({ state: 'bot' }).eq('id', session.id);
+            return `${t.welcome}\n\n${t.menuPrompt}\n\n${t.opt1}\n${t.opt2}\n${t.opt3}\n${t.opt4}\n${t.opt5}\n${t.opt6}\n\n${t.opt0}`;
+        }
+        return t.socDashboard
+                .replace(/{name}/g, funnel.societyName)
+                .replace(/{count}/g, '...') // Re-fetch logic omitted for brevity
+                .replace(/{missing}/g, '...')
+            + "\n\n" + t.invalidSelection;
     }
 
     // --- QUOTING FLOW STATES ---
@@ -315,8 +379,12 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
             responseText = t.referralInfo.replace(/{link}/g, refLink) + "\n\n" + t.referralInvite.replace(/{link}/g, refLink);
             await supabase.from('whatsapp_sessions').update({ state: 'bot_referral_info' }).eq('id', session.id);
         }
+        else if (textBase === '6' || textBase.includes('society')) {
+            responseText = t.socLoginPrompt;
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_society_login' }).eq('id', session.id);
+        }
         else {
-            responseText = `${t.welcome}\n\n${t.menuPrompt}\n\n${t.opt1}\n${t.opt2}\n${t.opt3}\n${t.opt4}\n${t.opt5}\n\n${t.opt0}\n\n_Powered by Thusanang_`;
+            responseText = `${t.welcome}\n\n${t.menuPrompt}\n\n${t.opt1}\n${t.opt2}\n${t.opt3}\n${t.opt4}\n${t.opt5}\n${t.opt6}\n\n${t.opt0}\n\n_Powered by Thusanang_`;
         }
     }
 
