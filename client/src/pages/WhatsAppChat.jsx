@@ -403,7 +403,7 @@ Date Captured: ${new Date(lead.updated_at).toLocaleString()}
             </svg>
             <p>Select a conversation from the left sidebar to start chatting.</p>
           </div>
-        )}
+        ) )}
       </div>
     </div>
   );
