@@ -146,9 +146,6 @@ const TRANSLATIONS = {
         socError: "Angikwazanga ukuthola inhlangano ngaleyo nombolo. Sicela uhlole futhi, noma ukhulume no-agent."
     }
 };
-ha: {link}"
-    }
-};
 
 const handleBotResponse = async (supabase, session, messageText, messageObj) => {
     let responseText = "";
