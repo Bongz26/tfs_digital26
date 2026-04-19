@@ -91,6 +91,13 @@ router.post('/webhook', async (req, res) => {
              messageText = `[Document Uploaded - ID: ${messageObj.document.id}]`;
           }
 
+          // --- REFERRAL DETECTION ---
+          let referralSource = null;
+          if (messageText && messageText.toUpperCase().startsWith('REFERRED_BY_')) {
+            referralSource = messageText.split('_').pop().trim();
+            console.log(`🔗 Referral Detected! Source: ${referralSource}`);
+          }
+
           // 1. Get or Create Session
           let { data: session } = await supabase
             .from('whatsapp_sessions')
@@ -101,11 +108,25 @@ router.post('/webhook', async (req, res) => {
           if (!session) {
             const { data: newSession, error: createErr } = await supabase
               .from('whatsapp_sessions')
-              .insert([{ phone_number: phoneNumber, user_name: userName, state: 'bot_language_selection' }])
+              .insert([{ 
+                phone_number: phoneNumber, 
+                user_name: userName, 
+                state: 'bot_language_selection',
+                funnel_data: referralSource ? { referred_by: referralSource } : {}
+              }])
               .select().single();
             
             if (createErr) throw createErr;
             session = newSession;
+          } else if (referralSource && (!session.funnel_data || !session.funnel_data.referred_by)) {
+            // Update existing session if referral was missed
+            const updatedFunnel = { ...(session.funnel_data || {}), referred_by: referralSource };
+            const { data: updatedSession } = await supabase
+              .from('whatsapp_sessions')
+              .update({ funnel_data: updatedFunnel })
+              .eq('id', session.id)
+              .select().single();
+            if (updatedSession) session = updatedSession;
           }
 
           // 2. Log User's Message

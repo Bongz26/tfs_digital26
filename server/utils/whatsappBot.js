@@ -1,4 +1,5 @@
 const { getRecommendedPlans } = require('./plans');
+const { triggerReferralReward } = require('./airtime');
 
 const TRANSLATIONS = {
     english: {
@@ -9,6 +10,7 @@ const TRANSLATIONS = {
         opt2: "2. Claims Information",
         opt3: "3. Plans & Pricing",
         opt4: "4. Obtain Pamphlet",
+        opt5: "5. Share & Earn (R50 Reward)",
         opt0: "0. Chat with an Agent",
         agentConnecting: "I am connecting you to a live agent. Please hold on, they will respond shortly. Type 'end' if you wish to close this chat.",
         appInfo: "*New Application*\nPlease use our secure online portal to log an application: https://admintfs.onrender.com\n\nOr, reply with *QUOTE* to get a customized recommendation right here!",
@@ -37,7 +39,11 @@ const TRANSLATIONS = {
         quoteSelect: "Reply with the *Plan Name* (e.g., Gold) to start your application, or *0* to talk to an agent.",
         quoteOnboardingName: "Excellent choice! To start your application, please provide your *Full Name*:",
         quoteOnboardingId: "Thank you. Finally, please provide your *ID Number*:",
-        quoteSuccess: "Perfect! I've created a draft application for you. One of our consultants will call you shortly to finalize the details and activate your cover. Welcome to Thusanang!"
+        quoteSuccess: "Perfect! I've created a draft application for you. One of our consultants will call you shortly to finalize the details and activate your cover. Welcome to Thusanang!",
+
+        // Referral Logic
+        referralInfo: "🎁 *Share & Earn R50!*\n\nInvite your friends and family to get a quote from Thusanang. For every person who completes a quote and ID verification, you get *R50 Airtime* credited to your phone!\n\n*Your Unique Link:*\n{link}\n\nSimply forward the message below to your contacts! ⬇️",
+        referralInvite: "Hey! I just got a funeral policy quote from Thusanang in 1 minute on WhatsApp. Try it out here: {link}"
     },
     sesotho: {
         welcome: "*Re u amohela ho Thusanang Assistance!*",
@@ -47,6 +53,7 @@ const TRANSLATIONS = {
         opt2: "2. Litaba tsa Likleime",
         opt3: "3. Merero le Litheko",
         opt4: "4. Fumana Pampiri",
+        opt5: "5. Arolelana mme u Fumane (R50)",
         opt0: "0. Bua le Moemeli",
         agentConnecting: "Ke u hokahanya le moemeli wa rona. Ka kopo emanyana, o tla u araba haufinyane. Ngola 'end' haeba u batla ho koala moqoqo ona.",
         appInfo: "*Kopo e Ncha*\nka kopo sebelisa portal ea rona e sireletsehileng ho kenya kopo: https://admintfs.onrender.com\n\nKapa, araba ka *QUOTE* ho fumana khothaletso mona!",
@@ -74,7 +81,11 @@ const TRANSLATIONS = {
         quoteSelect: "Araba ka *Lebitso la Morero* (mohlala, Gold) ho qala kopo ea hau, kapa *0* ho bua le moemeli.",
         quoteOnboardingName: "Khetho e ntle haholo! Ho qala kopo ea hau, ka kopo fana ka *Lebitso la hau ka ho tlala*:",
         quoteOnboardingId: "Kea leboha. qetellong, ka kopo fana ka *Nomoro ea ID*:",
-        quoteSuccess: "E phethehile! Ke u etselitse kopo ea mohlala. E mong oa baeletsi ba rona o tla u letsetsa haufinyane. Rea u amohela Thusanang!"
+        quoteSuccess: "E phethehile! Ke u etselitse kopo ea mohlala. E mong oa baeletsi ba rona o tla u letsetsa haufinyane. Rea u amohela Thusanang!",
+
+        // Referral Logic (Sesotho)
+        referralInfo: "🎁 *Arolelana mme u Fumane R50!*\n\nMeme metsoalle le ba lelapa ho fumana quote ho Thusanang. Bakeng sa motho e mong le e mong ea qetang quote le netefatso ea ID, u fumana *R50 Airtime*!\n\n*Link ea hau ea ho mema:*\n{link}\n\nArolelana molaetsa ona o ka tlase le mabitso a hau! ⬇️",
+        referralInvite: "Dumela! Ke sa tsoa fumana quote ea funeral policy ho Thusanang ka motsotso o le mong ho WhatsApp. E leke mona: {link}"
     },
     isizulu: {
         welcome: "*Siyakwamukela ku-Thusanang Assistance!*",
@@ -84,6 +95,7 @@ const TRANSLATIONS = {
         opt2: "2. Imininingwane Yezicelo",
         opt3: "3. Izinhlelo Nezintengo",
         opt4: "4. Thola iBhrusha",
+        opt5: "5. Yabelana futhi Uzuze (R50)",
         opt0: "0. Khuluma no-Agent",
         agentConnecting: "Ngikuxhumanisa no-agent wethu. Sicela ulinde kancane, uzokuphendula maduze. Bhala 'end' uma ufuna ukuvala le ngxoxo.",
         appInfo: "*Isicelo Esisha*\nSicela usebenzise ingosi yethu evikelekile ukufaka isicelo: https://admintfs.onrender.com\n\nNoma, phendula ngokuthi *QUOTE* ukuze uthole isincomo lapha!",
@@ -111,7 +123,11 @@ const TRANSLATIONS = {
         quoteSelect: "Phendula *Ngegamala Lohlelo* (mhlala, Gold) ukuze uqale isicelo sakho, noma *0* ukuze ukhulume no-agent.",
         quoteOnboardingName: "Ukukhetha okuhle kakhulu! Ukuze uqale isicelo sakho, sicela unikeze *Igama Lakho Eligcwele*:",
         quoteOnboardingId: "Ngiyabonga. Okokugcina, sicela unikeze *Inombolo yakho kamazisi (ID)*:",
-        quoteSuccess: "Kuphelele! Ngikwakhele isicelo esisalungiswa. Omunye wabeluleki bethu uzokufonela maduze. Siyakwamukela ku-Thusanang!"
+        quoteSuccess: "Kuphelele! Ngikwakhele isicelo esisalungiswa. Omunye wabeluleki bethu uzokufonela maduze. Siyakwamukela ku-Thusanang!",
+
+        // Referral Logic (Zulu)
+        referralInfo: "🎁 *Yabelana futhi Uzuze i-R50!*\n\nMema abangani bakho nomndeni wakho ukuthi bathole i-quote e-Thusanang. Kulowo nalowo muntu oqedela i-quote nokuqinisekiswa kwe-ID, uthola *i-R50 Airtime*!\n\n*Isixhumanisi sakho:*\n{link}\n\nThumela lo mlayezo ngezansi koxhumana nabo! ⬇️",
+        referralInvite: "Sawubona! Ngisanda kuthola i-quote yenqubomgomo yomngcwabo kwa-Thusanang ngomzuzu owodwa ku-WhatsApp. Izame lapha: {link}"
     }
 };
 
@@ -152,7 +168,7 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
             const chosenLang = stateMapping[textBase];
             await supabase.from('whatsapp_sessions').update({ language: chosenLang, state: 'bot' }).eq('id', session.id);
             const nt = TRANSLATIONS[chosenLang];
-            return `${nt.welcome}\n\n${nt.menuPrompt}\n\n${nt.opt1}\n${nt.opt2}\n${nt.opt3}\n${nt.opt4}\n\n${nt.opt0}`;
+            return `${nt.welcome}\n\n${nt.menuPrompt}\n\n${nt.opt1}\n${nt.opt2}\n${nt.opt3}\n${nt.opt4}\n${nt.opt5}\n\n${nt.opt0}`;
         }
         return `*Welcome to Thusanang Assistance!*\n\n${TRANSLATIONS.english.langSelect}`;
     }
@@ -203,7 +219,6 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
     }
 
     if (session.state === 'bot_quote_recommend') {
-        // User should reply with plan name
         const recommendations = getRecommendedPlans(funnel.category, funnel.category === 'motjha' ? funnel.members : funnel.age, funnel.budget);
         const match = recommendations.find(p => textBase.includes(p.name.toLowerCase()));
         
@@ -228,7 +243,6 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
         if (/^\d{6,13}$/.test(textBase)) {
             const finalFunnel = await updateFunnel({ idNumber: textBase });
             
-            // CREATE DRAFT (The "Onboarding" Step)
             const draftData = {
                 policy_number: `WA-${session.phone_number.slice(-4)}-${Date.now().toString().slice(-4)}`,
                 deceased_name: finalFunnel.fullName,
@@ -246,15 +260,25 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
                 data: draftData
             }]);
 
+            // TRIGGER REFERRAL REWARD
+            if (finalFunnel.referred_by) {
+                await triggerReferralReward(supabase, finalFunnel.referred_by, session.phone_number, 50);
+            }
+
             await supabase.from('whatsapp_sessions').update({ state: 'bot' }).eq('id', session.id);
             return t.quoteSuccess;
         }
         return t.quoteOnboardingId;
     }
 
+    // --- REFERRAL INFO STATE ---
+    if (session.state === 'bot_referral_info') {
+        // Just return to bot menu after showing info
+        await supabase.from('whatsapp_sessions').update({ state: 'bot' }).eq('id', session.id);
+    }
+
     // --- EXISTING FLOWS ---
 
-    // STATE: Claims Document Intake Flow
     if (session.state === 'bot_claims_intake') {
         if (messageObj.type === 'image' || messageObj.type === 'document') {
             return t.docReceived;
@@ -266,7 +290,7 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
         }
     }
 
-    // STATE: Default Main Menu (session.state === 'bot' or fallback)
+    // STATE: Default Main Menu
     if (session.state === 'bot' || !session.state) {
         if (!session.language && session.state !== 'bot_language_selection') {
             await supabase.from('whatsapp_sessions').update({ state: 'bot_language_selection' }).eq('id', session.id);
@@ -286,8 +310,13 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
         else if (textBase === '4' || textBase.includes('pamphlet') || textBase.includes('brochure')) {
             responseText = t.pamphletInfo;
         }
+        else if (textBase === '5' || textBase.includes('earn') || textBase.includes('share')) {
+            const refLink = `https://wa.me/27604965026?text=REFERRED_BY_${session.phone_number}`;
+            responseText = t.referralInfo.replace(/{link}/g, refLink) + "\n\n" + t.referralInvite.replace(/{link}/g, refLink);
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_referral_info' }).eq('id', session.id);
+        }
         else {
-            responseText = `${t.welcome}\n\n${t.menuPrompt}\n\n${t.opt1}\n${t.opt2}\n${t.opt3}\n${t.opt4}\n\n${t.opt0}\n\n_Powered by Thusanang_`;
+            responseText = `${t.welcome}\n\n${t.menuPrompt}\n\n${t.opt1}\n${t.opt2}\n${t.opt3}\n${t.opt4}\n${t.opt5}\n\n${t.opt0}\n\n_Powered by Thusanang_`;
         }
     }
 
