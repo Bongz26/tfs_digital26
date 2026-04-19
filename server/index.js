@@ -97,6 +97,7 @@ app.use('/api/repatriation-trips', requireAuth, repatriationTripsRoutes);
 app.use('/api/claim-drafts', requireAuth, requireMinRole('staff'), claimDraftsRoutes);
 app.use('/api/locations', requireAuth, require('./routes/locations'));
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/public', require('./routes/public'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

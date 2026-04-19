@@ -1,15 +1,17 @@
+const { getRecommendedPlans } = require('./plans');
+
 const TRANSLATIONS = {
     english: {
         welcome: "*Welcome to Thusanang Assistance!*",
         langSelect: "Please choose your preferred language:\n1. English\n2. Sesotho\n3. IsiZulu",
         menuPrompt: "How can we assist you today? Please reply with a number to choose an option:",
-        opt1: "1. New Application",
+        opt1: "1. New Application / Get Quote",
         opt2: "2. Claims Information",
         opt3: "3. Plans & Pricing",
         opt4: "4. Obtain Pamphlet",
         opt0: "0. Chat with an Agent",
         agentConnecting: "I am connecting you to a live agent. Please hold on, they will respond shortly. Type 'end' if you wish to close this chat.",
-        appInfo: "*New Application*\nPlease use our secure online portal to log an application: https://admintfs.onrender.com\n\nIf you require assistance from an agent while filling it out, please reply with *0*.",
+        appInfo: "*New Application*\nPlease use our secure online portal to log an application: https://admintfs.onrender.com\n\nOr, reply with *QUOTE* to get a customized recommendation right here!",
         claimsInfo: "To expedite your claim, please provide the following required documents:\n\n" +
                     "- Certified copy of the official death certificate\n" +
                     "- Certified copy of the claimant/beneficiary's ID (both sides)\n" +
@@ -23,19 +25,31 @@ const TRANSLATIONS = {
         docReceived: "Document received securely. Please upload the next document, or reply with 'done' when you have uploaded all of them.",
         claimsFinished: "Thank you. Your claim documents have been received and passed to our claims department for processing.\n\nYou have been connected to a live agent for final verification. Please hold on.",
         claimsInstructions: "Please upload photos or PDFs of the required documents directly here in this chat.\n\nReply with 'done' when you are finished, or '0' to chat with an agent immediately.",
-        invalidSelection: "Invalid selection. Please choose a valid number from the menu."
+        invalidSelection: "Invalid selection. Please choose a valid number from the menu.",
+        
+        // Quoting Flow
+        quoteCoverage: "Great! Let's get you a quote. Who are you looking to cover?\n1. Just Me (Single)\n2. My Family\n3. A Society (Motjha)",
+        quoteAge: "How old is the main member? (Please reply with a number, e.g. 45)",
+        quoteMembers: "How many members are in your society? (e.g. 6, 10 or 14)",
+        quoteBudget: "What is your maximum monthly budget? (e.g. 150)",
+        quoteNoResults: "I couldn't find a plan matching those exact details. Connecting you to an agent to help customize one for you...",
+        quoteRecommend: "Based on your details, here are our top recommendations for you:",
+        quoteSelect: "Reply with the *Plan Name* (e.g., Gold) to start your application, or *0* to talk to an agent.",
+        quoteOnboardingName: "Excellent choice! To start your application, please provide your *Full Name*:",
+        quoteOnboardingId: "Thank you. Finally, please provide your *ID Number*:",
+        quoteSuccess: "Perfect! I've created a draft application for you. One of our consultants will call you shortly to finalize the details and activate your cover. Welcome to Thusanang!"
     },
     sesotho: {
         welcome: "*Re u amohela ho Thusanang Assistance!*",
         langSelect: "Ka kopo khetha puo ea hau:\n1. English\n2. Sesotho\n3. IsiZulu",
         menuPrompt: "Re ka u thusa joang kajeno? Ka kopo araba ka nomoro ho khetha:",
-        opt1: "1. Kopo e Ncha",
+        opt1: "1. Kopo e Ncha / Fumana Quote",
         opt2: "2. Litaba tsa Likleime",
         opt3: "3. Merero le Litheko",
         opt4: "4. Fumana Pampiri",
         opt0: "0. Bua le Moemeli",
         agentConnecting: "Ke u hokahanya le moemeli wa rona. Ka kopo emanyana, o tla u araba haufinyane. Ngola 'end' haeba u batla ho koala moqoqo ona.",
-        appInfo: "*Kopo e Ncha*\nka kopo sebelisa portal ea rona e sireletsehileng ho kenya kopo: https://admintfs.onrender.com\n\nHaeba u hloka thuso ho moemeli ha u ntse u e tlatsa, ka kopo araba ka *0*.",
+        appInfo: "*Kopo e Ncha*\nka kopo sebelisa portal ea rona e sireletsehileng ho kenya kopo: https://admintfs.onrender.com\n\nKapa, araba ka *QUOTE* ho fumana khothaletso mona!",
         claimsInfo: "Ho potlakisa tleime ea hau, ka kopo fana ka litokomane tse latelang tse hlokahalang:\n\n" +
                     "- Khopi e netefalitsoeng ea setifikeiti sa semmuso sa lefu\n" +
                     "- Khopi e netefalitsoeng ea ID ea mojalefa (mahlale a mabeli)\n" +
@@ -43,24 +57,36 @@ const TRANSLATIONS = {
                     "- Foromo e tlatsweng ea BI/DHA-1663 (maqephe ohle a 3)\n" +
                     "- Setatemente sa banka se setempetsoeng sa mojalefa (se sa feteng likhoeli tse 3)\n\n" +
                     "Ka kopo kenya linepe kapa li-PDF tsa litokomane tsena mona. Araba ka 'done' ha u qetile ho li kenya kaofela.",
-        plansInfo: "*Merero le Litheko*\nThusanang e fana ka merero e fapaneng ea lepato e lokiselitsoeng ho amohela boholo ba malapa a fapaneng le litlhoko.\n\nKa kopo araba ka *0* ho hokahana le moemeli bakeng sa thulaganyo le qotulo ea hau.",
+        plansInfo: "*Merero le Litheko*\nThusanang e fana ka merero e fapaneng dea lepato e lokiselitsoeng ho amohela boholo ba malapa a fapaneng le litlhoko.\n\nKa kopo araba ka *0* ho hokahana le moemeli bakeng sa thulaganyo le qotulo ea hau.",
         pamphletInfo: "*Fumana Pampiri*\nBukana ea rona ea dijithale e tla fumaneha bakeng sa ho khoasolloa mona haufinyane. Bakeng sa thuso ea hang-hang, ka kopo araba ka *0* ho hokahana le moemeli.",
         docReceived: "Tokomane e amohetsoe ka mokhoa o sireletsehileng. Ka kopo kenya tokomane e latelang, kapa u arabe ka 'done' ha u qetile.",
         claimsFinished: "Kea leboha. Litokomane tsa hau tsa tleime li amohetsoe mme li fetiselitsoe lefapheng la rona la likleime.\n\nU hokahantsoe le moemeli bakeng sa netefatso ea ho qetela. Ka kopo emanyana.",
         claimsInstructions: "Ka kopo kenya linepe kapa li-PDF tsa litokomane mona hle.\n\nAraba ka 'done' ha u qetile, kapa '0' ho bua le moemeli hang-hang.",
-        invalidSelection: "Khetho ha e ea nepahala. Ka kopo khetha nomoro e nepahetseng lenaneong."
+        invalidSelection: "Khetho ha e ea nepahala. Ka kopo khetha nomoro e nepahetseng lenaneong.",
+
+        // Quoting Flow (Sesotho)
+        quoteCoverage: "Hantle! Ha re u fe quote. U batla ho koahela mang?\n1. Ke nna feela (Single)\n2. Lelapa la ka\n3. Mokhatlo (Motjha)",
+        quoteAge: "Setho se seholo se na le lilemo tse kae? (Ka kopo araba ka nomoro, mohlala 45)",
+        quoteMembers: "Ho na le litho tse kae mokhatlong oa hau? (mohlala 6, 10 kapa 14)",
+        quoteBudget: "Tekanyetso ea hau ea khoeli le khoeli ke bokae? (mohlala 150)",
+        quoteNoResults: "Ha kea khona ho fumana morero o lumellanang le lintlha tseo. Ke u hokahanya le moemeli ho u thusa...",
+        quoteRecommend: "Ho latela lintlha tsa hau, mona ke likhothaletso tsa rona tse ka sehloohong:",
+        quoteSelect: "Araba ka *Lebitso la Morero* (mohlala, Gold) ho qala kopo ea hau, kapa *0* ho bua le moemeli.",
+        quoteOnboardingName: "Khetho e ntle haholo! Ho qala kopo ea hau, ka kopo fana ka *Lebitso la hau ka ho tlala*:",
+        quoteOnboardingId: "Kea leboha. qetellong, ka kopo fana ka *Nomoro ea ID*:",
+        quoteSuccess: "E phethehile! Ke u etselitse kopo ea mohlala. E mong oa baeletsi ba rona o tla u letsetsa haufinyane. Rea u amohela Thusanang!"
     },
     isizulu: {
         welcome: "*Siyakwamukela ku-Thusanang Assistance!*",
         langSelect: "Sicela ukhethe ulimi lwakho:\n1. English\n2. Sesotho\n3. IsiZulu",
         menuPrompt: "Singakusiza kanjani namuhla? Sicela uphendule ngenombolo ukuze ukhethe:",
-        opt1: "1. Isicelo Esisha",
+        opt1: "1. Isicelo Esisha / Thola i-Quote",
         opt2: "2. Imininingwane Yezicelo",
         opt3: "3. Izinhlelo Nezintengo",
         opt4: "4. Thola iBhrusha",
         opt0: "0. Khuluma no-Agent",
         agentConnecting: "Ngikuxhumanisa no-agent wethu. Sicela ulinde kancane, uzokuphendula maduze. Bhala 'end' uma ufuna ukuvala le ngxoxo.",
-        appInfo: "*Isicelo Esisha*\nSicela usebenzise ingosi yethu evikelekile ukufaka isicelo: https://admintfs.onrender.com\n\nUma udinga usizo ku-agent ngenkathi usigcwalisa, sicela uphendule ngo-*0*.",
+        appInfo: "*Isicelo Esisha*\nSicela usebenzise ingosi yethu evikelekile ukufaka isicelo: https://admintfs.onrender.com\n\nNoma, phendula ngokuthi *QUOTE* ukuze uthole isincomo lapha!",
         claimsInfo: "Ukuze usheshise isimangalo sakho, sicela unikeze le mibhalo elandelayo edingekayo:\n\n" +
                     "- Ikhophia eqinisekisiwe yesitifiketi sokushona esisemthethweni\n" +
                     "- Ikhophia eqinisekisiwe kamazisi (ID) womhlomuli (nxazonke)\n" +
@@ -73,7 +99,19 @@ const TRANSLATIONS = {
         docReceived: "Umbhalo ufunyenwe ngokuphepha. Sicela ufake umbhalo olandelayo, noma uphendule ngokuthi 'done' uma usuqedile.",
         claimsFinished: "Siyabonga. Imibhalo yakho yesimangalo ifunyenwe futhi idluliselwe emnyangweni wethu wezicelo.\n\nUxhunyiwe no-agent ukuze kuqinisekiswe okokugcina. Sicela ulinde.",
         claimsInstructions: "Sicela ufake izithombe noma ama-PDF emibhalo edingekayo lapha.\n\nPhendula ngokuthi 'done' uma usuqedile, noma '0' ukuze ukhulume no-agent manje.",
-        invalidSelection: "Ukukhetha akulungile. Sicela ukhethe inombolo elungile kumenyu."
+        invalidSelection: "Ukukhetha akulungile. Sicela ukhethe inombolo elungile kumenyu.",
+
+        // Quoting Flow (Zulu)
+        quoteCoverage: "Kuhle! Masikutholele i-quote. Ubani ofuna ukumvikelia?\n1. Mina kuphela (Single)\n2. Umndeni wami\n3. Inhlangano (Motjha)",
+        quoteAge: "Uneminyaka emingaki ilungu eliyinhloko? (Sicela uphendule ngenombolo, mhlala 45)",
+        quoteMembers: "Mangaki amalungu enhlangano yakho? (mhlala 6, 10 noma 14)",
+        quoteBudget: "Yimalini isabelomali sakho sanyanga zonke? (mhlala 150)",
+        quoteNoResults: "Angikwazanga ukuthola uhlelo olufana naleyo mininingwane. Ngikuxhumanisa no-agent ukuze akusize...",
+        quoteRecommend: "Ngokusekelwe emininingwaneni yakho, nazi izincomo zethu eziphezulu kuwe:",
+        quoteSelect: "Phendula *Ngegamala Lohlelo* (mhlala, Gold) ukuze uqale isicelo sakho, noma *0* ukuze ukhulume no-agent.",
+        quoteOnboardingName: "Ukukhetha okuhle kakhulu! Ukuze uqale isicelo sakho, sicela unikeze *Igama Lakho Eligcwele*:",
+        quoteOnboardingId: "Ngiyabonga. Okokugcina, sicela unikeze *Inombolo yakho kamazisi (ID)*:",
+        quoteSuccess: "Kuphelele! Ngikwakhele isicelo esisalungiswa. Omunye wabeluleki bethu uzokufonela maduze. Siyakwamukela ku-Thusanang!"
     }
 };
 
@@ -82,6 +120,14 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
     const textBase = (messageText || "").trim().toLowerCase();
     const lang = session.language || 'english';
     const t = TRANSLATIONS[lang] || TRANSLATIONS.english;
+    const funnel = session.funnel_data || {};
+
+    // Helper to update funnel data
+    const updateFunnel = async (newData) => {
+        const updated = { ...funnel, ...newData };
+        await supabase.from('whatsapp_sessions').update({ funnel_data: updated }).eq('id', session.id);
+        return updated;
+    };
 
     // Universal escalation or cancel (from any state)
     if (messageObj.type === 'text' && (textBase === '0' || textBase.includes('agent') || textBase === 'cancel')) {
@@ -93,24 +139,120 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
         return t.agentConnecting;
     }
 
+    // TRIGGER QUOTE FLOW
+    if (textBase === 'quote' || textBase.includes('get quote')) {
+        await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_start' }).eq('id', session.id);
+        return t.quoteCoverage;
+    }
+
     // STATE: Language Selection
     if (session.state === 'bot_language_selection') {
-        if (textBase === '1') {
-            await supabase.from('whatsapp_sessions').update({ language: 'english', state: 'bot' }).eq('id', session.id);
-            const nt = TRANSLATIONS.english;
+        const stateMapping = { '1': 'english', '2': 'sesotho', '3': 'isizulu' };
+        if (stateMapping[textBase]) {
+            const chosenLang = stateMapping[textBase];
+            await supabase.from('whatsapp_sessions').update({ language: chosenLang, state: 'bot' }).eq('id', session.id);
+            const nt = TRANSLATIONS[chosenLang];
             return `${nt.welcome}\n\n${nt.menuPrompt}\n\n${nt.opt1}\n${nt.opt2}\n${nt.opt3}\n${nt.opt4}\n\n${nt.opt0}`;
-        } else if (textBase === '2') {
-            await supabase.from('whatsapp_sessions').update({ language: 'sesotho', state: 'bot' }).eq('id', session.id);
-            const nt = TRANSLATIONS.sesotho;
-            return `${nt.welcome}\n\n${nt.menuPrompt}\n\n${nt.opt1}\n${nt.opt2}\n${nt.opt3}\n${nt.opt4}\n\n${nt.opt0}`;
-        } else if (textBase === '3') {
-            await supabase.from('whatsapp_sessions').update({ language: 'isizulu', state: 'bot' }).eq('id', session.id);
-            const nt = TRANSLATIONS.isizulu;
-            return `${nt.welcome}\n\n${nt.menuPrompt}\n\n${nt.opt1}\n${nt.opt2}\n${nt.opt3}\n${nt.opt4}\n\n${nt.opt0}`;
-        } else {
-            return `*Welcome to Thusanang Assistance!*\n\n${TRANSLATIONS.english.langSelect}`;
         }
+        return `*Welcome to Thusanang Assistance!*\n\n${TRANSLATIONS.english.langSelect}`;
     }
+
+    // --- QUOTING FLOW STATES ---
+    
+    if (session.state === 'bot_quote_start') {
+        const map = { '1': 'single', '2': 'family', '3': 'motjha' };
+        if (map[textBase]) {
+            await updateFunnel({ category: map[textBase] });
+            await supabase.from('whatsapp_sessions').update({ state: map[textBase] === 'motjha' ? 'bot_quote_members' : 'bot_quote_age' }).eq('id', session.id);
+            return map[textBase] === 'motjha' ? t.quoteMembers : t.quoteAge;
+        }
+        return t.quoteCoverage;
+    }
+
+    if (session.state === 'bot_quote_members' || session.state === 'bot_quote_age') {
+        const val = parseInt(textBase);
+        if (!isNaN(val)) {
+            await updateFunnel(session.state === 'bot_quote_members' ? { members: val } : { age: val });
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_budget' }).eq('id', session.id);
+            return t.quoteBudget;
+        }
+        return session.state === 'bot_quote_members' ? t.quoteMembers : t.quoteAge;
+    }
+
+    if (session.state === 'bot_quote_budget') {
+        const budget = parseInt(textBase);
+        if (!isNaN(budget)) {
+            const currentFunnel = await updateFunnel({ budget });
+            const recommendations = getRecommendedPlans(currentFunnel.category, currentFunnel.category === 'motjha' ? currentFunnel.members : currentFunnel.age, budget);
+            
+            if (recommendations.length === 0) {
+                await supabase.from('whatsapp_sessions').update({ state: 'agent' }).eq('id', session.id);
+                return t.quoteNoResults;
+            }
+
+            let resp = `${t.quoteRecommend}\n\n`;
+            recommendations.forEach(p => {
+                resp += `🏆 *${p.name}*\n💰 Price: R${p.price}/pm\n\n`;
+            });
+            resp += t.quoteSelect;
+            
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_recommend' }).eq('id', session.id);
+            return resp;
+        }
+        return t.quoteBudget;
+    }
+
+    if (session.state === 'bot_quote_recommend') {
+        // User should reply with plan name
+        const recommendations = getRecommendedPlans(funnel.category, funnel.category === 'motjha' ? funnel.members : funnel.age, funnel.budget);
+        const match = recommendations.find(p => textBase.includes(p.name.toLowerCase()));
+        
+        if (match) {
+            await updateFunnel({ selectedPlan: match.name, selectedPrice: match.price });
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_onboarding_name' }).eq('id', session.id);
+            return t.quoteOnboardingName;
+        }
+        return t.quoteSelect;
+    }
+
+    if (session.state === 'bot_quote_onboarding_name') {
+        if (textBase.length > 3) {
+            await updateFunnel({ fullName: messageText });
+            await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_onboarding_id' }).eq('id', session.id);
+            return t.quoteOnboardingId;
+        }
+        return t.quoteOnboardingName;
+    }
+
+    if (session.state === 'bot_quote_onboarding_id') {
+        if (/^\d{6,13}$/.test(textBase)) {
+            const finalFunnel = await updateFunnel({ idNumber: textBase });
+            
+            // CREATE DRAFT (The "Onboarding" Step)
+            const draftData = {
+                policy_number: `WA-${session.phone_number.slice(-4)}-${Date.now().toString().slice(-4)}`,
+                deceased_name: finalFunnel.fullName,
+                deceased_id: finalFunnel.idNumber,
+                plan_category: finalFunnel.category,
+                plan_name: finalFunnel.selectedPlan,
+                total_price: finalFunnel.selectedPrice,
+                status: 'intake',
+                source: 'whatsapp_bot'
+            };
+
+            await supabase.from('claim_drafts').insert([{
+                policy_number: draftData.policy_number,
+                department: 'claims',
+                data: draftData
+            }]);
+
+            await supabase.from('whatsapp_sessions').update({ state: 'bot' }).eq('id', session.id);
+            return t.quoteSuccess;
+        }
+        return t.quoteOnboardingId;
+    }
+
+    // --- EXISTING FLOWS ---
 
     // STATE: Claims Document Intake Flow
     if (session.state === 'bot_claims_intake') {
@@ -126,7 +268,6 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
 
     // STATE: Default Main Menu (session.state === 'bot' or fallback)
     if (session.state === 'bot' || !session.state) {
-        // If language isn't set somehow, force selection
         if (!session.language && session.state !== 'bot_language_selection') {
             await supabase.from('whatsapp_sessions').update({ state: 'bot_language_selection' }).eq('id', session.id);
             return `*Welcome to Thusanang Assistance!*\n\n${TRANSLATIONS.english.langSelect}`;
@@ -146,7 +287,6 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
             responseText = t.pamphletInfo;
         }
         else {
-            // Fallback Menu
             responseText = `${t.welcome}\n\n${t.menuPrompt}\n\n${t.opt1}\n${t.opt2}\n${t.opt3}\n${t.opt4}\n\n${t.opt0}\n\n_Powered by Thusanang_`;
         }
     }
