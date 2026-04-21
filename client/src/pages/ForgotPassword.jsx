@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { forgotPassword } from '../api/auth';
 
 export default function ForgotPassword() {
@@ -49,7 +50,11 @@ export default function ForgotPassword() {
               {loading ? 'Sending…' : 'Send Reset Link'}
             </button>
           </form>
-          <p className="mt-4 text-sm text-gray-600">You will receive an email with a link to reset your password.</p>
+          <div className="mt-6 text-center">
+            <Link to="/login" className="text-sm text-red-600 hover:text-red-800 font-medium font-semibold">
+              &larr; Back to Login
+            </Link>
+          </div>
         </div>
       </div>
     </div>

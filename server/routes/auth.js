@@ -456,6 +456,14 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
+    const token = authHeader?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'Reset token missing'
+      });
+    }
+
     const supabaseClient = getSupabase();
     if (!supabaseClient) {
       return res.status(500).json({
@@ -464,7 +472,19 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    const { error } = await supabaseClient.auth.updateUser({
+    // Verify token to get the user
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+
+    if (userError || !user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired reset token'
+      });
+    }
+
+    // Use admin client to perform the password update unconditionally
+    const adminClient = getSupabaseAdmin() || supabaseClient;
+    const { error } = await adminClient.auth.admin.updateUserById(user.id, {
       password
     });
 

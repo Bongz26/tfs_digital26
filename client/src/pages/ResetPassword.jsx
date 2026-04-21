@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { resetPassword } from '../api/auth';
 
 function parseHashParams() {
@@ -92,6 +93,11 @@ export default function ResetPassword() {
             </button>
           </form>
           <p className="mt-4 text-sm text-gray-600">If this page shows missing token, open the password reset link from your email again.</p>
+          <div className="mt-6 text-center">
+            <Link to="/login" className="text-sm text-red-600 hover:text-red-800 font-medium font-semibold">
+              &larr; Back to Login
+            </Link>
+          </div>
         </div>
       </div>
     </div>

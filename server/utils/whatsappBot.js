@@ -15,20 +15,20 @@ const TRANSLATIONS = {
         agentConnecting: "I am connecting you to a live agent. Please hold on, they will respond shortly. Type 'end' if you wish to close this chat.",
         appInfo: "*New Application*\nPlease use our secure online portal to log an application: https://admintfs.onrender.com\n\nOr, reply with *QUOTE* to get a customized recommendation right here!",
         claimsInfo: "To expedite your claim, please provide the following required documents:\n\n" +
-                    "- Certified copy of the official death certificate\n" +
-                    "- Certified copy of the claimant/beneficiary's ID (both sides)\n" +
-                    "- Certified copy of the deceased's ID (both sides)\n" +
-                    "- Completed BI/DHA-1663 form (all 3 pages)\n" +
-                    "- Stamped bank statement of claimant (not older than 3 months)\n" +
-                    "*(Include BI-1680 if they died at home, and police/medical reports for unnatural cases/stillborns)*\n\n" +
-                    "Please upload photos or PDFs of these documents here. Reply with 'done' when you have uploaded all of them.",
+            "- Certified copy of the official death certificate\n" +
+            "- Certified copy of the claimant/beneficiary's ID (both sides)\n" +
+            "- Certified copy of the deceased's ID (both sides)\n" +
+            "- Completed BI/DHA-1663 form (all 3 pages)\n" +
+            "- Stamped bank statement of claimant (not older than 3 months)\n" +
+            "*(Include BI-1680 if they died at home, and police/medical reports for unnatural cases/stillborns)*\n\n" +
+            "Please upload photos or PDFs of these documents here. Reply with 'done' when you have uploaded all of them.",
         plansInfo: "*Plans & Pricing*\nThusanang offers a variety of comprehensive funeral plans tailored to accommodate different family sizes and needs.\n\nPlease reply with *0* to connect with an agent for a personalized consultation and quotation.",
         pamphletInfo: "*Obtain Pamphlet*\nOur digital brochure will be available for download from this menu shortly. For immediate assistance and detailed information regarding our offerings, please reply with *0* to connect with an agent.",
         docReceived: "Document received securely. Please upload the next document, or reply with 'done' when you have uploaded all of them.",
         claimsFinished: "Thank you. Your claim documents have been received and passed to our claims department for processing.\n\nYou have been connected to a live agent for final verification. Please hold on.",
         claimsInstructions: "Please upload photos or PDFs of the required documents directly here in this chat.\n\nReply with 'done' when you are finished, or '0' to chat with an agent immediately.",
         invalidSelection: "Invalid selection. Please choose a valid number from the menu.",
-        
+
         // Quoting Flow
         quoteCoverage: "Great! Let's get you a quote. Who are you looking to cover?\n1. Just Me (Single)\n2. My Family\n3. A Society (Motjha)",
         quoteAge: "How old is the main member? (Please reply with a number, e.g. 45)",
@@ -48,7 +48,7 @@ const TRANSLATIONS = {
         socError: "I couldn't find a society with that policy number. Please double check and try again, or chat with an agent."
     },
     sesotho: {
-        welcome: "*Re u amohela ho Thusanang Assistance!*",
+        welcome: "*Rea ho amohela mo Thusanang Funeral Services*",
         langSelect: "Ka kopo khetha puo ea hau:\n1. English\n2. Sesotho\n3. IsiZulu",
         menuPrompt: "Re ka u thusa joang kajeno? Ka kopo araba ka nomoro ho khetha:",
         opt1: "1. Kopo e Ncha / Fumana Quote",
@@ -61,12 +61,13 @@ const TRANSLATIONS = {
         agentConnecting: "Ke u hokahanya le moemeli wa rona. Ka kopo emanyana, o tla u araba haufinyane. Ngola 'end' haeba u batla ho koala moqoqo ona.",
         appInfo: "*Kopo e Ncha*\nka kopo sebelisa portal ea rona e sireletsehileng ho kenya kopo: https://admintfs.onrender.com\n\nKapa, araba ka *QUOTE* ho fumana khothaletso mona!",
         claimsInfo: "Ho potlakisa tleime ea hau, ka kopo fana ka litokomane tse latelang tse hlokahalang:\n\n" +
-                    "- Khopi e netefalitsoeng ea setifikeiti sa semmuso sa lefu\n" +
-                    "- Khopi e netefalitsoeng ea ID ea mojalefa (mahlale a mabeli)\n" +
-                    "- Khopi e netefalitsoeng ea ID ea mofu (mahlale a mabeli)\n" +
-                    "- Foromo e tlatsweng ea BI/DHA-1663 (maqephe ohle a 3)\n" +
-                    "- Setatemente sa banka se setempetsoeng sa mojalefa (se sa feteng likhoeli tse 3)\n\n" +
-                    "Ka kopo kenya linepe kapa li-PDF tsa litokomane tsena mona. Araba ka 'done' ha u qetile ho li kenya kaofela.",
+            "- Certified copy of the official death certificate\n" +
+            "- Certified copy of the claimant/beneficiary's ID (both sides)\n" +
+            "- Certified copy of the deceased's ID (both sides)\n" +
+            "- Completed BI/DHA-1663 form (all 3 pages)\n" +
+            "- Stamped bank statement of claimant (not older than 3 months)\n" +
+            "*(Include BI-1680 if they died at home, and police/medical reports for unnatural cases/stillborns)*\n\n" +
+            "Ka kopo kenya linepe kapa li-PDF tsa litokomane tsena mona. Araba ka 'done' ha u qetile ho li kenya kaofela.",
         plansInfo: "*Merero le Litheko*\nThusanang e fana ka merero e fapaneng dea lepato e lokiselitsoeng ho amohela boholo ba malapa a fapaneng le litlhoko.\n\nKa kopo araba ka *0* ho hokahana le moemeli bakeng sa thulaganyo le qotulo ea hau.",
         pamphletInfo: "*Fumana Pampiri*\nBukana ea rona ea dijithale e tla fumaneha bakeng sa ho khoasolloa mona haufinyane. Bakeng sa thuso ea hang-hang, ka kopo araba ka *0* ho hokahana le moemeli.",
         docReceived: "Tokomane e amohetsoe ka mokhoa o sireletsehileng. Ka kopo kenya tokomane e latelang, kapa u arabe ka 'done' ha u qetile.",
@@ -110,12 +111,13 @@ const TRANSLATIONS = {
         agentConnecting: "Ngikuxhumanisa no-agent wethu. Sicela ulinde kancane, uzokuphendula maduze. Bhala 'end' uma ufuna ukuvala le ngxoxo.",
         appInfo: "*Isicelo Esisha*\nSicela usebenzise ingosi yethu evikelekile ukufaka isicelo: https://admintfs.onrender.com\n\nNoma, phendula ngokuthi *QUOTE* ukuze uthole isincomo lapha!",
         claimsInfo: "Ukuze usheshise isimangalo sakho, sicela unikeze le mibhalo elandelayo edingekayo:\n\n" +
-                    "- Ikhophia eqinisekisiwe yesitifiketi sokushona esisemthethweni\n" +
-                    "- Ikhophia eqinisekisiwe kamazisi (ID) womhlomuli (nxazonke)\n" +
-                    "- Ikhophia eqinisekisiwe kamazisi (ID) kamufi (nxazonke)\n" +
-                    "- Ifomu eligcwalisiwe le-BI/DHA-1663 (wonke amakhasi ama-3)\n" +
-                    "- Isitatimende sasebhange esinezitembu somhlomuli (esingeqile ezinyangeni ezi-3)\n\n" +
-                    "Sicela ufake izithombe noma ama-PDF ale mibhalo lapha. Phendula ngokuthi 'done' uma usuqedile ukuyifaka yonke.",
+            "- Certified copy of the official death certificate\n" +
+            "- Certified copy of the claimant/beneficiary's ID (both sides)\n" +
+            "- Certified copy of the deceased's ID (both sides)\n" +
+            "- Completed BI/DHA-1663 form (all 3 pages)\n" +
+            "- Stamped bank statement of claimant (not older than 3 months)\n" +
+            "*(Include BI-1680 if they died at home, and police/medical reports for unnatural cases/stillborns)*\n\n" +
+            "Sicela ufake izithombe noma ama-PDF ale mibhalo lapha. Phendula ngokuthi 'done' uma usuqedile ukuyifaka yonke.",
         plansInfo: "*Izinhlelo Nezintengo*\nI-Thusanang ihlinzeka ngezinhlelo zomngcwabo ezahlukene eziklanyelwe ukuhlinzeka imindeni yabo bonke osayizi nezidingo.\n\nSicela uphendule ngo-*0* ukuze uxhumane no-agent ukuze uthole imininingwane nentengo yakho.",
         pamphletInfo: "*Thola iBhrusha*\nIbhuloshu yethu yedijithali azotholakala lapha maduze. Ukuze uthole usizo olusheshayo nemininingwane, sicela uphendule ngo-*0* ukuze uxhumane no-agent.",
         docReceived: "Umbhalo ufunyenwe ngokuphepha. Sicela ufake umbhalo olandelayo, noma uphendule ngokuthi 'done' uma usuqedile.",
@@ -167,7 +169,7 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
             .from('whatsapp_sessions')
             .update({ state: 'agent' })
             .eq('id', session.id);
-        
+
         return t.agentConnecting;
     }
 
@@ -228,14 +230,14 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
             return `${t.welcome}\n\n${t.menuPrompt}\n\n${t.opt1}\n${t.opt2}\n${t.opt3}\n${t.opt4}\n${t.opt5}\n${t.opt6}\n\n${t.opt0}`;
         }
         return t.socDashboard
-                .replace(/{name}/g, funnel.societyName)
-                .replace(/{count}/g, '...') // Re-fetch logic omitted for brevity
-                .replace(/{missing}/g, '...')
+            .replace(/{name}/g, funnel.societyName)
+            .replace(/{count}/g, '...') // Re-fetch logic omitted for brevity
+            .replace(/{missing}/g, '...')
             + "\n\n" + t.invalidSelection;
     }
 
     // --- QUOTING FLOW STATES ---
-    
+
     if (session.state === 'bot_quote_start') {
         const map = { '1': 'single', '2': 'family', '3': 'motjha' };
         if (map[textBase]) {
@@ -261,7 +263,7 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
         if (!isNaN(budget)) {
             const currentFunnel = await updateFunnel({ budget });
             const recommendations = getRecommendedPlans(currentFunnel.category, currentFunnel.category === 'motjha' ? currentFunnel.members : currentFunnel.age, budget);
-            
+
             if (recommendations.length === 0) {
                 await supabase.from('whatsapp_sessions').update({ state: 'agent' }).eq('id', session.id);
                 return t.quoteNoResults;
@@ -272,7 +274,7 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
                 resp += `🏆 *${p.name}*\n💰 Price: R${p.price}/pm\n\n`;
             });
             resp += t.quoteSelect;
-            
+
             await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_recommend' }).eq('id', session.id);
             return resp;
         }
@@ -282,7 +284,7 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
     if (session.state === 'bot_quote_recommend') {
         const recommendations = getRecommendedPlans(funnel.category, funnel.category === 'motjha' ? funnel.members : funnel.age, funnel.budget);
         const match = recommendations.find(p => textBase.includes(p.name.toLowerCase()));
-        
+
         if (match) {
             await updateFunnel({ selectedPlan: match.name, selectedPrice: match.price });
             await supabase.from('whatsapp_sessions').update({ state: 'bot_quote_onboarding_name' }).eq('id', session.id);
@@ -303,7 +305,7 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
     if (session.state === 'bot_quote_onboarding_id') {
         if (/^\d{6,13}$/.test(textBase)) {
             const finalFunnel = await updateFunnel({ idNumber: textBase });
-            
+
             const draftData = {
                 policy_number: `WA-${session.phone_number.slice(-4)}-${Date.now().toString().slice(-4)}`,
                 deceased_name: finalFunnel.fullName,
@@ -344,12 +346,12 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
         if (messageObj.type === 'image' || messageObj.type === 'document') {
             const now = Date.now();
             const lastAck = funnel.last_media_ack_at || 0;
-            
+
             // 10 second cooldown for acknowledgment messages during bursts
             if (now - lastAck < 10000) {
-                return ""; 
+                return "";
             }
-            
+
             await updateFunnel({ last_media_ack_at: now });
             return t.docReceived;
         } else if (textBase === 'done') {
@@ -369,14 +371,14 @@ const handleBotResponse = async (supabase, session, messageText, messageObj) => 
 
         if (textBase === '1' || textBase.includes('application')) {
             responseText = t.appInfo;
-        } 
+        }
         else if (textBase === '2' || textBase.includes('claim')) {
             await supabase.from('whatsapp_sessions').update({ state: 'bot_claims_intake' }).eq('id', session.id);
             responseText = t.claimsInfo;
-        } 
+        }
         else if (textBase === '3' || textBase.includes('plan') || textBase.includes('price')) {
             responseText = t.plansInfo;
-        } 
+        }
         else if (textBase === '4' || textBase.includes('pamphlet') || textBase.includes('brochure')) {
             responseText = t.pamphletInfo;
         }
