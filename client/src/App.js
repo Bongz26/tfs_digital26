@@ -21,6 +21,7 @@ import UserManagement from './pages/UserManagement';
 import AirtimeRequests from './pages/AirtimeRequests';
 import Roster from './pages/Roster';
 import WhatsAppChat from './pages/WhatsAppChat';
+import MediaStudio from './pages/MediaStudio';
 import './index.css';
 
 function Navigation() {
@@ -196,6 +197,13 @@ function Navigation() {
           >
             <span className="mr-2">💬</span> Chats
           </Link>
+          <Link
+            to="/media-studio"
+            className={`px-3 py-2 rounded transition flex items-center ${isActive('/media-studio') ? 'bg-red-700 text-yellow-400' : 'hover:text-yellow-500 hover:bg-red-700'
+              }`}
+          >
+            <span className="mr-2">🎬</span> Media Studio
+          </Link>
           {/* Admin-only: Users link */}
           {isAuthenticated && user?.role === 'admin' && (
             <Link
@@ -299,6 +307,14 @@ function Navigation() {
                 }`}
             >
               <span className="mr-2">💬</span> WA Chats
+            </Link>
+            <Link
+              to="/media-studio"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-3 rounded transition flex items-center ${isActive('/media-studio') ? 'bg-red-700 text-yellow-400' : 'hover:text-yellow-500 hover:bg-red-700'
+                }`}
+            >
+              <span className="mr-2">🎬</span> Media Studio
             </Link>
             {/* Admin-only: Users link (mobile) */}
             {isAuthenticated && user?.role === 'admin' && (
@@ -453,6 +469,9 @@ function AppContent() {
           <ProtectedRoute>
             <WhatsAppChat />
           </ProtectedRoute>
+        } />
+        <Route path="/media-studio" element={
+            <MediaStudio />
         } />
 
         {/* Catch-all route for invalid URLs */}

@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { createCase, lookupCase, updateCase, fetchCaseById } from './api/cases';
 import { createAirtimeRequest } from './api/sms';
 import { fetchInventory } from './api/inventory';
+import { API_HOST } from './api/config';
 import { saveDraft as saveDraftServer, getDraftByPolicy as getDraftServer, getLastDraft as getLastDraftServer, deleteDraftByPolicy as deleteDraftServer, listDrafts as listDraftsServer, getDraftHistory } from './api/claimDrafts';
 
 let PLAN_DATA = {}; // Will be populated from server
@@ -13,7 +14,7 @@ let PLAN_DATA = {}; // Will be populated from server
 // Plan benefits based on brochure
 const PLAN_BENEFITS = {
   'Budget Buster': {
-    casket: "Flat Lid Coffin",
+    casket: "FLAT LID",
     tent: 1,
     table: 1,
     toilet: 1,
@@ -22,7 +23,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Car & Deco)"
   },
   'Plan A': {
-    casket: "Three Tier Coffin",
+    casket: "3 TIER",
     tent: 1,
     table: 1,
     toilet: 1,
@@ -34,7 +35,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Car & Deco)"
   },
   'Plan B': {
-    casket: "Dutch Economy Casket",
+    casket: "ECONO",
     tent: 1,
     table: 1,
     toilet: 1,
@@ -47,7 +48,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Car & Deco)"
   },
   'Plan C': {
-    casket: "Pongee Casket",
+    casket: "PONGEE",
     tent: 1,
     table: 2,
     toilet: 1,
@@ -60,7 +61,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Cars & Deco)"
   },
   'Plan D': {
-    casket: "Raised Halfview Casket",
+    casket: "RAISED HALFVIEW",
     tent: 1,
     table: 2,
     toilet: "VIP",
@@ -73,7 +74,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Cars & Deco)"
   },
   'Plan E': {
-    casket: "Four Tier Casket",
+    casket: "4 TIER",
     tombstone: "1 Tombstone (Head)",
     tent: 1,
     table: 2,
@@ -86,7 +87,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Cars & Deco)"
   },
   'Plan F': {
-    casket: "Four CNR Figurine Casket",
+    casket: "4 CNR WOODTURNING",
     tombstone: "1 Tombstone (Head & Slab)",
     tent: 1,
     table: 2,
@@ -101,13 +102,14 @@ const PLAN_BENEFITS = {
   },
   // Color-graded plans (latest plans with color grading)
   Green: {
+    casket: "3 TIER",
     cover: 5000,
     juice_liters: 15,
     cakes_liters: 40,
     grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"]
   },
   Silver: {
-    casket: "Economy Casket",
+    casket: "ECONO",
     cover: 10000,
     grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
@@ -120,7 +122,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Car)"
   },
   Gold: {
-    casket: "Pongee Casket",
+    casket: "PONGEE",
     cover: 15000,
     grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
@@ -132,10 +134,9 @@ const PLAN_BENEFITS = {
     flower: 1,
     airtime: 200,
     service: "1 Service (Incl. Hearse & Family Cars)"
-
   },
   Platinum: {
-    casket: "Raised HalfView Casket",
+    casket: "RAISED HALFVIEW",
     cover: 20000,
     grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
@@ -149,7 +150,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Cars)"
   },
   Black: {
-    casket: "Four Tier Casket",
+    casket: "4 TIER",
     cover: 30000,
     grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
@@ -163,7 +164,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Car)"
   },
   Pearl: {
-    casket: "Princeton Dome Casket",
+    casket: "PRINCE DOME",
     cover: 40000,
     grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
@@ -177,7 +178,7 @@ const PLAN_BENEFITS = {
     service: "1 Service (Incl. Hearse & Family Cars & Deco)"
   },
   Ivory: {
-    casket: "Four CNR Figurine",
+    casket: "4 CNR WOODTURNING",
     cover: 50000,
     grocery_items: ["Rice", "Maize", "Samp", "Sugar", "Oil", "Tea", "Cremora", "Juice"],
     tent: 1,
@@ -198,7 +199,7 @@ const SPECIAL_PLAN_BENEFITS = {
   'Spring A': {
     cover: 6500,
     airtime: 100,
-    casket: "3-Tier Coffin",
+    casket: "3 TIER",
     benefits: [
       "Full Service (Includes Fleet & Graveyard Setup)",
       "Tent, Table & Toilet",
@@ -211,7 +212,7 @@ const SPECIAL_PLAN_BENEFITS = {
   'Spring B': {
     cover: 6500,
     airtime: 100,
-    casket: "Econo Casket",
+    casket: "ECONO",
     benefits: [
       "Full Service (Includes Fleet & Graveyard Setup)",
       "Tent, Table & Toilet",
@@ -282,7 +283,7 @@ export default function ConsultationForm() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await fetch('/api/public/plans');
+        const response = await fetch(`${API_HOST}/api/public/plans`);
         const data = await response.json();
         if (data && Object.keys(data).length > 0) {
           PLAN_DATA = data;
@@ -511,25 +512,12 @@ export default function ConsultationForm() {
     const nextCashbackAmount = isSpecialPlan ? 0 : (form.benefit_mode === 'cashback' ? (benefits.cover || 0) : 0);
     const hasAirtimeBenefit = (typeof benefits.airtime !== 'undefined') && nextBenefitMode === 'benefits';
 
-    // Auto-set casket ONLY when there's no top-up (book or cash)
-    // Manual selection is ONLY for: private services, book top-ups, or cash top-ups
-    const hasTopUp = form.top_up_type === 'book' || (form.top_up_amount > 0);
-    const shouldAutoSetCasket = form.service_type !== 'private' && !hasTopUp;
-
-    // Exchange Logic: Auto-check the required item if swapped
-    const isExchange = form.benefit_exchange && form.benefit_exchange !== 'standard';
-
+    // Auto-set benefit details ONLY (no longer auto-sets casket based on user request)
     const isStillBornPlan = /still\s*born/i.test(form.plan_name || '');
 
     setForm(prev => {
-      const nextCasketType = shouldAutoSetCasket ? (benefits.casket || '') : prev.casket_type;
-      // Reset color if casket type changes
-      const nextCasketColor = (nextCasketType !== prev.casket_type) ? '' : prev.casket_colour;
-
       return {
         ...prev,
-        casket_type: nextCasketType,
-        casket_colour: isSpecialPlan ? (prev.casket_colour || 'Cherry') : nextCasketColor,
         cover_amount: benefits.cover || 0,
         cashback_amount: nextCashbackAmount,
         benefit_mode: nextBenefitMode,
@@ -668,27 +656,6 @@ export default function ConsultationForm() {
 
   const isSpecialPlan = form.plan_category === 'specials';
 
-  const getAutoCasketType = () => {
-    // If Private, always allow manual override (return form value)
-    if (form.service_type === 'private') {
-      return form.casket_type || '';
-    }
-    // If Book Top-Up, always require manual selection (no auto-fill)
-    if (form.top_up_type === 'book') {
-      return form.casket_type || '';
-    }
-    // If Special Plan, allow edit only if top-up > 0, otherwise read-only default
-    if (isSpecialPlan) {
-      if (form.top_up_amount > 0) {
-        // If top-up exists, allow manual edit (no snap-back to default if cleared)
-        return form.casket_type;
-      }
-      return SPECIAL_PLAN_BENEFITS[form.plan_name]?.casket || '';
-    }
-    // For standard plans, allow full manual override without snap-back
-    // The useEffect above handles setting the initial default when plan changes
-    return form.casket_type;
-  };
 
   const getExtrasSummary = () => {
     const items = [];
@@ -935,7 +902,7 @@ export default function ConsultationForm() {
     const data = {
       ...form,
       total_price: form.service_type === 'book' ? getAutoPrice() : parseFloat(form.total_price) || 0,
-      casket_type: getAutoCasketType(),
+      casket_type: form.casket_type,
       venue_lat: null,
       venue_lng: null,
       status: 'claim_draft',
@@ -990,7 +957,7 @@ export default function ConsultationForm() {
     const data = {
       ...form,
       total_price: form.service_type === 'book' ? getAutoPrice() : parseFloat(form.total_price) || 0,
-      casket_type: getAutoCasketType(),
+      casket_type: form.casket_type,
       venue_lat: null,
       venue_lng: null,
       status: 'confirmed',
@@ -1018,7 +985,8 @@ export default function ConsultationForm() {
           return;
         }
         const intakeDate = new Date(form.intake_day);
-        if (isNaN(intakeDate.getTime()) || intakeDate.getDay() !== 3) {
+        // Robust check for Wednesday (Day index 3) using UTC to avoid timezone shifts
+        if (isNaN(intakeDate.getTime()) || intakeDate.getUTCDay() !== 3) {
           setMessage('Intake day must be a Wednesday');
           setSubmitting(false);
           return;
@@ -1982,14 +1950,33 @@ export default function ConsultationForm() {
             <>
               {/* SCHEDULE DETAILS */}
               <div className="p-8 border-b border-gray-200">
-                <div className="flex items-center mb-4">
+                <div className="flex items-center mb-6">
                   <h3 className="text-xl font-bold text-red-800 flex items-center">
                     <span className="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">3</span>
-                    Schedule Details (Cleansing, Delivery, Service, Church)
+                    Schedule Details (Intake, Cleansing, Delivery, Service)
                   </h3>
-                  <button type="button" onClick={() => setScheduleOpen(v => !v)} className="ml-auto px-4 py-2 rounded-lg border text-sm font-semibold hover:bg-gray-100">
-                    {scheduleOpen ? 'Hide' : 'Show'}
+                  <button type="button" onClick={() => setScheduleOpen(v => !v)} className="ml-auto px-4 py-2 rounded-lg border text-sm font-semibold hover:bg-gray-100 text-gray-700">
+                    {scheduleOpen ? 'Hide Full Schedule' : 'Show Full Schedule'}
                   </button>
+                </div>
+
+                {/* Always Visible Intake Day - Primary for claim registration */}
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-black text-red-800 uppercase tracking-wide mb-1">
+                        Intake Day (MUST BE A WEDNESDAY) <span className="text-red-600">*</span>
+                      </label>
+                      <p className="text-xs text-red-600 mb-2">Required for all claim registrations and mortuary intake scheduling.</p>
+                      <input 
+                        type="date" 
+                        required
+                        value={form.intake_day} 
+                        onChange={e => handleInputChange('intake_day', e.target.value)} 
+                        className="w-full px-4 py-3 border-2 border-red-200 rounded-lg focus:border-red-500 focus:ring-0 text-lg font-bold" 
+                      />
+                    </div>
+                  </div>
                 </div>
                 {!scheduleOpen && (
                   <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-3">
@@ -2052,29 +2039,23 @@ export default function ConsultationForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label>Casket Type</label>
-                    {isSpecialPlan && form.service_type !== 'private' && (!form.top_up_amount || form.top_up_amount <= 0) ? (
-                      <div className="w-full px-4 py-3 bg-green-50 border border-green-300 rounded-lg font-bold text-green-800">
-                        {getAutoCasketType()} (Included)
-                      </div>
-                    ) : (
-                      <select
-                        value={getAutoCasketType()}
-                        onChange={e => {
-                          handleInputChange('casket_type', e.target.value);
-                          if (e.target.value.includes('1.9 Feet')) handleInputChange('programs', 0);
-                        }}
-                        className="w-full px-4 py-3 border rounded-lg bg-white"
-                      >
-                        <option value="">-- Select Casket --</option>
-                        {casketOptions.map((opt, idx) => (
-                          <option key={idx} value={opt}>{opt}</option>
-                        ))}
-                        {/* Ensure current value is shown even if not in options (e.g. legacy data) */}
-                        {getAutoCasketType() && !casketOptions.includes(getAutoCasketType()) && (
-                          <option value={getAutoCasketType()}>{getAutoCasketType()}</option>
-                        )}
-                      </select>
-                    )}
+                    <select
+                      value={form.casket_type}
+                      onChange={e => {
+                        handleInputChange('casket_type', e.target.value);
+                        if (e.target.value.includes('1.9 Feet')) handleInputChange('programs', 0);
+                      }}
+                      className="w-full px-4 py-3 border rounded-lg bg-white"
+                    >
+                      <option value="">-- Select Casket --</option>
+                      {casketOptions.map((opt, idx) => (
+                        <option key={idx} value={opt}>{opt}</option>
+                      ))}
+                      {/* Ensure current value is shown if set */}
+                      {form.casket_type && !casketOptions.includes(form.casket_type) && (
+                        <option value={form.casket_type}>{form.casket_type}</option>
+                      )}
+                    </select>
                   </div>
                   {/* Dynamic Color Dropdown */}
                   <div>
@@ -2189,7 +2170,6 @@ export default function ConsultationForm() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label>Intake Day (Wednesday)</label><input type="date" value={form.intake_day} onChange={e => handleInputChange('intake_day', e.target.value)} className="w-full px-4 py-3 border rounded-lg mt-2" /></div>
                     <div><label>Supplier Name (Optional)</label><input value={form.supplier_name} onChange={e => handleInputChange('supplier_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg mt-2" placeholder="e.g. QwaQwa Tents Hire" /></div>
                   </div>
                 </div>

@@ -257,12 +257,13 @@ exports.createCase = async (req, res) => {
         }
 
         const intakeDate = new Date(intake_day);
-        const dayOfWeek = intakeDate.getDay(); // 0 = Sunday, 3 = Wednesday
+        // Using getUTCDay() for YYYY-MM-DD strings to avoid timezone shift issues (0=Sun, 3=Wed)
+        const dayOfWeek = intakeDate.getUTCDay(); 
         if (dayOfWeek !== 3) {
             return res.status(400).json({
                 success: false,
                 error: 'Intake day must be a Wednesday',
-                details: `Selected date ${intake_day} is not a Wednesday`
+                details: `Selected date ${intake_day} is not a Wednesday (parsed day index: ${dayOfWeek})`
             });
         }
 
