@@ -881,10 +881,13 @@ export default function ConsultationForm() {
       setSubmitting(false);
       return;
     }
-    if (form.service_type === 'book' && (!autoPrice || autoPrice <= 0)) {
-      setMessage('Selected plan must have a valid price');
-      setSubmitting(false);
-      return;
+    if (form.service_type === 'book') {
+      const isFreePlan = form.plan_category === 'colour_grade' || form.plan_category === 'specials';
+      if (!isFreePlan && (!autoPrice || autoPrice <= 0)) {
+        setMessage('Selected plan must have a valid price');
+        setSubmitting(false);
+        return;
+      }
     }
     if (form.service_type === 'private' && (!form.total_price || parseFloat(form.total_price) <= 0)) {
       setMessage('Please provide a manual Total Price for Private service');
