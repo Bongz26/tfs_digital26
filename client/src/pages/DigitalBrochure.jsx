@@ -9,7 +9,7 @@ const Page = React.forwardRef((props, ref) => {
       
       {/* We use an image if provided, otherwise a placeholder */}
       {props.imageSrc ? (
-        <img src={props.imageSrc} alt={`Page ${props.number}`} className="w-full h-full object-fill" />
+        <img src={props.imageSrc} alt={`Page ${props.number}`} className="w-full h-full object-contain bg-white" />
       ) : (
         <div className="p-8 text-center h-full flex flex-col justify-center items-center bg-gray-50 w-full">
           <div className="w-16 h-16 bg-[#8B0000] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">
@@ -61,13 +61,13 @@ const DigitalBrochure = () => {
         <div className="absolute inset-0 bg-yellow-500/5 blur-3xl rounded-full transform scale-150 pointer-events-none"></div>
         
         <HTMLFlipBook 
-          width={450} 
-          height={636} 
+          width={550} 
+          height={773} 
           size="stretch"
           minWidth={315}
-          maxWidth={600}
+          maxWidth={800}
           minHeight={445}
-          maxHeight={848}
+          maxHeight={1125}
           maxShadowOpacity={0.6}
           showCover={true}
           mobileScrollSupport={true}
