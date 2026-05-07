@@ -22,6 +22,7 @@ import AirtimeRequests from './pages/AirtimeRequests';
 import Roster from './pages/Roster';
 import WhatsAppChat from './pages/WhatsAppChat';
 import MediaStudio from './pages/MediaStudio';
+import DigitalBrochure from './pages/DigitalBrochure';
 import './index.css';
 
 function Navigation() {
@@ -472,6 +473,9 @@ function AppContent() {
         } />
         <Route path="/media-studio" element={
             <MediaStudio />
+        } />
+        <Route path="/brochure" element={
+            <DigitalBrochure />
         } />
 
         {/* Catch-all route for invalid URLs */}
