@@ -58,15 +58,18 @@ const SingleTripReceipt = ({ assignment, caseData, groupName }) => {
                 <div className="border-l-4 border-yellow-500 pl-3">
                     <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Collection / Home</div>
                     <div className="text-xs font-semibold text-gray-800">
-                        {caseData.collection_place || caseData.home_address || <span className="italic text-gray-400 font-normal">Not specified</span>}
+                        {caseData.venue_address || <span className="italic text-gray-400 font-normal">Not specified</span>}
                     </div>
                 </div>
                 
                 <div className="border-l-4 border-red-600 pl-3">
                     <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Service Venue</div>
                     <div className="text-xs font-semibold text-gray-800">
-                        {caseData.venue_name || caseData.venue_address || <span className="italic text-gray-400 font-normal">Not specified</span>}
+                        {caseData.venue_name || <span className="italic text-gray-400 font-normal">Not specified</span>}
                     </div>
+                    {caseData.venue_name && caseData.venue_address && (
+                        <div className="text-[10px] text-gray-500 mt-0.5">{caseData.venue_address}</div>
+                    )}
                 </div>
 
                 <div className="border-l-4 border-gray-800 pl-3">
