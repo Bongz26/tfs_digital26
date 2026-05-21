@@ -2310,15 +2310,10 @@ export default function ConsultationForm() {
                   {renderBenefitsList(printedData)}
 
                   <div className="mt-8 pt-4 border-t-2 border-gray-400 break-inside-avoid">
-                    <div className="mb-6 border border-red-800 p-3 text-[10px] bg-red-50 text-red-900 font-semibold rounded break-inside-avoid">
-                      <p className="mb-2 uppercase text-red-800 font-bold text-[11px]">Time Management / Service Discipline Agreement</p>
-                      <p>Respectfully, our drivers operate on a strict schedule to ensure all families receive timely, dignified service. I acknowledge that if the service or departure is delayed by more than <strong className="uppercase underline">20 minutes</strong> from the scheduled time, Thusanang drivers reserve the right to depart to attend to other scheduled services.</p>
-                    </div>
                     <p className="text-[10px] italic mb-6">I acknowledge that all details above are correct and confirmed similar to what is on the case receipt.</p>
-                    <div className="flex justify-between mt-10 gap-6">
+                    <div className="flex justify-between mt-8 gap-6">
                       <div className="border-t border-black flex-1 pt-1 text-center font-bold text-xs">Office Personnel</div>
                       <div className="border-t border-black flex-1 pt-1 text-center font-bold text-xs">Client Signature</div>
-                      <div className="border-t border-black flex-1 pt-1 text-center font-bold text-xs">Pastor / Chairperson</div>
                     </div>
                   </div>
                 </div>
@@ -2609,9 +2604,16 @@ export default function ConsultationForm() {
                   </div>
                 </div>
 
+                {/* Time Management Agreement */}
+                <div className="mt-4 mb-4 border border-red-800 p-3 text-[10px] bg-red-50 text-red-900 font-semibold rounded break-inside-avoid">
+                  <p className="mb-2 uppercase text-red-800 font-bold text-[11px]">Time Management / Service Discipline Agreement</p>
+                  <p>Respectfully, our drivers operate on a strict schedule to ensure all families receive timely, dignified service. I acknowledge that if the service or departure is delayed by more than <strong className="uppercase underline">20 minutes</strong> from the scheduled time, Thusanang drivers reserve the right to depart to attend to other scheduled services.</p>
+                </div>
+
                 {/* Sign Off Section */}
                 <div className="mt-2 text-right">
-                  <table className="sign-off-table">
+                  <h4 className="text-left text-xs font-bold text-red-800 uppercase mb-2">Checklist Confirmation</h4>
+                  <table className="sign-off-table mb-4">
                     <tbody>
                       <tr>
                         <td width="25%">
@@ -2636,6 +2638,43 @@ export default function ConsultationForm() {
                         </td>
                         <td colSpan="3" className="bg-gray-50 text-[9px] text-gray-500 italic align-middle">
                           I acknowledge that all details above are correct and confirmed.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <h4 className="text-left text-xs font-bold text-red-800 uppercase mb-2">Final Service Sign-Off</h4>
+                  <table className="sign-off-table">
+                    <tbody>
+                      <tr>
+                        <td width="20%">
+                          <span className="sign-off-label">OFFICE PERSONNEL</span>
+                          <div className="font-bold">{printedData.office_personnel2}</div>
+                        </td>
+                        <td width="13%">
+                          <span className="sign-off-label">SIGNATURE</span>
+                        </td>
+                        <td width="20%">
+                          <span className="sign-off-label">CLIENT NAME</span>
+                          <div className="font-bold">{printedData.client_name2}</div>
+                        </td>
+                        <td width="13%">
+                          <span className="sign-off-label">SIGNATURE</span>
+                        </td>
+                        <td width="20%">
+                          <span className="sign-off-label">PASTOR / CHAIRPERSON</span>
+                        </td>
+                        <td width="14%">
+                          <span className="sign-off-label">SIGNATURE</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span className="sign-off-label">DATE</span>
+                          <div>{printedData.date2}</div>
+                        </td>
+                        <td colSpan="5" className="bg-gray-50 text-[9px] text-gray-500 italic align-middle">
+                          I acknowledge that all services were completed with dignity and respect.
                         </td>
                       </tr>
                     </tbody>
