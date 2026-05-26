@@ -72,6 +72,14 @@ export const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const requireAuthHeaders = () => {
+  const headers = getAuthHeaders();
+  if (!headers.Authorization) {
+    throw new Error('Authentication required');
+  }
+  return headers;
+};
+
 /**
  * Login user
  */
@@ -258,18 +266,16 @@ export const resetPassword = async (password, token) => {
  * Get all users (Admin only)
  */
 export const getAllUsers = async () => {
-  const token = getAccessToken();
+  const headers = requireAuthHeaders();
   
   const response = await fetch(`${AUTH_URL}/users`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
+    headers
   });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || 'Failed to fetch users');
+    throw new Error(data.error || data.message || 'Failed to fetch users');
   }
 
   return data.users;
@@ -279,21 +285,21 @@ export const getAllUsers = async () => {
  * Create user (Admin only)
  */
 export const createUser = async (userData) => {
-  const token = getAccessToken();
-  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...requireAuthHeaders()
+  };
+
   const response = await fetch(`${AUTH_URL}/users/create`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
+    headers,
     body: JSON.stringify(userData)
   });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || 'Failed to create user');
+    throw new Error(data.error || data.message || 'Failed to create user');
   }
 
   return data;
@@ -303,21 +309,21 @@ export const createUser = async (userData) => {
  * Update user role (Admin only)
  */
 export const updateUserRole = async (userId, role) => {
-  const token = getAccessToken();
-  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...requireAuthHeaders()
+  };
+
   const response = await fetch(`${AUTH_URL}/users/${userId}/role`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
+    headers,
     body: JSON.stringify({ role })
   });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || 'Failed to update role');
+    throw new Error(data.error || data.message || 'Failed to update role');
   }
 
   return data;
@@ -327,21 +333,21 @@ export const updateUserRole = async (userId, role) => {
  * Update user status (Admin only)
  */
 export const updateUserStatus = async (userId, active) => {
-  const token = getAccessToken();
-  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...requireAuthHeaders()
+  };
+
   const response = await fetch(`${AUTH_URL}/users/${userId}/status`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
+    headers,
     body: JSON.stringify({ active })
   });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || 'Failed to update status');
+    throw new Error(data.error || data.message || 'Failed to update status');
   }
 
   return data;
@@ -351,19 +357,20 @@ export const updateUserStatus = async (userId, active) => {
  * Delete user (Admin only)
  */
 export const deleteUser = async (userId, confirmEmail, reason) => {
-  const token = getAccessToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...requireAuthHeaders()
+  };
+
   const response = await fetch(`${AUTH_URL}/users/${userId}`, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
+    headers,
     body: JSON.stringify({ confirm_email: confirmEmail, reason })
   });
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || 'Failed to delete user');
+    throw new Error(data.error || data.message || 'Failed to delete user');
   }
   return data;
 };
