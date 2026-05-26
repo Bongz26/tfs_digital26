@@ -56,10 +56,12 @@ export function AuthProvider({ children }) {
           const serverUser = await getCurrentUser();
           if (serverUser) {
             setUser(serverUser);
-          } else if (!storedUser) {
-            // No valid user, clear state
+          } else {
+            // Token is invalid or expired; clear stale state
             setUser(null);
           }
+        } else {
+          setUser(null);
         }
       } catch (err) {
         console.error('Auth initialization error:', err);

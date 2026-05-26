@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate 
 import axios from 'axios';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import { getAccessToken, clearAuthData } from './api/auth';
+import { getAccessToken, clearAuthData, refreshAccessToken } from './api/auth';
 import ConsultationForm from './ConsultationForm';
 import RepatriationTripSheet from './pages/RepatriationTripSheet';
 import Dashboard from './pages/Dashboard';
@@ -379,8 +379,35 @@ function AppContent() {
 
     const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
-      (error) => {
+      async (error) => {
         const status = error?.response?.status;
+        const originalRequest = error?.config;
+
+        if (status === 401 && originalRequest && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          // Do not attempt refresh for auth endpoints themselves
+          if (originalRequest.url?.includes('/api/auth')) {
+            clearAuthData();
+            navigate('/login');
+            return Promise.reject(error);
+          }
+
+          try {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+              originalRequest.headers = originalRequest.headers || {};
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              return axios(originalRequest);
+            }
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+          }
+
+          clearAuthData();
+          navigate('/login');
+        }
+
         if (status === 401) {
           clearAuthData();
           navigate('/login');
