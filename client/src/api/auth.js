@@ -290,16 +290,28 @@ export const createUser = async (userData) => {
     ...requireAuthHeaders()
   };
 
+  // Debug: log outgoing payload (do not log real passwords in production logs)
+  try {
+    console.debug('[createUser] Sending:', { ...userData, password: userData.password ? '***' : undefined });
+  } catch (e) {}
+
   const response = await fetch(`${AUTH_URL}/users/create`, {
     method: 'POST',
     headers,
     body: JSON.stringify(userData)
   });
 
-  const data = await response.json();
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (e) {
+    console.error('[createUser] Failed to parse response JSON', e);
+  }
 
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Failed to create user');
+    console.warn('[createUser] Server error', { status: response.status, body: data });
+    const msg = data?.error || data?.message || (data ? JSON.stringify(data) : 'Failed to create user');
+    throw new Error(msg);
   }
 
   return data;
