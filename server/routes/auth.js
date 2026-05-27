@@ -667,11 +667,15 @@ router.post('/users/create', requireAuth, requireRole([ROLES.ADMIN]), async (req
 
     const adminClient = getSupabaseAdmin();
     if (!adminClient) {
+      console.error('❌ [CreateUser] adminClient not initialized. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
       return res.status(500).json({
         success: false,
-        error: 'Admin service unavailable. Set SUPABASE_SERVICE_KEY in environment.'
+        error: 'Admin service unavailable. Set SUPABASE_SERVICE_ROLE_KEY in environment.'
       });
     }
+    console.log('✅ [CreateUser] Admin client initialized');
+    console.log('[CreateUser] SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Not set');
+    console.log('[CreateUser] SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set (length: ' + process.env.SUPABASE_SERVICE_ROLE_KEY.length + ')' : 'NOT SET');
 
     // Check if user already exists in Supabase Auth and reactivate/update if so
     let existingUser = await findUserByEmail(adminClient, email);
@@ -721,7 +725,7 @@ router.post('/users/create', requireAuth, requireRole([ROLES.ADMIN]), async (req
     }
 
     // Create user with admin client
-    console.log('🆕 [CreateUser] Creating new auth user');
+    console.log('🆕 [CreateUser] Creating new auth user with adminClient.auth.admin.createUser()');
     const { data, error } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -732,7 +736,12 @@ router.post('/users/create', requireAuth, requireRole([ROLES.ADMIN]), async (req
     });
 
     if (error) {
-      console.warn('⚠️  [CreateUser] createUser failed', { error: error.message });
+      console.error('❌ [CreateUser] Supabase auth.admin.createUser() failed:', {
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        fullError: error
+      });
       // If already registered, try to locate and update existing user
       const msg = String(error.message || '').toLowerCase();
       if (msg.includes('already') && msg.includes('registered')) {
