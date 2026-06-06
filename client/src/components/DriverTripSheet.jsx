@@ -50,6 +50,14 @@ const SingleTripReceipt = ({ assignment, caseData, groupName }) => {
                         <span className="text-gray-500 font-semibold w-20">Date:</span>
                         <span className="font-bold text-gray-900 flex-1">{caseData.funeral_date ? new Date(caseData.funeral_date).toLocaleDateString() : 'TBA'}</span>
                     </div>
+                    <div className="flex">
+                        <span className="text-gray-500 font-semibold w-20">Next of Kin:</span>
+                        <span className="font-bold text-gray-900 flex-1">{caseData.nok_name || 'TBA'}</span>
+                    </div>
+                    <div className="flex">
+                        <span className="text-gray-500 font-semibold w-20">Contact:</span>
+                        <span className="font-bold text-gray-900 flex-1">{caseData.nok_contact || 'TBA'}</span>
+                    </div>
                 </div>
             </div>
 
