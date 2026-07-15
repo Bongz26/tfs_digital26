@@ -1,38 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 
 const Page = React.forwardRef((props, ref) => {
   return (
     <div className="page bg-white shadow-2xl overflow-hidden flex flex-col justify-center items-center relative" ref={ref}>
-      {/* Subtle paper texture/gradient over the page */}
+      {/* Subtle paper texture/gradient over the page for realistic lighting */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-transparent pointer-events-none z-10" />
       
-      {/* We use an image if provided, otherwise a placeholder */}
-      {props.imageSrc ? (
-        <img src={props.imageSrc} alt={`Page ${props.number}`} className="w-full h-full object-contain bg-white" />
-      ) : (
-        <div className="p-8 text-center h-full flex flex-col justify-center items-center bg-gray-50 w-full">
-          <div className="w-16 h-16 bg-[#8B0000] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">
-            {props.number}
-          </div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Brochure Page {props.number}</h2>
-          <p className="text-sm text-gray-500 max-w-[200px]">
-            Upload your page {props.number} image and update the <code className="bg-gray-200 px-1 rounded text-[#8B0000]">imageSrc</code>.
-          </p>
+      <img 
+        src={props.imageSrc} 
+        alt={`Page ${props.number}`} 
+        className="w-full h-full object-cover bg-white"
+        onError={(e) => {
+          // Fallback if image is missing
+          e.target.style.display = 'none';
+          e.target.nextSibling.style.display = 'flex';
+        }}
+      />
+      
+      {/* Fallback display if image not found */}
+      <div className="hidden absolute inset-0 flex-col items-center justify-center bg-gray-50 text-center p-8">
+        <div className="w-16 h-16 bg-[#8B0000] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">
+          {props.number}
         </div>
-      )}
+        <p className="text-sm text-gray-500">
+          Please add <code className="bg-gray-200 px-1 rounded text-[#8B0000]">{props.imageSrc.split('/').pop()}</code> to the <code className="bg-gray-200 px-1 rounded text-[#8B0000]">public/images</code> folder.
+        </p>
+      </div>
     </div>
   );
 });
 
 const DigitalBrochure = () => {
+  // Using the 8 pages from your most recent PDF
+  const timestamp = Date.now();
   const pages = [
-    { id: 1, imageSrc: '/images/page1.png' }, // Cover
-    { id: 2, imageSrc: '/images/page2.png' }, // Services
-    { id: 3, imageSrc: '/images/page3.png' }, // Core Plans
-    { id: 4, imageSrc: '/images/page4.png' }, // Premium Plans
-    { id: 5, imageSrc: '/images/page5.png' }, // Extras
-    { id: 6, imageSrc: '/images/page6.png' }, // Back Cover
+    { id: 1, imageSrc: `/images/page1.png?v=${timestamp}` }, // Cover
+    { id: 2, imageSrc: `/images/page2.png?v=${timestamp}` }, // Welcome
+    { id: 3, imageSrc: `/images/page3.png?v=${timestamp}` }, // Budget Buster & Executive
+    { id: 4, imageSrc: `/images/page4.png?v=${timestamp}` }, // Royal & Presidential
+    { id: 5, imageSrc: `/images/page5.png?v=${timestamp}` }, // One-Stop All-Inclusive
+    { id: 6, imageSrc: `/images/page6.png?v=${timestamp}` }, // Fleet & Setup
+    { id: 7, imageSrc: `/images/page7.png?v=${timestamp}` }, // Directory & Terms
+    { id: 8, imageSrc: `/images/page8.png?v=${timestamp}` }, // Back Cover
   ];
 
   return (
@@ -57,7 +67,7 @@ const DigitalBrochure = () => {
 
       {/* Flipbook Container */}
       <div className="flex-grow flex items-center justify-center w-full relative z-20 pb-12">
-        {/* Adds a nice glow behind the book */}
+        {/* Glow behind the book */}
         <div className="absolute inset-0 bg-yellow-500/5 blur-3xl rounded-full transform scale-150 pointer-events-none"></div>
         
         <HTMLFlipBook 
