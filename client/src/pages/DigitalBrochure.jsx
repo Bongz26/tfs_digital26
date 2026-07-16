@@ -33,7 +33,7 @@ const Page = React.forwardRef((props, ref) => {
 
 const DigitalBrochure = () => {
   // Using the 8 pages from your most recent PDF
-  const timestamp = Date.now();
+  const timestamp = React.useMemo(() => Date.now(), []);
   const pages = [
     { id: 1, imageSrc: `/images/page1.png?v=${timestamp}` }, // Cover
     { id: 2, imageSrc: `/images/page2.png?v=${timestamp}` }, // Welcome
