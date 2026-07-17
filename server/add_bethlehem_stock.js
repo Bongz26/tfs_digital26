@@ -12,10 +12,11 @@ async function addBethlehemStock() {
         { name: 'Pongee White', model: 'Pongee', color: 'White', qty: 1 },
         { name: 'Pongee Redwood', model: 'Pongee', color: 'Redwood', qty: 1 },
         { name: 'Raised Half View', model: 'Raised Half View', color: null, qty: 1 },
-        { name: '4 Tier', model: '4 Tier', color: null, qty: 1 },
-        { name: '3 Tier Redwood', model: '3 Tier', color: 'Redwood', qty: 2 },
-        { name: 'Balmoral Dome', model: 'Balmoral Dome', color: null, qty: 1 },
-        { name: 'Lapita Dome', model: 'Lapita Dome', color: null, qty: 1 },
+        { name: '4 Tier', model: '4 Tier', color: null, qty: 1, category: 'coffin' },
+        { name: '3 Tier Redwood', model: '3 Tier', color: 'Redwood', qty: 2, category: 'coffin' },
+        { name: 'Egyptian', model: 'Dome', color: 'White', qty: 1, category: 'coffin' },
+        { name: 'Balmoral Dome', model: 'Balmoral Dome', color: null, qty: 1, category: 'coffin' },
+        { name: 'Lapita Dome', model: 'Lapita Dome', color: null, qty: 1, category: 'coffin' },
     ];
 
     try {
@@ -30,20 +31,22 @@ async function addBethlehemStock() {
             `, [item.name, location]);
 
             if (res.rows.length > 0) {
-                // Update existing
+                // Update existing and ensure category is correct
                 const current = res.rows[0];
                 await query(`
                     UPDATE inventory 
-                    SET stock_quantity = stock_quantity + $1, updated_at = NOW()
+                    SET stock_quantity = stock_quantity + $1,
+                        category = COALESCE(category, 'coffin'),
+                        updated_at = NOW()
                     WHERE id = $2
                 `, [item.qty, current.id]);
                 console.log(`Updated ${item.name}: +${item.qty} (New Total: ${current.stock_quantity + item.qty})`);
             } else {
                 // Insert new
                 await query(`
-                    INSERT INTO inventory (name, model, color, stock_quantity, location, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-                `, [item.name, item.model, item.color, item.qty, location]);
+                    INSERT INTO inventory (name, category, model, color, stock_quantity, location, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+                `, [item.name, item.category, item.model, item.color, item.qty, location]);
                 console.log(`Created ${item.name}: set to ${item.qty}`);
             }
         }

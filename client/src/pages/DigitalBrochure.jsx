@@ -40,9 +40,9 @@ const DigitalBrochure = () => {
     { id: 3, imageSrc: `/images/page3.png?v=${timestamp}` }, // Budget Buster & Executive
     { id: 4, imageSrc: `/images/page4.png?v=${timestamp}` }, // Royal & Presidential
     { id: 5, imageSrc: `/images/page5.png?v=${timestamp}` }, // One-Stop All-Inclusive
-    { id: 6, imageSrc: `/images/page6.png?v=${timestamp}` }, // Fleet & Setup
-    { id: 7, imageSrc: `/images/page7.png?v=${timestamp}` }, // Directory & Terms
-    { id: 8, imageSrc: `/images/page8.png?v=${timestamp}` }, // Back Cover
+    { id: 6, imageSrc: `/images/page6.png?v=${timestamp}` }, // Optional Add-On Benefits (Tombstone & Catering)
+    { id: 7, imageSrc: `/images/page7.png?v=${timestamp}` }, // Fleet & Setup
+    { id: 8, imageSrc: `/images/page8.png?v=${timestamp}` }, // Directory & Terms
   ];
 
   return (

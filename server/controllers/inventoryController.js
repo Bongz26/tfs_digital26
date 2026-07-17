@@ -1099,6 +1099,7 @@ exports.replaceInventoryWithPreset = async (req, res) => {
 
         const items = [
             { model: 'Pierce Dome', color: null, qty: 3, category: 'coffin' },
+            { name: 'Egyptian', model: 'Dome', color: 'White', qty: 1, category: 'coffin' },
             { model: 'Octagonal', color: null, qty: 1, category: 'coffin' },
             { model: 'Ponge', color: 'Cherry', qty: 3, category: 'coffin' },
             { model: 'Ponge', color: 'Plywood', qty: 3, category: 'coffin' },
@@ -1127,7 +1128,7 @@ exports.replaceInventoryWithPreset = async (req, res) => {
         await query('TRUNCATE inventory RESTART IDENTITY CASCADE');
 
         for (const it of items) {
-            const name = it.color ? `${it.model} ${it.color}` : it.model;
+            const name = it.name || (it.color ? `${it.model} ${it.color}` : it.model);
             await query(
                 `INSERT INTO inventory (name, category, sku, stock_quantity, unit_price, low_stock_threshold, location, model, color)
                  VALUES ($1,$2,$3,$4,$5,1,$7,$8,$9)`,
