@@ -44,8 +44,8 @@ function Navigation() {
     navigate('/login');
   };
 
-  // Don't show navigation on login page
-  if (location.pathname === '/login' || location.pathname === '/forgot-password' || location.pathname === '/reset-password') {
+  // Don't show navigation on standalone or auth pages
+  if (location.pathname === '/login' || location.pathname === '/forgot-password' || location.pathname === '/reset-password' || location.pathname === '/brochure') {
     return null;
   }
 
@@ -422,6 +422,17 @@ function AppContent() {
       axios.interceptors.response.eject(responseInterceptor);
     };
   }, [navigate]);
+
+  // Hostname check for standalone brochure deployment
+  const isPamphletSite = window.location.hostname.includes('pamphlet') || window.location.hostname.includes('brochure');
+
+  if (isPamphletSite) {
+    return (
+      <Routes>
+        <Route path="*" element={<DigitalBrochure />} />
+      </Routes>
+    );
+  }
 
   return (
     <>
