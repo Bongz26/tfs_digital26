@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thusanang Funeral Services | Digital Pamphlet</title>
+  <meta name="description" content="Official Digital Pamphlet for Thusanang Funeral Services. Respectful, Professional, Dignified Care.">
+  <meta name="theme-color" content="#3D050E">
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --maroon-dark: #2B0308;
+      --maroon-bg: #3D050E;
+      --maroon-card: #4A0E17;
+      --maroon-surface: #56111C;
+      --gold-primary: #C5A059;
+      --gold-bright: #FFD700;
+      --gold-light: #F4E8C1;
+      --gold-border: rgba(197, 160, 89, 0.4);
+      --text-white: #FFFFFF;
+      --text-muted: #D1C7BD;
+      --shadow-deep: 0 12px 32px rgba(0, 0, 0, 0.45);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--maroon-bg);
+      color: var(--text-white);
+      line-height: 1.6;
+      padding-bottom: 90px;
+      background-image: radial-gradient(circle at 50% 0%, #5E1420 0%, #3D050E 75%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* EXECUTIVE TOP GALLERY CAROUSEL BANNER */
+    .top-carousel-wrapper {
+      background: #120104;
+      border-bottom: 3px solid var(--gold-primary);
+      position: relative;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow: hidden;
+      background: #1B0206;
+    }
+
+    @media (max-width: 768px) {
+      .carousel-container { height: 320px; }
+    }
+
+    @media (max-width: 480px) {
+      .carousel-container { height: 260px; }
+    }
+
+    .carousel-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #1B0206;
+    }
+
+    .carousel-slide.active {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    /* Blurred Backdrop for Portrait Orientation Photos */
+    .slide-bg-blur {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(28px) brightness(0.35);
+      transform: scale(1.15);
+      z-index: 0;
+    }
+
+    /* Standard Landscape Photo (Fills container cleanly) */
+    .slide-img-landscape {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+    }
+
+    /* Vertical Portrait Photo (Displays FULL photo without ANY cropping) */
+    .slide-img-portrait {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    }
+
+    /* Floating Glassmorphic Caption Card */
+    .carousel-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: linear-gradient(to top, rgba(18, 1, 4, 0.85) 0%, rgba(18, 1, 4, 0.1) 45%, transparent 100%);
+      display: flex;
+      align-items: flex-end;
+      padding-bottom: 20px;
+      pointer-events: none;
+    }
+
+    .caption-glass-card {
+      background: rgba(43, 3, 8, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--gold-border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      max-width: 580px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      pointer-events: auto;
+    }
+
+    .slide-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--gold-bright);
+      font-weight: 700;
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+
+    .slide-subtitle {
+      font-size: 12px;
+      color: var(--gold-light);
+      font-weight: 300;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 640px) {
+      .caption-glass-card { padding: 10px 14px; max-width: 100%; }
+      .slide-title { font-size: 16px; }
+      .slide-subtitle { font-size: 11px; }
+    }
+
+    /* Carousel Nav Controls */
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      background: rgba(18, 1, 4, 0.75);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-bright);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    }
+
+    .carousel-btn:hover {
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      transform: translateY(-50%) scale(1.08);
+    }
+
+    .carousel-btn.prev { left: 16px; }
+    .carousel-btn.next { right: 16px; }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      background: rgba(18, 1, 4, 0.75);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--gold-border);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dot.active {
+      background: var(--gold-bright);
+      transform: scale(1.3);
+      box-shadow: 0 0 8px var(--gold-bright);
+    }
+
+    /* HERO SECTION WITH EMBLEM LOGO ONLY */
+    .hero-section {
+      padding: 32px 16px 24px;
+    }
+
+    .hero-flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    @media (max-width: 640px) {
+      .hero-flex {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+      }
+    }
+
+    .hero-logo-col {
+      flex-shrink: 0;
+    }
+
+    .hero-logo-img {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.6));
+      border: none;
+      background: transparent;
+      padding: 0;
+    }
+
+    .hero-text-col {
+      max-width: 620px;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      margin-bottom: 6px;
+      line-height: 1.15;
+    }
+
+    .hero-title i {
+      font-style: italic;
+      color: var(--gold-light);
+      font-weight: 400;
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 300;
+    }
+
+    .brand-values {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Interactive Premium Estimator */
+    .calc-card {
+      background: var(--maroon-card);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-deep);
+      margin-bottom: 24px;
+    }
+
+    .calc-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--gold-bright);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--gold-border);
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 640px) {
+      .calc-grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: 26px; }
+      .hero-logo-img { width: 90px; height: 90px; }
+    }
+
+    .label-text {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--gold-light);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      flex: 1;
+      min-width: 75px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--gold-border);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text-white);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .chip-btn:hover {
+      border-color: var(--gold-bright);
+    }
+
+    .chip-btn.active {
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      border-color: var(--gold-bright);
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(197, 160, 89, 0.35);
+    }
+
+    /* Tab Controls */
+    .tabs-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .tabs-row::-webkit-scrollbar { display: none; }
+
+    .tab-item {
+      padding: 10px 20px;
+      border-radius: 50px;
+      border: 1px solid var(--gold-border);
+      background: var(--maroon-card);
+      color: var(--gold-light);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-item.active {
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      border-color: var(--gold-bright);
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
+    }
+
+    /* Section Headers */
+    .sec-head {
+      margin: 20px 0 16px;
+    }
+
+    .sec-head h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold-bright);
+    }
+
+    .sec-head p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Plan Cards Grid */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: var(--maroon-card);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-deep);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .plan-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold-bright);
+    }
+
+    .plan-card.highlight {
+      border: 2px solid var(--gold-primary);
+      background: linear-gradient(145deg, #5D121F 0%, #4A0E17 100%);
+    }
+
+    .plan-num {
+      position: absolute;
+      top: -14px;
+      left: 20px;
+      width: 32px;
+      height: 32px;
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .plan-title-box {
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+
+    .plan-title-box h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold-bright);
+    }
+
+    .plan-tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .price-container {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--gold-border);
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .price-num {
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      line-height: 1;
+    }
+
+    .price-num span {
+      font-size: 13px;
+      color: var(--gold-light);
+      font-weight: 400;
+    }
+
+    .price-wait {
+      font-size: 11px;
+      color: var(--gold-primary);
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cash-badge {
+      background: rgba(197, 160, 89, 0.15);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-bright);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .feature-ul {
+      list-style: none;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .feature-ul li {
+      font-size: 13px;
+      color: var(--text-white);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .feature-ul li::before {
+      content: '♦';
+      color: var(--gold-primary);
+      font-size: 10px;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .select-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.2s ease;
+    }
+
+    .select-btn:hover {
+      background: var(--gold-bright);
+    }
+
+    /* Table Matrix */
+    .table-card {
+      background: var(--maroon-card);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+      box-shadow: var(--shadow-deep);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 680px;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--gold-border);
+    }
+
+    th {
+      background: var(--maroon-dark);
+      color: var(--gold-bright);
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    tr:nth-child(even) td {
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    /* Riders & Children */
+    .riders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .rider-card {
+      background: var(--maroon-card);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-deep);
+    }
+
+    .rider-card h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--gold-bright);
+      margin-bottom: 4px;
+    }
+
+    .rider-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Branch Directory */
+    .branch-search-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--gold-border);
+      background: rgba(0,0,0,0.3);
+      color: white;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .branches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .branch-card {
+      background: var(--maroon-card);
+      border: 1px solid var(--gold-border);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .branch-card.ho {
+      border: 2px solid var(--gold-bright);
+      background: linear-gradient(145deg, #5E1420 0%, #4A0E17 100%);
+    }
+
+    .branch-card h5 {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      color: var(--gold-bright);
+      margin-bottom: 4px;
+    }
+
+    .branch-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .call-btn {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 4px;
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    /* Terms Card */
+    .terms-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--gold-border);
+      padding: 20px;
+      border-radius: var(--radius);
+      margin-top: 24px;
+    }
+
+    .terms-card h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--gold-primary);
+      margin-bottom: 12px;
+    }
+
+    .terms-card ol {
+      padding-left: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .terms-card li {
+      margin-bottom: 8px;
+    }
+
+    /* Bottom Dock Bar */
+    .bottom-dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--maroon-dark);
+      border-top: 2px solid var(--gold-primary);
+      padding: 12px 20px;
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+    }
+
+    .dock-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .btn-whatsapp {
+      background: #128C7E;
+      color: white;
+    }
+
+    .btn-print {
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+    }
+
+    /* Toast */
+    .toast-msg {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 200;
+      display: none;
+      box-shadow: var(--shadow-deep);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EXECUTIVE TOP GALLERY CAROUSEL BANNER -->
+  <div class="top-carousel-wrapper">
+    <div class="carousel-container" id="photoCarousel">
+
+      <!-- Slide 1: Stretch Tent & VIP Setup (Landscape Wide View) -->
+      <div class="carousel-slide active">
+        <img src="images/slide3.jpg" alt="Complete Funeral Service & Setup" class="slide-img-landscape">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Complete Funeral Marquee & VIP Setup</div>
+              <div class="slide-subtitle">Branded Thusanang marquee setup with white VIP seating, red carpet aisle, and gold stanchions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Ground View Tent & Red Carpet (Landscape Wide View) -->
+      <div class="carousel-slide">
+        <img src="images/slide2.jpg" alt="Elegant Stretch Tent & Seating" class="slide-img-landscape">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Elegant Stretch Tent & Seating</div>
+              <div class="slide-subtitle">Custom red & yellow stretch canopy, polished chairs, and carpeted family entrance</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Horse Escort Procession (FULL Vertical Portrait Photo Display - ZERO Cropping!) -->
+      <div class="carousel-slide">
+        <div class="slide-bg-blur" style="background-image: url('images/slide1.jpg');"></div>
+        <img src="images/slide1.jpg" alt="Dignified Cultural Escort & Fleet" class="slide-img-portrait">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Dignified Cultural Escort & Fleet</div>
+              <div class="slide-subtitle">Traditional Basotho horse-mounted honor guards accompanying the funeral fleet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Hearse & Glass Dome Trailer (FULL Vertical Portrait Photo Display - ZERO Cropping!) -->
+      <div class="carousel-slide">
+        <div class="slide-bg-blur" style="background-image: url('images/slide4.jpg');"></div>
+        <img src="images/slide4.jpg" alt="Ceremonial Funeral Transport" class="slide-img-portrait">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Ceremonial Funeral Transport</div>
+              <div class="slide-subtitle">Respectful ceremonial escort accompanying the glass dome funeral trailer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 5: Mountain Gazebo Service (Landscape Wide View) -->
+      <div class="carousel-slide">
+        <img src="images/slide5.jpg" alt="Graveyard Gazebo & Family Setup" class="slide-img-landscape">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Graveyard Gazebo & Family Setup</div>
+              <div class="slide-subtitle">Dignified outdoor service setup surrounded by peaceful mountain landscapes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav Buttons -->
+      <button class="carousel-btn prev" onclick="moveSlide(-1)">‹</button>
+      <button class="carousel-btn next" onclick="moveSlide(1)">›</button>
+
+      <!-- Dots -->
+      <div class="carousel-dots">
+        <span class="dot active" onclick="setSlide(0)"></span>
+        <span class="dot" onclick="setSlide(1)"></span>
+        <span class="dot" onclick="setSlide(2)"></span>
+        <span class="dot" onclick="setSlide(3)"></span>
+        <span class="dot" onclick="setSlide(4)"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO SECTION WITH EMBLEM LOGO ONLY -->
+  <div class="hero-section">
+    <div class="container">
+      <div class="hero-flex">
+        <!-- Logo Emblem Only (Outer-Padding Stripped) -->
+        <div class="hero-logo-col">
+          <img src="tfs_logo.png" alt="Thusanang Funeral Services Logo" class="hero-logo-img" id="mainHeroLogo" onload="stripOuterWhitePadding(this)">
+        </div>
+        <!-- Main Text Column -->
+        <div class="hero-text-col">
+          <h2 class="hero-title">Honouring Life, <i>Caring for Family</i></h2>
+          <p class="hero-sub">Trusted funeral cover for every generation — affordable plans, dignified service and a promise to walk with your family when it matters most.</p>
+          <div class="brand-values">
+            RESPECTFUL • PROFESSIONAL • DIGNIFIED
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Interactive Estimator -->
+    <div class="calc-card">
+      <div class="calc-title">
+        ♦ Instant Premium Estimator & Cover Calculator
+      </div>
+      <div class="calc-grid">
+        <div>
+          <span class="label-text">1. Select Main Member Age Tier</span>
+          <div class="chip-group" id="ageSelector">
+            <div class="chip-btn active" data-age="18-64">18 – 64 yrs</div>
+            <div class="chip-btn" data-age="65-74">65 – 74 yrs</div>
+            <div class="chip-btn" data-age="75-84">75 – 84 yrs</div>
+            <div class="chip-btn" data-age="85-100">85 – 100 yrs</div>
+          </div>
+        </div>
+        <div>
+          <span class="label-text">2. Select Covered Members</span>
+          <div class="chip-group" id="memberSelector">
+            <div class="chip-btn active" data-member="single">Single</div>
+            <div class="chip-btn" data-member="family">Family</div>
+            <div class="chip-btn" data-member="m6">6 Members</div>
+            <div class="chip-btn" data-member="m10">10 Members</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-row">
+      <button class="tab-item active" onclick="switchTab('plans')">♦ Cover Tiers</button>
+      <button class="tab-item" onclick="switchTab('matrix')">♦ Plan Comparison Matrix</button>
+      <button class="tab-item" onclick="switchTab('addons')">♦ Optional Add-On Benefits</button>
+      <button class="tab-item" onclick="switchTab('children')">♦ Children's Cover Scale</button>
+      <button class="tab-item" onclick="switchTab('branches')">♦ Contact Us & Branches</button>
+    </div>
+
+    <!-- TAB 1: PLAN TIERS -->
+    <div id="tab-plans" class="tab-content">
+      <div class="sec-head">
+        <h3>Funeral Cover Tiers</h3>
+        <p id="selectedLabel">Showing premiums for Age 18–64 yrs (Single)</p>
+      </div>
+      <div class="plans-grid" id="plansContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 2: MATRIX -->
+    <div id="tab-matrix" class="tab-content" style="display: none;">
+      <div class="sec-head">
+        <h3>Full Plan Comparison Matrix</h3>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature / Benefit</th>
+              <th>Budget Buster</th>
+              <th>Executive</th>
+              <th>Royal</th>
+              <th>Presidential</th>
+              <th>One-Stop</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Casket / Coffin Type</strong></td>
+              <td>Flatlid Coffin</td>
+              <td>Pongee Walnut</td>
+              <td>Raised ½ View Walnut</td>
+              <td>4 Tier Mountain Ash</td>
+              <td>Princeton Dome</td>
+            </tr>
+            <tr>
+              <td><strong>Chairs Provided</strong></td>
+              <td>50 Chairs</td>
+              <td>80 Chairs</td>
+              <td>100 Chairs</td>
+              <td>100 Chairs</td>
+              <td>100 Chairs</td>
+            </tr>
+            <tr>
+              <td><strong>Programmes</strong></td>
+              <td>50 Standard</td>
+              <td>80 Standard</td>
+              <td>100 Standard</td>
+              <td>100 VIP</td>
+              <td>150 VIP</td>
+            </tr>
+            <tr>
+              <td><strong>Tent, Table & Toilet</strong></td>
+              <td>Tent, Table & Toilet</td>
+              <td>Tent, Table & Toilet</td>
+              <td>Tent, Table & Toilet</td>
+              <td>Tent, 2 Tables, VIP Toilet</td>
+              <td>Tent, 2 Tables, VIP Toilet</td>
+            </tr>
+            <tr>
+              <td><strong>Fresh Flowers</strong></td>
+              <td>—</td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+            </tr>
+            <tr>
+              <td><strong>Grocery Provision</strong></td>
+              <td>—</td>
+              <td>—</td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td>Full Catering Service</td>
+            </tr>
+            <tr>
+              <td><strong>Full Catering Service</strong></td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td><span style="color:var(--gold-bright)">Full Service Included</span></td>
+            </tr>
+            <tr>
+              <td><strong>Grave Marker / Tombstone</strong></td>
+              <td>Standard Marker</td>
+              <td>Grave Marker</td>
+              <td>Grave Marker</td>
+              <td>Grave Marker</td>
+              <td>Tombstone Included</td>
+            </tr>
+            <tr>
+              <td><strong>Airtime / Data / Electricity</strong></td>
+              <td>R100</td>
+              <td>R200</td>
+              <td>R200</td>
+              <td>R200</td>
+              <td>R200</td>
+            </tr>
+            <tr>
+              <td><strong>Mokoti / Dipere</strong></td>
+              <td>—</td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+            </tr>
+            <tr>
+              <td><strong>Free Repatriation*</strong></td>
+              <td>—</td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+              <td><span style="color:var(--gold-bright)">Included</span></td>
+            </tr>
+            <tr>
+              <td><strong>Cash Payout Alternative</strong></td>
+              <td>—</td>
+              <td><strong>OR R5,000 Cash</strong></td>
+              <td><strong>OR R6,000 Cash</strong></td>
+              <td><strong>OR R10,000 Cash</strong></td>
+              <td><strong>OR R15,000 Cash</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: ADDONS -->
+    <div id="tab-addons" class="tab-content" style="display: none;">
+      <div class="sec-head">
+        <h3>Optional Add-On Benefits</h3>
+      </div>
+      <div class="riders-grid" id="addonsContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 4: CHILDREN -->
+    <div id="tab-children" class="tab-content" style="display: none;">
+      <div class="sec-head">
+        <h3>Children's Cover Scale</h3>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Age Bracket</th>
+              <th>Cover Percentage</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>14 – 21 years</strong></td>
+              <td><strong style="color: var(--gold-bright);">100%</strong></td>
+              <td>100% of Main Member Cover Amount</td>
+            </tr>
+            <tr>
+              <td><strong>6 – 13 years</strong></td>
+              <td><strong style="color: var(--gold-bright);">50%</strong></td>
+              <td>50% of Main Member Cover Amount</td>
+            </tr>
+            <tr>
+              <td><strong>0 – 5 years</strong></td>
+              <td><strong style="color: var(--gold-bright);">25%</strong></td>
+              <td>25% of Main Member Cover Amount</td>
+            </tr>
+            <tr>
+              <td><strong>Stillborn</strong></td>
+              <td><strong style="color: var(--gold-bright);">25%</strong></td>
+              <td>25% of Main Member Cover Amount</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: BRANCHES & TERMS -->
+    <div id="tab-branches" class="tab-content" style="display: none;">
+      <div class="sec-head">
+        <h3>Contact Us & Branch Locations</h3>
+      </div>
+      <input type="text" class="branch-search-input" id="branchInput" placeholder="Search branch location or street address..." onkeyup="filterBranchList()">
+      <div class="branches-grid" id="branchesContainer">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Terms & Conditions Section (Page 8) -->
+      <div class="terms-card">
+        <h4>Terms & Conditions</h4>
+        <ol>
+          <li>Budget Buster: 3 months waiting period for natural death.</li>
+          <li>Executive, Royal & Presidential: 6 months waiting period for natural death.</li>
+          <li>One-Stop All-Inclusive: 9 months waiting period for natural death.</li>
+          <li>Add-on benefits (Tombstone, Catering) follow the waiting period of the underlying plan.</li>
+          <li>24 months waiting period for suicide.</li>
+          <li>Immediate cover for accidental death.</li>
+          <li>Terms and conditions apply.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Dock -->
+  <div class="bottom-dock">
+    <button class="dock-btn btn-whatsapp" onclick="shareWhatsApp()">
+      📱 Share via WhatsApp
+    </button>
+    <button class="dock-btn btn-print" onclick="window.print()">
+      🖨️ Print / Save PDF
+    </button>
+  </div>
+
+  <div class="toast-msg" id="toast">Notification</div>
+
+  <script>
+    // Precision Outer White Padding Stripper
+    function stripOuterWhitePadding(imgElement) {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = imgElement.naturalWidth || imgElement.width || 300;
+        const height = imgElement.naturalHeight || imgElement.height || 300;
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(imgElement, 0, 0);
+        
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const data = imgData.data;
+        
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const outerCircleRadius = (Math.min(width, height) / 2) * 0.88;
+        
+        for (let i = 0; i < data.length; i += 4) {
+          const x = (i / 4) % width;
+          const y = Math.floor((i / 4) / width);
+          const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+          
+          if (dist > outerCircleRadius) {
+            data[i + 3] = 0; // Alpha 0
+          }
+        }
+        
+        ctx.putImageData(imgData, 0, 0);
+        imgElement.onload = null;
+        imgElement.src = canvas.toDataURL('image/png');
+      } catch (err) {
+        console.log("Canvas processing:", err);
+      }
+    }
+
+    // Slideshow Logic
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.carousel-slide');
+    const dots = document.querySelectorAll('.dot');
+
+    function showSlide(index) {
+      if (index >= slides.length) currentSlide = 0;
+      else if (index < 0) currentSlide = slides.length - 1;
+      else currentSlide = index;
+
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active'));
+
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].classList.add('active');
+    }
+
+    function moveSlide(direction) {
+      showSlide(currentSlide + direction);
+    }
+
+    function setSlide(index) {
+      showSlide(index);
+    }
+
+    setInterval(() => {
+      moveSlide(1);
+    }, 5000);
+
+    // Plans Data
+    const PLANS = [
+      {
+        num: "1",
+        id: "budget-buster",
+        name: "Budget Buster",
+        tagline: "Affordable dignity for every family",
+        waiting: "3 Months Waiting Period",
+        casket: "Flatlid Coffin",
+        cashPayout: null,
+        pricing: {
+          "18-64": { single: 25, family: 35, m6: 45, m10: 60 },
+          "65-74": { single: 35, family: 45, m6: 50, m10: 65 },
+          "75-84": { single: 45, family: 55, m6: 65, m10: 70 },
+          "85-100": { single: 90, family: 100, m6: 117, m10: 126 }
+        },
+        items: ["Flatlid Coffin", "Full Fleet Provided", "Graveyard Setup", "Tent, Table & Toilet", "50 Chairs & 50 Programmes", "Airtime / Data / Electricity R100", "Storage & Collection 100km"]
+      },
+      {
+        num: "2",
+        id: "executive",
+        name: "Executive",
+        tagline: "Premium care with added peace of mind",
+        waiting: "6 Months Waiting Period",
+        casket: "Pongee Casket (Walnut)",
+        cashPayout: "OR R5,000 CASH PAYOUT",
+        pricing: {
+          "18-64": { single: 35, family: 45, m6: 90, m10: 120 },
+          "65-74": { single: 45, family: 55, m6: 95, m10: 130 },
+          "75-84": { single: 55, family: 65, m6: 110, m10: 140 },
+          "85-100": { single: 100, family: 110, m6: 165, m10: 210 }
+        },
+        items: ["Pongee Casket (Walnut)", "Full Fleet & Graveyard Setup", "Tent, Table & Toilet", "80 Chairs & 80 Programmes", "Grave Marker", "Airtime / Data / Electricity R200", "Mokoti / Dipere", "Free Repatriation*"]
+      },
+      {
+        num: "3",
+        id: "royal",
+        name: "Royal",
+        tagline: "A regal farewell befitting royalty",
+        waiting: "6 Months Waiting Period",
+        casket: "Raised ½ View (Walnut)",
+        cashPayout: "OR R6,000 CASH PAYOUT",
+        pricing: {
+          "18-64": { single: 40, family: 50, m6: 95, m10: 125 },
+          "65-74": { single: 50, family: 60, m6: 100, m10: 135 },
+          "75-84": { single: 60, family: 70, m6: 115, m10: 145 },
+          "85-100": { single: 105, family: 115, m6: 173, m10: 218 }
+        },
+        items: ["Raised ½ View (Walnut)", "Full Fleet & Graveyard Setup", "Tent, Table & Toilet", "100 Chairs & 100 Programmes", "Grocery & Fresh Flower", "Grave Marker", "Airtime R200 & Mokoti / Dipere", "Free Repatriation*"]
+      },
+      {
+        num: "4",
+        id: "presidential",
+        name: "Presidential",
+        tagline: "The ultimate tribute for a distinguished farewell",
+        waiting: "6 Months Waiting Period",
+        casket: "4 Tier Casket (Mountain Ash)",
+        cashPayout: "OR R10,000 CASH PAYOUT",
+        pricing: {
+          "18-64": { single: 45, family: 73, m6: 100, m10: 130 },
+          "65-74": { single: 60, family: 80, m6: 115, m10: 140 },
+          "75-84": null,
+          "85-100": null
+        },
+        items: ["4 Tier Casket (Mountain Ash)", "Full Fleet & Graveyard Setup", "Tent, 2 Tables, VIP Toilet", "100 Chairs & 100 VIP Programmes", "Grocery & Fresh Flower", "Grave Marker", "Airtime R200 & Mokoti / Dipere", "Free Repatriation*"]
+      },
+      {
+        num: "5",
+        id: "one-stop",
+        name: "One-Stop All-Inclusive",
+        tagline: "Everything handled - nothing left to chance",
+        waiting: "9 Months Waiting Period",
+        casket: "Princeton Dome Casket",
+        cashPayout: "OR R15,000 CASH PAYOUT",
+        pricing: {
+          "18-64": { single: 300, family: 600, m6: 1000, m10: null },
+          "65-74": null,
+          "75-84": null,
+          "85-100": null
+        },
+        items: ["Princeton Dome Casket", "Full Fleet Provided & Graveyard Setup", "Tent, 2 Tables, 1 VIP Toilet", "100 Chairs & 150 VIP Programmes", "Full Catering Service (Replaces Grocery)", "Tombstone (Headstone) Included", "Fresh Flower", "Airtime R200 & Free Repatriation*"]
+      }
+    ];
+
+    const ADDONS = [
+      {
+        name: "A. Tombstone Benefit",
+        desc: "Head & Base, Kerbs & Chips",
+        payout: "OR R5,000 CASH PAYOUT",
+        pricing: {
+          "18-64": { single: 35, family: 45, m6: 90, m10: 120 },
+          "65-74": { single: 45, family: 55, m6: 95, m10: 130 },
+          "75-84": { single: 55, family: 65, m6: 110, m10: 140 },
+          "85-100": { single: 100, family: 110, m6: 165, m10: 210 }
+        }
+      },
+      {
+        name: "B. Headstone & Base & Ledger Option",
+        desc: "Head & Base, Ledger",
+        payout: "OR R10,000 CASH PAYOUT",
+        pricing: {
+          "18-64": { single: 45, family: 73, m6: 100, m10: 130 },
+          "65-74": { single: 60, family: 70, m6: 115, m10: 140 }
+        }
+      },
+      {
+        name: "C. Catering Benefit",
+        desc: "Full memorial catering setup & 10 Chefs (Groceries provided by client)",
+        payout: "OR R10,000 CASH PAYOUT",
+        pricing: {
+          "18-64": { single: 45, family: 73, m6: 100, m10: 130 },
+          "65-74": { single: 60, family: 70, m6: 115, m10: 140 }
+        }
+      }
+    ];
+
+    const BRANCHES = [
+      { name: "Phuthaditjhaba (Head Office)", address: "Site 1, Portion 2, Beirut (After Circle)", tel: "058 713 0112", mobile: "063 043 9438", claims: "060 726 7994", isHO: true },
+      { name: "Bethlehem", address: "8 Grey Street", tel: "058 303 6109", mobile: "063 287 6002" },
+      { name: "Botshabelo", address: "Shop 172BA, Varase Centre (Next To Cashbuild)", mobile: "076 721 9735" },
+      { name: "Harrismith", address: "29A Warden Street", mobile: "082 233 0704" },
+      { name: "Ladybrand", address: "Shop 2, Erasmus Street", mobile: "079 278 3787" },
+      { name: "Lindley", address: "16 Brand Street", mobile: "073 601 0759" },
+      { name: "Makeneng Village", address: "Motebang Str, Witsieshoek", tel: "058 789 0014" },
+      { name: "Paul-Roux", address: "187 Old Location, Fateng Tse Ntsho", mobile: "068 839 0073" },
+      { name: "Petrus-Steyn", address: "33 Botha Street", mobile: "078 063 0451" },
+      { name: "Reitz", address: "19 Hoop Street", tel: "058 863 1419" },
+      { name: "Tweeling", address: "11 Andries Pretorious Street", mobile: "073 327 9661" }
+    ];
+
+    let currentAge = "18-64";
+    let currentMember = "single";
+
+    document.querySelectorAll('#ageSelector .chip-btn').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#ageSelector .chip-btn').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentAge = chip.dataset.age;
+        renderPlans();
+        renderAddons();
+      });
+    });
+
+    document.querySelectorAll('#memberSelector .chip-btn').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#memberSelector .chip-btn').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentMember = chip.dataset.member;
+        renderPlans();
+        renderAddons();
+      });
+    });
+
+    function renderPlans() {
+      const container = document.getElementById('plansContainer');
+      const label = document.getElementById('selectedLabel');
+      const memberNames = { single: "Single", family: "Family", m6: "6 Members", m10: "10 Members" };
+      
+      label.innerText = `Showing premiums for Age ${currentAge} yrs (${memberNames[currentMember]})`;
+
+      container.innerHTML = PLANS.map(plan => {
+        const pData = plan.pricing[currentAge];
+        const price = pData ? pData[currentMember] : null;
+
+        return `
+          <div class="plan-card ${plan.id === 'royal' ? 'highlight' : ''}">
+            <div class="plan-num">${plan.num}</div>
+            <div class="plan-title-box">
+              <h4>${plan.name}</h4>
+              <div class="plan-tagline">${plan.tagline}</div>
+            </div>
+
+            <div class="price-container">
+              ${price !== null && price !== undefined ? `
+                <div class="price-num">R${price} <span>/ month</span></div>
+                <div class="price-wait">★ ${plan.waiting}</div>
+              ` : `
+                <div class="price-num" style="font-size: 20px; color: #999;">N/A</div>
+                <div class="price-wait">Not available for selected age</div>
+              `}
+            </div>
+
+            ${plan.cashPayout ? `<div class="cash-badge">★ ${plan.cashPayout}</div>` : ''}
+
+            <ul class="feature-ul">
+              ${plan.items.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+
+            <button class="select-btn" onclick="choosePlan('${plan.name}', ${price})">
+              Select This Plan
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAddons() {
+      const container = document.getElementById('addonsContainer');
+      container.innerHTML = ADDONS.map(addon => {
+        const pData = addon.pricing[currentAge];
+        const price = pData ? pData[currentMember] : null;
+
+        return `
+          <div class="rider-card">
+            <h4>${addon.name}</h4>
+            <p>${addon.desc}</p>
+            <div class="cash-badge" style="margin-bottom:10px;">${addon.payout}</div>
+            <div style="font-size: 22px; font-weight: 700; color: var(--gold-bright);">
+              ${price !== null && price !== undefined ? `+ R${price} / month` : '<span style="color:#999; font-size:13px;">Not available for this age tier</span>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderBranches(filter = "") {
+      const container = document.getElementById('branchesContainer');
+      const filtered = BRANCHES.filter(b => 
+        b.name.toLowerCase().includes(filter.toLowerCase()) || 
+        b.address.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      container.innerHTML = filtered.map(b => `
+        <div class="branch-card ${b.isHO ? 'ho' : ''}">
+          <h5>♦ ${b.name.toUpperCase()} ${b.isHO ? '(HEAD OFFICE)' : ''}</h5>
+          <p>📍 ${b.address}</p>
+          <div>
+            ${b.mobile ? `<a href="tel:${b.mobile.replace(/\s+/g, '')}" class="call-btn">Call ${b.mobile}</a>` : ''}
+            ${b.tel ? `<a href="tel:${b.tel.replace(/\s+/g, '')}" class="call-btn" style="margin-left:4px;">Tel: ${b.tel}</a>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterBranchList() {
+      const query = document.getElementById('branchInput').value;
+      renderBranches(query);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+      
+      document.getElementById(`tab-${tabId}`).style.display = 'block';
+      event.currentTarget.classList.add('active');
+    }
+
+    function choosePlan(name, price) {
+      if(!price) {
+        alert("This plan is not available for the selected age and member structure.");
+        return;
+      }
+      showToast(`Selected ${name} (R${price}/pm). Tap 'Share via WhatsApp' below!`);
+    }
+
+    function shareWhatsApp() {
+      const memberNames = { single: "Single", family: "Family", m6: "6 Members", m10: "10 Members" };
+      const text = `Good day Thusanang Funeral Services,\n\nI am requesting funeral cover for:\n- Main Member Age: ${currentAge} years\n- Structure: ${memberNames[currentMember]}\n\nPlease contact me with details. Thank you!`;
+      
+      const url = `https://wa.me/27630439438?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.innerText = text;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    // Initialize
+    renderPlans();
+    renderAddons();
+    renderBranches();
+  </script>
+</body>
+</html>
