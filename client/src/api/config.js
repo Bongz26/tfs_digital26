@@ -36,8 +36,8 @@ export const getApiHost = () => {
     }
   }
 
-  // Fallback to Render URL when not local or when forced remote
-  return "https://admintfs.onrender.com";
+  // Fallback to custom domain when not local or when forced remote
+  return "http://api.thusanangfs.co.za";
 };
 
 // Export as a function that gets called, not a constant, to ensure it's evaluated at runtime
