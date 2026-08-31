@@ -9,7 +9,7 @@ const scheduleKeepAlive = () => {
             // Render environment variables usually include RENDER_EXTERNAL_URL
             const url = process.env.RENDER_EXTERNAL_URL
                 ? `${process.env.RENDER_EXTERNAL_URL}/api/health`
-                : 'http://api.thusanangfs.co.za/api/health';
+                : 'https://tfsdigital.onrender.com/api/health';
 
             console.log(`[KeepAlive] Pinging ${url} to prevent sleep...`);
             const res = await axios.get(url);

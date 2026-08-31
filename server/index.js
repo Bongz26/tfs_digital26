@@ -62,11 +62,27 @@ if (supabaseUrl && supabaseKey) {
   console.warn('   SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Set' : '❌ Missing');
 }
 
-// Middleware - CORS (allow all origins in development)
+// Middleware - CORS
+const allowedOrigins = [
+  'https://admintfs.onrender.com',
+  'https://tfsdigital.onrender.com',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL || 'https://admintfs.onrender.com'
-    : '*', // Allow all origins in development
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, server keepAlive)
+    if (!origin) return callback(null, true);
+    if (process.env.NODE_ENV !== 'production') return callback(null, true);
+    if (allowedOrigins.some(ao => origin.startsWith(ao) || origin === ao)) {
+      return callback(null, true);
+    }
+    // Allow any onrender preview / custom domain
+    if (origin.endsWith('.onrender.com') || origin.includes('thusanangfs.co.za') || origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 

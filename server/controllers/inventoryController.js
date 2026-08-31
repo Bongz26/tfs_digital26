@@ -1472,18 +1472,16 @@ exports.receiveTransfer = async (req, res) => {
             const item = items[idx];
             log(`item[${idx}]`, 'Processing', { inventory_id: item.inventory_id, name: item.name, quantity: item.quantity });
             const qty = Math.abs(item.quantity || 0);
-            if (qty > 0 && item.inventory_id) {
-                if (useNewFlow) {
-                    try {
-                        await releaseStock(
-                            item.inventory_id,
-                            qty,
-                            userEmail,
-                            `Transfer ${transfer.transfer_number} received at ${transfer.to_location}`
-                        );
-                    } catch (relErr) {
-                        console.warn(`⚠️ Release reservation failed for item ${item.inventory_id}:`, relErr.message);
-                    }
+            if (qty > 0 && useNewFlow && item.inventory_id) {
+                try {
+                    await releaseStock(
+                        item.inventory_id,
+                        qty,
+                        userEmail,
+                        `Transfer ${transfer.transfer_number} received at ${transfer.to_location}`
+                    );
+                } catch (relErr) {
+                    console.warn(`⚠️ Release reservation failed for item ${item.inventory_id}:`, relErr.message);
                 }
                 try {
                     await decrementStock(

@@ -1,0 +1,155 @@
+const { sendEmail } = require('./emailService');
+
+/**
+ * Finds an inventory item in the specific branch, or auto-creates a "Ghost Stock" item (negative balance)
+ * if it doesn't exist. Triggers an email alert for ghost stock creation.
+ * 
+ * @param {object} supabase - Supabase client
+ * @param {object} params - { name, color, branch, category, caseNumber }
+ * @returns {Promise<object|null>} The inventory item (existing or newly created)
+ */
+exports.findOrCreateInventoryItem = async (supabase, { name, model, color, branch, category = 'coffin', caseNumber }) => {
+    let nameStr = String(name || '').trim();
+    let modelStr = String(model || '').trim();
+    const colorStr = String(color || '').trim();
+    const selectedBranch = (branch || 'Head Office').trim().toUpperCase();
+
+    if (!nameStr) return null;
+
+    // 1. Backward Compatibility: Parse Name/Model if name contains " - " and model is empty
+    if (nameStr.includes(' - ') && !modelStr) {
+        const lastDashIndex = nameStr.lastIndexOf(' - ');
+        modelStr = nameStr.substring(lastDashIndex + 3).trim();
+        nameStr = nameStr.substring(0, lastDashIndex).trim();
+    }
+
+    // 2. Normalize for search
+    const primaryName = nameStr.toUpperCase();
+    const targetModel = modelStr.toUpperCase();
+
+    // 3. BROAD SEARCH: Get matching names
+    let invItem = null;
+
+    let query = supabase
+        .from('inventory')
+        .select('id, stock_quantity, reserved_quantity, name, model, color, unit_price, low_stock_threshold, sku, supplier, location')
+        .eq('category', category)
+        .ilike('name', `%${nameStr}%`) // broader search
+        .order('stock_quantity', { ascending: false });
+
+    const { data: matches, error: fetchErr } = await query;
+
+    if (matches && matches.length > 0) {
+        // Filter location in memory strictly case-insensitive
+        let candidates = matches.filter(i => (i.location || '').trim().toUpperCase() === selectedBranch);
+
+        // Filter by name strictly (ignoring model suffix if it was there)
+        candidates = candidates.filter(i => (i.name || '').trim().toUpperCase() === primaryName);
+
+        // Filter by model if specified or found in parsing
+        if (targetModel) {
+            const exactModel = candidates.filter(i => (i.model || '').trim().toUpperCase() === targetModel);
+            if (exactModel.length > 0) candidates = exactModel;
+            else {
+                // If we didn't find the exact model at this branch, we might still want to proceed 
+                // but we should be careful not to pick a wrong model. 
+                // For now, we clear candidates if model was specified but not found.
+                candidates = []; 
+            }
+        }
+
+        // Filter by color if specified
+        if (colorStr && candidates.length > 0) {
+            const colorMatch = candidates.find(i => (i.color || '').trim().toUpperCase() === colorStr.toUpperCase());
+            if (colorMatch) invItem = colorMatch;
+            else {
+                invItem = null; // Found name/model match but not color match -> Create new
+            }
+        } else if (candidates.length > 0) {
+            invItem = candidates[0];
+        }
+    }
+
+    // 2. Return Found Item
+    if (invItem) {
+        return invItem;
+    }
+
+    // 3. Auto-Create "Ghost Stock" (Negative Balance)
+    console.log(`👻 Item '${nameStr}' (Model: ${targetModel}, Color: ${colorStr}) not found in ${selectedBranch}. Auto-creating Ghost Stock...`);
+
+    // A. Try to find a TEMPLATE from another branch (to get pricing/SKU/Desc)
+    const { data: templates } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('category', category)
+        .ilike('name', nameStr)
+        .limit(1);
+
+    const template = templates && templates.length > 0 ? templates[0] : {};
+
+    // B. Insert new item (Use normalized branch for creation)
+    const normalizedBranch = selectedBranch;
+
+    const newItemObj = {
+        name: nameStr,
+        model: targetModel || template.model || '',
+        color: colorStr || template.color || '',
+        category: category,
+        location: normalizedBranch,
+        stock_quantity: 0,
+        reserved_quantity: 0,
+        low_stock_threshold: 5,
+        unit_price: template.unit_price || 0,
+        sku: template.sku ? `${template.sku}-${normalizedBranch.substring(0, 3).toUpperCase()}` : `AUTO-${Date.now()}`,
+        notes: `Auto-created for Case ${caseNumber || 'Unknown'}`
+    };
+
+    const result = await supabase
+        .from('inventory')
+        .insert(newItemObj)
+        .select();
+
+    const { data, error: createErr } = result;
+
+    if (createErr) {
+        console.error('❌ Failed to auto-create ghost stock:', JSON.stringify(createErr, null, 2));
+        return null;
+    }
+
+    if (!data || data.length === 0) {
+        console.error('❌ Insert succeeded but returned NO DATA.');
+        return null;
+    }
+
+    const createdItem = data[0];
+    console.log(`✅ Ghost Stock Created: ID ${createdItem.id} at ${selectedBranch}`);
+
+    // C. Send Alert
+    try {
+        const alertTo = process.env.INVENTORY_ALERTS_TO || process.env.ALERTS_TO || process.env.MANAGEMENT_EMAIL;
+        if (alertTo) {
+            const subject = `⚠️ Negative Stock Alert: ${nameStr} (${selectedBranch})`;
+            const html = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #f44336; border-radius: 5px;">
+                    <h2 style="color: #d32f2f;">Negative Stock Created</h2>
+                    <p>The following item was selected for a case but did not exist in the branch inventory.</p>
+                    <p>The system has <strong>auto-created</strong> it. Once reserved, it will show a negative availability.</p>
+                    <ul style="background: #fff3f3; padding: 15px;">
+                        <li><strong>Item:</strong> ${nameStr}</li>
+                        <li><strong>Model:</strong> ${modelStr || 'N/A'}</li>
+                        <li><strong>Color:</strong> ${colorStr || 'N/A'}</li>
+                        <li><strong>Location:</strong> ${selectedBranch}</li>
+                        <li><strong>Case Number:</strong> ${caseNumber || 'N/A'}</li>
+                    </ul>
+                    <p><strong>Action Required:</strong> Please transfer stock to ${selectedBranch} or update the inventory levels.</p>
+                </div>
+            `;
+            sendEmail(alertTo, subject, html).catch(e => console.error('Failed to send negative stock alert:', e));
+        }
+    } catch (emailErr) {
+        console.error('Failed to initialize email service for alert:', emailErr);
+    }
+
+    return createdItem;
+};
