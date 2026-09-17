@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thusanang Funeral Services | Digital Pamphlet</title>
-  <meta name="description" content="Official Digital Pamphlet for Thusanang Funeral Services. Respectful, Professional, Dignified Care.">
+  <meta name="description"
+    content="Official Digital Pamphlet for Thusanang Funeral Services. Respectful, Professional, Dignified Care.">
   <meta name="theme-color" content="#7C2D1B">
-  
+
   <!-- Premium Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&display=swap"
+    rel="stylesheet">
 
   <style>
     :root {
@@ -56,7 +60,7 @@
       background: #381008;
       border-bottom: 3px solid var(--gold-primary);
       position: relative;
-      box-shadow: 0 12px 36px rgba(0,0,0,0.7);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
       overflow: hidden;
     }
 
@@ -71,11 +75,15 @@
     }
 
     @media (max-width: 768px) {
-      .carousel-container { height: 320px; }
+      .carousel-container {
+        height: 320px;
+      }
     }
 
     @media (max-width: 480px) {
-      .carousel-container { height: 260px; }
+      .carousel-container {
+        height: 260px;
+      }
     }
 
     .carousel-slide {
@@ -126,7 +134,7 @@
       height: 100%;
       max-width: 100%;
       object-fit: contain;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
     }
 
     /* Floating Glassmorphic Caption Card */
@@ -170,9 +178,18 @@
     }
 
     @media (max-width: 640px) {
-      .caption-glass-card { padding: 10px 14px; max-width: 100%; }
-      .slide-title { font-size: 16px; }
-      .slide-subtitle { font-size: 11px; }
+      .caption-glass-card {
+        padding: 10px 14px;
+        max-width: 100%;
+      }
+
+      .slide-title {
+        font-size: 16px;
+      }
+
+      .slide-subtitle {
+        font-size: 11px;
+      }
     }
 
     /* Carousel Nav Controls */
@@ -193,7 +210,7 @@
       justify-content: center;
       font-size: 22px;
       transition: all 0.25s ease;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
     }
 
     .carousel-btn:hover {
@@ -202,8 +219,13 @@
       transform: translateY(-50%) scale(1.08);
     }
 
-    .carousel-btn.prev { left: 16px; }
-    .carousel-btn.next { right: 16px; }
+    .carousel-btn.prev {
+      left: 16px;
+    }
+
+    .carousel-btn.next {
+      right: 16px;
+    }
 
     .carousel-dots {
       position: absolute;
@@ -328,9 +350,18 @@
     }
 
     @media (max-width: 640px) {
-      .calc-grid { grid-template-columns: 1fr; }
-      .hero-title { font-size: 26px; }
-      .hero-logo-img { width: 90px; height: 90px; }
+      .calc-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-title {
+        font-size: 26px;
+      }
+
+      .hero-logo-img {
+        width: 90px;
+        height: 90px;
+      }
     }
 
     .label-text {
@@ -385,7 +416,10 @@
       padding-bottom: 16px;
       scrollbar-width: none;
     }
-    .tabs-row::-webkit-scrollbar { display: none; }
+
+    .tabs-row::-webkit-scrollbar {
+      display: none;
+    }
 
     .tab-item {
       padding: 10px 20px;
@@ -469,7 +503,7 @@
       font-family: 'Playfair Display', serif;
       font-weight: 700;
       font-size: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
     .plan-title-box {
@@ -572,6 +606,396 @@
       background: var(--gold-bright);
     }
 
+    /* Interactive Casket Showcase in Plan Cards */
+    .casket-preview-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--gold-border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .casket-preview-card:hover {
+      border-color: var(--gold-bright);
+      background: rgba(18, 1, 4, 0.7);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(197, 160, 89, 0.2);
+    }
+
+    .casket-img-wrap {
+      position: relative;
+      width: 100%;
+      height: 120px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 50% 65%, rgba(197, 160, 89, 0.2) 0%, rgba(20, 3, 6, 0.95) 75%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .casket-thumb {
+      max-width: 94%;
+      max-height: 105px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.95));
+      transition: transform 0.4s ease;
+    }
+
+    .casket-preview-card:hover .casket-thumb {
+      transform: scale(1.08) rotate(-1deg);
+    }
+
+    .casket-lens-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(18, 1, 4, 0.85);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-bright);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
+      opacity: 0.9;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .casket-preview-card:hover .casket-lens-badge {
+      opacity: 1;
+      transform: scale(1.05);
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+    }
+
+    .casket-shimmer {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent);
+      transform: skewX(-20deg);
+      pointer-events: none;
+      transition: left 0.75s ease;
+    }
+
+    .casket-preview-card:hover .casket-shimmer {
+      left: 200%;
+    }
+
+    .casket-name-tag {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      padding: 0 2px;
+    }
+
+    .casket-lbl {
+      color: var(--gold-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+
+    .casket-val {
+      color: var(--gold-bright);
+      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+    }
+
+    /* Full-Screen Luxury Casket Modal */
+    .casket-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 2, 4, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: modalFadeIn 0.3s ease-out;
+    }
+
+    .casket-modal-backdrop.active {
+      display: flex;
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .casket-modal-card {
+      background: linear-gradient(160deg, #5E1420 0%, #2A060C 60%, #150205 100%);
+      border: 2px solid var(--gold-primary);
+      border-radius: 16px;
+      max-width: 820px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(197, 160, 89, 0.25);
+      position: relative;
+      animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .casket-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gold-border);
+      background: rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .casket-modal-title-wrap h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold-bright);
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .casket-modal-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .casket-modal-close {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--gold-border);
+      color: var(--gold-bright);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .casket-modal-close:hover {
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      transform: scale(1.1);
+    }
+
+    .casket-modal-body {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .casket-modal-body {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 16px;
+      }
+    }
+
+    .casket-modal-hero {
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0.85) 100%);
+      border: 1px solid var(--gold-border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+      min-height: 220px;
+    }
+
+    .casket-modal-hero img {
+      max-width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.9));
+      transition: transform 0.3s ease;
+    }
+
+    .casket-modal-hero:hover img {
+      transform: scale(1.05);
+    }
+
+    .casket-spec-box {
+      margin-top: 14px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(197, 160, 89, 0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .casket-spec-label {
+      font-size: 11px;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .casket-spec-val {
+      font-size: 13px;
+      color: var(--gold-bright);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .casket-details-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .casket-desc-p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .casket-inclusions-list {
+      list-style: none;
+      margin-bottom: 20px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 8px;
+      padding: 12px 16px;
+      border: 1px solid rgba(197, 160, 89, 0.15);
+    }
+
+    .casket-inclusions-list li {
+      font-size: 12px;
+      color: var(--text-white);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .casket-inclusions-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .casket-inclusions-list li::before {
+      content: '✓';
+      color: var(--gold-bright);
+      font-weight: bold;
+    }
+
+    .casket-modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .casket-btn-wa {
+      background: #25D366;
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+    }
+
+    .casket-btn-wa:hover {
+      background: #20BA5C;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(37, 211, 102, 0.3);
+    }
+
+    .casket-btn-select {
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+      font-weight: 700;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .casket-btn-select:hover {
+      background: var(--gold-bright);
+    }
+
+    .matrix-casket-btn {
+      background: rgba(197, 160, 89, 0.15);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-bright);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .matrix-casket-btn:hover {
+      background: var(--gold-primary);
+      color: var(--maroon-dark);
+    }
+
     /* Table Matrix */
     .table-card {
       background: var(--maroon-card);
@@ -589,7 +1013,8 @@
       text-align: left;
     }
 
-    th, td {
+    th,
+    td {
       padding: 14px 16px;
       border-bottom: 1px solid var(--gold-border);
     }
@@ -641,7 +1066,7 @@
       padding: 12px 16px;
       border-radius: 6px;
       border: 1px solid var(--gold-border);
-      background: rgba(0,0,0,0.3);
+      background: rgba(0, 0, 0, 0.3);
       color: white;
       font-size: 14px;
       outline: none;
@@ -729,7 +1154,7 @@
       display: flex;
       gap: 12px;
       z-index: 100;
-      box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
     }
 
     .dock-btn {
@@ -777,41 +1202,101 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- EXECUTIVE TOP GALLERY CAROUSEL BANNER -->
   <div class="top-carousel-wrapper">
     <div class="carousel-container" id="photoCarousel">
 
-      <!-- Slide 1: Fleet -->
+      <!-- Slide 1: Bikes & Mercedes Fleet Setup -->
       <div class="carousel-slide active">
-        <img src="images/fleet.jpg" alt="Executive Fleet & Escort" class="slide-img-landscape">
+        <img src="images/fleet_bikes_setup.jpg" alt="Executive Fleet & Escort Motorbikes" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
-              <div class="slide-title">Executive Fleet & Escort</div>
-              <div class="slide-subtitle">Branded Mercedes-Benz & Audi funeral fleet providing dignified transport</div>
+              <div class="slide-title">Executive Fleet & Escort Motorbikes</div>
+              <div class="slide-subtitle">Branded Mercedes-Benz fleet & escort motorbikes with custom Thusanang marquee
+                setup</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 2: Church Deco 1 -->
+      <!-- Slide 2: Drone Staff & Traffic Direction -->
       <div class="carousel-slide">
-        <img src="images/church_deco1.jpg" alt="Church Decoration 1" class="slide-img-landscape">
+        <img src="images/drone_staff_traffic.jpg" alt="Staff Directing Traffic & Drone View"
+          class="slide-img-landscape">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Professional Field Staff & Traffic Control</div>
+              <div class="slide-subtitle">Uniformed staff directing traffic & coordinating cemetery procession with the
+                Glass Dome Hearse</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Defender & Horse Escort Procession -->
+      <div class="carousel-slide">
+        <img src="images/defender_horses_procession.jpg" alt="Prestige Escort" class="slide-img-landscape">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Prestige Escort</div>
+              <div class="slide-subtitle">White Land Rover Defender towing the glass dome hearse led by traditional
+                Basotho horsemen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Basotho Traditional Horsemen -->
+      <div class="carousel-slide">
+        <img src="images/horses_lineup.jpg" alt="Traditional Basotho Guard of Honour" class="slide-img-landscape">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Traditional Basotho Guard of Honour (Mokorotlo)</div>
+              <div class="slide-subtitle">Basotho traditional horsemen in authentic Mokorotlo hats and blankets
+                honouring the departed</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 5: Defender Towing Glass Dome Hearse -->
+      <div class="carousel-slide">
+        <img src="images/defender_dome_hearse.jpg" alt="Defender & Glass Dome Hearse" class="slide-img-landscape">
+        <div class="carousel-overlay">
+          <div class="container">
+            <div class="caption-glass-card">
+              <div class="slide-title">Luxury Land Rover Defender & Glass Dome Trailer</div>
+              <div class="slide-subtitle">Ceremonial Defender hearse combination with floral tribute and official
+                Thusanang emblem</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 6: Church Deco 1 -->
+      <div class="carousel-slide">
+        <img src="images/church_deco1.jpg" alt="Church Decoration & Stage Styling" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
               <div class="slide-title">Church Decoration & Stage Styling</div>
-              <div class="slide-subtitle">Illuminated angel wings backdrop, white floral pedestals & red walkway carpet</div>
+              <div class="slide-subtitle">Illuminated angel wings backdrop, white floral pedestals & red walkway carpet
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 3: Church Deco 2 -->
+      <!-- Slide 7: Church Deco 2 -->
       <div class="carousel-slide">
-        <img src="images/church_deco2.jpg" alt="Church Decoration 2" class="slide-img-landscape">
+        <img src="images/church_deco2.jpg" alt="VIP Sanctuary Setup" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
@@ -822,61 +1307,23 @@
         </div>
       </div>
 
-      <!-- Slide 4: Horse Honouring -->
+      <!-- Slide 8: Premium Church Deco -->
       <div class="carousel-slide">
-        <img src="images/horse_honouring.jpg" alt="Horse Honouring Escort" class="slide-img-landscape">
-        <div class="carousel-overlay">
-          <div class="container">
-            <div class="caption-glass-card">
-              <div class="slide-title">Traditional Horse Honouring Escort</div>
-              <div class="slide-subtitle">Basotho traditional horsemen in Mokorotlo attire escorting the funeral procession</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Slide 5: Staff -->
-      <div class="carousel-slide">
-        <img src="images/staff.jpg" alt="Professional Staff & Fleet" class="slide-img-landscape">
-        <div class="carousel-overlay">
-          <div class="container">
-            <div class="caption-glass-card">
-              <div class="slide-title">Professional Thusanang Service Staff</div>
-              <div class="slide-subtitle">Dignified staff in official uniforms standing with Audi fleet & stretch marquee</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Slide 6: Premium Church Deco -->
-      <div class="carousel-slide">
-        <img src="images/premium_church_deco.jpg" alt="Premium Church Deco" class="slide-img-landscape">
+        <img src="images/premium_church_deco.jpg" alt="Premium Church & Venue Decoration" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
               <div class="slide-title">Premium Church & Venue Decoration</div>
-              <div class="slide-subtitle">Full venue transformation with artificial lawn, white arch, and floral pedestals</div>
+              <div class="slide-subtitle">Full venue transformation with artificial lawn, white arch, and floral
+                pedestals</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 7: Dome Hearse Trailer -->
+      <!-- Slide 9: Premium Catering -->
       <div class="carousel-slide">
-        <img src="images/dome_hearse.jpg" alt="Dome Hearse Trailer" class="slide-img-landscape">
-        <div class="carousel-overlay">
-          <div class="container">
-            <div class="caption-glass-card">
-              <div class="slide-title">Glass Dome Hearse Trailer</div>
-              <div class="slide-subtitle">State-of-the-art ceremonial glass dome hearse trailer with escort guard</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Slide 8: Premium Catering -->
-      <div class="carousel-slide">
-        <img src="images/premium_catering.jpg" alt="Premium Catering Service" class="slide-img-landscape">
+        <img src="images/premium_catering.jpg" alt="Premium VIP Catering Service" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
@@ -887,9 +1334,9 @@
         </div>
       </div>
 
-      <!-- Slide 9: Standard Catering -->
+      <!-- Slide 10: Standard Catering -->
       <div class="carousel-slide">
-        <img src="images/standard_catering.jpg" alt="Standard Catering Setup" class="slide-img-landscape">
+        <img src="images/standard_catering.jpg" alt="Standard Event Catering" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
@@ -900,22 +1347,23 @@
         </div>
       </div>
 
-      <!-- Slide 10: Friendly Catering Team -->
+      <!-- Slide 11: Friendly Catering Team -->
       <div class="carousel-slide">
         <img src="images/catering_team.jpg" alt="Friendly Catering Team" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
               <div class="slide-title">Friendly & Professional Catering Staff</div>
-              <div class="slide-subtitle">Warm, respectful catering team dedicated to serving your family with care</div>
+              <div class="slide-subtitle">Warm, respectful catering team dedicated to serving your family with care
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 11: Tombstone Top Tier -->
+      <!-- Slide 12: Tombstone Top Tier -->
       <div class="carousel-slide">
-        <img src="images/tombstone_top_tier.jpg" alt="Tombstone Top Tier" class="slide-img-landscape">
+        <img src="images/tombstone_top_tier.jpg" alt="Top Tier Memorial Tombstone" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
@@ -943,6 +1391,7 @@
         <span class="dot" onclick="setSlide(8)"></span>
         <span class="dot" onclick="setSlide(9)"></span>
         <span class="dot" onclick="setSlide(10)"></span>
+        <span class="dot" onclick="setSlide(11)"></span>
       </div>
     </div>
   </div>
@@ -953,12 +1402,14 @@
       <div class="hero-flex">
         <!-- Logo Emblem Only (Outer-Padding Stripped) -->
         <div class="hero-logo-col">
-          <img src="tfs_logo.png" alt="Thusanang Funeral Services Logo" class="hero-logo-img" id="mainHeroLogo" onload="stripOuterWhitePadding(this)">
+          <img src="tfs_logo.png" alt="Thusanang Funeral Services Logo" class="hero-logo-img" id="mainHeroLogo"
+            onload="stripOuterWhitePadding(this)">
         </div>
         <!-- Main Text Column -->
         <div class="hero-text-col">
           <h2 class="hero-title">Honouring Life, <i>Caring for Family</i></h2>
-          <p class="hero-sub">Trusted funeral cover for every generation — affordable plans, dignified service and a promise to walk with your family when it matters most.</p>
+          <p class="hero-sub">Trusted funeral cover for every generation — affordable plans, dignified service and a
+            promise to walk with your family when it matters most.</p>
           <div class="brand-values">
             RESPECTFUL • PROFESSIONAL • DIGNIFIED
           </div>
@@ -999,7 +1450,7 @@
     <div class="tabs-row">
       <button class="tab-item active" onclick="switchTab('plans')">♦ Cover Tiers</button>
       <button class="tab-item" onclick="switchTab('matrix')">♦ Plan Comparison Matrix</button>
-      <button class="tab-item" onclick="switchTab('addons')">♦ Optional Add-On Benefits</button>
+      <button class="tab-item" onclick="switchTab('addons')">♦ Catering & Tombstones</button>
       <button class="tab-item" onclick="switchTab('children')">♦ Children's Cover Scale</button>
       <button class="tab-item" onclick="switchTab('branches')">♦ Contact Us & Branches</button>
     </div>
@@ -1035,11 +1486,15 @@
           <tbody>
             <tr>
               <td><strong>Casket / Coffin Type</strong></td>
-              <td>Flatlid Coffin</td>
-              <td>Pongee Walnut</td>
-              <td>Raised ½ View Walnut</td>
-              <td>4 Tier Mountain Ash</td>
-              <td>Princeton Dome</td>
+              <td><button class="matrix-casket-btn" onclick="openCasketModal('budget-buster')">🔍 Flatlid
+                  Coffin</button></td>
+              <td><button class="matrix-casket-btn" onclick="openCasketModal('executive')">🔍 Pongee Walnut</button>
+              </td>
+              <td><button class="matrix-casket-btn" onclick="openCasketModal('royal')">🔍 Raised ½ View</button></td>
+              <td><button class="matrix-casket-btn" onclick="openCasketModal('presidential')">🔍 4 Tier Ash</button>
+              </td>
+              <td><button class="matrix-casket-btn" onclick="openCasketModal('one-stop')">🔍 Princeton Dome</button>
+              </td>
             </tr>
             <tr>
               <td><strong>Chairs Provided</strong></td>
@@ -1137,7 +1592,7 @@
     <!-- TAB 3: ADDONS -->
     <div id="tab-addons" class="tab-content" style="display: none;">
       <div class="sec-head">
-        <h3>Optional Add-On Benefits</h3>
+        <h3>Tombstone & Catering</h3>
       </div>
       <div class="riders-grid" id="addonsContainer">
         <!-- Rendered dynamically -->
@@ -1189,7 +1644,8 @@
       <div class="sec-head">
         <h3>Contact Us & Branch Locations</h3>
       </div>
-      <input type="text" class="branch-search-input" id="branchInput" placeholder="Search branch location or street address..." onkeyup="filterBranchList()">
+      <input type="text" class="branch-search-input" id="branchInput"
+        placeholder="Search branch location or street address..." onkeyup="filterBranchList()">
       <div class="branches-grid" id="branchesContainer">
         <!-- Rendered dynamically -->
       </div>
@@ -1210,6 +1666,43 @@
     </div>
   </div>
 
+  <!-- CASKET LUXURY SHOWCASE MODAL -->
+  <div id="casketModal" class="casket-modal-backdrop" onclick="handleModalBackdropClick(event)">
+    <div class="casket-modal-card" onclick="event.stopPropagation()">
+      <div class="casket-modal-header">
+        <div class="casket-modal-title-wrap">
+          <span class="casket-modal-badge" id="modalPlanBadge">PLAN SPOTLIGHT</span>
+          <h3 id="modalPlanTitle">Plan Casket Showcase</h3>
+        </div>
+        <button class="casket-modal-close" onclick="closeCasketModal()" title="Close">✕</button>
+      </div>
+      <div class="casket-modal-body">
+        <div class="casket-modal-hero">
+          <img id="modalCasketImg" src="" alt="Casket Preview" />
+          <div class="casket-spec-box">
+            <div class="casket-spec-label">Craftsmanship & Finish</div>
+            <div class="casket-spec-val" id="modalCasketFinish">—</div>
+          </div>
+        </div>
+        <div class="casket-details-col">
+          <div>
+            <div class="casket-spec-label" style="margin-bottom:6px; color:var(--gold-bright);">About This Casket</div>
+            <p class="casket-desc-p" id="modalCasketDesc">—</p>
+
+            <div class="casket-spec-label" style="margin-bottom:6px; color:var(--gold-bright);">Complete Plan Package
+              Inclusions</div>
+            <ul class="casket-inclusions-list" id="modalInclusionsList">
+              <!-- Inclusions dynamically populated -->
+            </ul>
+          </div>
+          <div class="casket-modal-actions" id="modalActionsWrap">
+            <!-- Dynamic CTA buttons -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom Dock -->
   <div class="bottom-dock">
     <button class="dock-btn btn-whatsapp" onclick="shareWhatsApp()">
@@ -1223,40 +1716,155 @@
   <div class="toast-msg" id="toast">Notification</div>
 
   <script>
-    // Precision Outer White Padding Stripper
+    // Precision Outer White Padding Stripper for Circular Logo
     function stripOuterWhitePadding(imgElement) {
       try {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const width = imgElement.naturalWidth || imgElement.width || 300;
         const height = imgElement.naturalHeight || imgElement.height || 300;
-        
+
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(imgElement, 0, 0);
-        
+
         const imgData = ctx.getImageData(0, 0, width, height);
         const data = imgData.data;
-        
+
         const centerX = width / 2;
         const centerY = height / 2;
         const outerCircleRadius = (Math.min(width, height) / 2) * 0.88;
-        
+
         for (let i = 0; i < data.length; i += 4) {
           const x = (i / 4) % width;
           const y = Math.floor((i / 4) / width);
           const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-          
+
           if (dist > outerCircleRadius) {
             data[i + 3] = 0; // Alpha 0
           }
         }
-        
+
         ctx.putImageData(imgData, 0, 0);
         imgElement.onload = null;
         imgElement.src = canvas.toDataURL('image/png');
       } catch (err) {
         console.log("Canvas processing:", err);
+      }
+    }
+
+    // High-Precision Flood-Fill Background Remover for Caskets
+    function cleanCasketTransparent(imgElement) {
+      if (imgElement.dataset.cleaned === "true") return;
+
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const width = imgElement.naturalWidth || imgElement.width || 500;
+        const height = imgElement.naturalHeight || imgElement.height || 250;
+
+        if (width <= 0 || height <= 0) return;
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(imgElement, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const data = imgData.data;
+
+        // Sample corner/edge pixels to detect background mode (dark/black vs light/white)
+        const corners = [
+          [0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1],
+          [Math.floor(width / 2), 0], [0, Math.floor(height / 2)], [width - 1, Math.floor(height / 2)],
+          [Math.floor(width / 4), 0], [Math.floor(3 * width / 4), 0]
+        ];
+
+        let darkCount = 0;
+        let lightCount = 0;
+
+        corners.forEach(([x, y]) => {
+          const idx = (y * width + x) * 4;
+          const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+          const brightness = (r + g + b) / 3;
+          if (brightness < 60) darkCount++;
+          else if (brightness > 190) lightCount++;
+        });
+
+        const isDarkBg = darkCount >= lightCount;
+
+        // Flood fill from outer boundaries
+        const visited = new Uint8Array(width * height);
+        const queue = [];
+
+        // Push border pixels
+        for (let x = 0; x < width; x++) {
+          queue.push(x, 0);
+          queue.push(x, height - 1);
+        }
+        for (let y = 0; y < height; y++) {
+          queue.push(0, y);
+          queue.push(width - 1, y);
+        }
+
+        let head = 0;
+        while (head < queue.length) {
+          const x = queue[head++];
+          const y = queue[head++];
+          const pIdx = y * width + x;
+
+          if (x < 0 || x >= width || y < 0 || y >= height || visited[pIdx]) continue;
+
+          const dIdx = pIdx * 4;
+          const r = data[dIdx];
+          const g = data[dIdx + 1];
+          const b = data[dIdx + 2];
+
+          let isBg = false;
+          let alphaMult = 0;
+
+          if (isDarkBg) {
+            // Black background removal
+            const maxVal = Math.max(r, g, b);
+            if (maxVal < 38) {
+              isBg = true;
+              alphaMult = 0;
+            } else if (maxVal < 62) {
+              isBg = true;
+              alphaMult = (maxVal - 38) / 24; // Smooth feather
+            }
+          } else {
+            // White / light grey background removal
+            const minVal = Math.min(r, g, b);
+            const maxVal = Math.max(r, g, b);
+            const diff = maxVal - minVal;
+
+            if (minVal > 222 && diff < 28) {
+              isBg = true;
+              alphaMult = 0;
+            } else if (minVal > 195 && diff < 30) {
+              isBg = true;
+              alphaMult = 1 - (minVal - 195) / 27; // Smooth feather
+            }
+          }
+
+          if (isBg) {
+            visited[pIdx] = 1;
+            data[dIdx + 3] = Math.floor(data[dIdx + 3] * alphaMult);
+
+            // Expand 4-direction neighbors
+            if (x > 0 && !visited[pIdx - 1]) queue.push(x - 1, y);
+            if (x < width - 1 && !visited[pIdx + 1]) queue.push(x + 1, y);
+            if (y > 0 && !visited[pIdx - width]) queue.push(x, y - 1);
+            if (y < height - 1 && !visited[pIdx + width]) queue.push(x, y + 1);
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        imgElement.onload = null;
+        imgElement.dataset.cleaned = "true";
+        imgElement.src = canvas.toDataURL('image/png');
+      } catch (err) {
+        console.log("Casket background removal error:", err);
       }
     }
 
@@ -1289,7 +1897,7 @@
       moveSlide(1);
     }, 5000);
 
-    // Plans Data
+    // Plans Data with Caskets
     const PLANS = [
       {
         num: "1",
@@ -1298,6 +1906,9 @@
         tagline: "Affordable dignity for every family",
         waiting: "3 Months Waiting Period",
         casket: "Flatlid Coffin",
+        casketImg: "images/caskets/casket_budget_flatlid.jpg",
+        casketFinish: "Polished Walnut Finish with Gold Accents",
+        casketDesc: "Solid timber construction with rich walnut lacquer, classic polished gold-tone swing handles, ornamental corner escutcheons, and white satin interior lining.",
         cashPayout: null,
         pricing: {
           "18-64": { single: 25, family: 35, m6: 45, m10: 60 },
@@ -1305,7 +1916,7 @@
           "75-84": { single: 45, family: 55, m6: 65, m10: 70 },
           "85-100": { single: 90, family: 100, m6: 117, m10: 126 }
         },
-        items: ["Flatlid Coffin", "Full Fleet Provided", "Graveyard Setup", "Tent, Table & Toilet", "50 Chairs & 50 Programmes", "Airtime / Data / Electricity R100", "Storage & Collection 100km"]
+        items: ["Flatlid Coffin (Polished Walnut)", "Full Fleet Provided", "Graveyard Setup", "Tent, Table & Toilet", "50 Chairs & 50 Programmes", "Airtime / Data / Electricity R100", "Storage & Collection 100km"]
       },
       {
         num: "2",
@@ -1314,6 +1925,9 @@
         tagline: "Premium care with added peace of mind",
         waiting: "6 Months Waiting Period",
         casket: "Pongee Casket (Walnut)",
+        casketImg: "images/caskets/casket_executive_pongee.jpg",
+        casketFinish: "Warm Walnut with Rose Embroidery",
+        casketDesc: "Half-couch open casket featuring a delicately embroidered floral head panel, luxurious tufted white satin bedding, and ornate bronze scrollwork corner handles.",
         cashPayout: "OR R5,000 CASH PAYOUT",
         pricing: {
           "18-64": { single: 35, family: 45, m6: 90, m10: 120 },
@@ -1330,6 +1944,9 @@
         tagline: "A regal farewell befitting royalty",
         waiting: "6 Months Waiting Period",
         casket: "Raised ½ View (Walnut)",
+        casketImg: "images/caskets/casket_royal_raised_half_view.png",
+        casketFinish: "Natural Blonde Oak & Bronze Bar",
+        casketDesc: "Regal blonde oak finish with an elevated raised half-view lid, plush diamond-tufted satin interior, and continuous bronze-finished handle bars.",
         cashPayout: "OR R6,000 CASH PAYOUT",
         pricing: {
           "18-64": { single: 40, family: 50, m6: 95, m10: 125 },
@@ -1337,7 +1954,7 @@
           "75-84": { single: 60, family: 70, m6: 115, m10: 145 },
           "85-100": { single: 105, family: 115, m6: 173, m10: 218 }
         },
-        items: ["Raised ½ View (Walnut)", "Full Fleet & Graveyard Setup", "Tent, Table & Toilet", "100 Chairs & 100 Programmes", "Grocery & Fresh Flower", "Grave Marker", "Airtime R200 & Mokoti / Dipere", "Free Repatriation*"]
+        items: ["Raised ½ View (Blonde Oak)", "Full Fleet & Graveyard Setup", "Tent, Table & Toilet", "100 Chairs & 100 Programmes", "Grocery & Fresh Flower", "Grave Marker", "Airtime R200 & Mokoti / Dipere", "Free Repatriation*"]
       },
       {
         num: "4",
@@ -1346,6 +1963,9 @@
         tagline: "The ultimate tribute for a distinguished farewell",
         waiting: "6 Months Waiting Period",
         casket: "4 Tier Casket (Mountain Ash)",
+        casketImg: "images/caskets/casket_presidential_4tier.png",
+        casketFinish: "Mountain Ash / Slate Bronze Trim",
+        casketDesc: "Distinguished 4-tier step-lid masterwork with slate-ash wood grain, architectural corner pillars, heavy-duty antiqued bronze drop-handles, and premium interior.",
         cashPayout: "OR R10,000 CASH PAYOUT",
         pricing: {
           "18-64": { single: 45, family: 73, m6: 100, m10: 130 },
@@ -1362,6 +1982,9 @@
         tagline: "Everything handled - nothing left to chance",
         waiting: "9 Months Waiting Period",
         casket: "Princeton Dome Casket",
+        casketImg: "images/caskets/casket_onestop_princeton_dome.png",
+        casketFinish: "Deep Royal Mahogany & Ruched Velvet",
+        casketDesc: "The pinnacle of funeral luxury — crowned dome half-couch with deep cherry-mahogany gloss, hand-ruched white velvet bedding, and sovereign brass appointments.",
         cashPayout: "OR R15,000 CASH PAYOUT",
         pricing: {
           "18-64": { single: 300, family: 600, m6: 1000, m10: null },
@@ -1446,7 +2069,7 @@
       const container = document.getElementById('plansContainer');
       const label = document.getElementById('selectedLabel');
       const memberNames = { single: "Single", family: "Family", m6: "6 Members", m10: "10 Members" };
-      
+
       label.innerText = `Showing premiums for Age ${currentAge} yrs (${memberNames[currentMember]})`;
 
       container.innerHTML = PLANS.map(plan => {
@@ -1459,6 +2082,19 @@
             <div class="plan-title-box">
               <h4>${plan.name}</h4>
               <div class="plan-tagline">${plan.tagline}</div>
+            </div>
+
+            <!-- Interactive Casket Preview -->
+            <div class="casket-preview-card" onclick="openCasketModal('${plan.id}')" title="Click to view full casket & setup details">
+              <div class="casket-img-wrap">
+                <img src="${plan.casketImg}" alt="${plan.casket}" class="casket-thumb" onload="cleanCasketTransparent(this)" loading="lazy" />
+                <div class="casket-lens-badge">🔍 Inspect Casket</div>
+                <div class="casket-shimmer"></div>
+              </div>
+              <div class="casket-name-tag">
+                <span class="casket-lbl">Included Casket</span>
+                <span class="casket-val">${plan.casket}</span>
+              </div>
             </div>
 
             <div class="price-container">
@@ -1485,6 +2121,65 @@
       }).join('');
     }
 
+    // Modal Controller
+    function openCasketModal(planId) {
+      const plan = PLANS.find(p => p.id === planId);
+      if (!plan) return;
+
+      const pData = plan.pricing[currentAge];
+      const price = pData ? pData[currentMember] : null;
+      const memberNames = { single: "Single", family: "Family", m6: "6 Members", m10: "10 Members" };
+
+      document.getElementById('modalPlanBadge').innerText = `${plan.name.toUpperCase()} COVER`;
+      document.getElementById('modalPlanTitle').innerText = `${plan.casket} (${plan.name} Plan)`;
+
+      const modalImg = document.getElementById('modalCasketImg');
+      modalImg.dataset.cleaned = "false";
+      modalImg.onload = function () { cleanCasketTransparent(this); };
+      modalImg.src = plan.casketImg;
+      modalImg.alt = plan.casket;
+
+      document.getElementById('modalCasketFinish').innerText = plan.casketFinish;
+      document.getElementById('modalCasketDesc').innerText = plan.casketDesc;
+
+      const inclusionsUl = document.getElementById('modalInclusionsList');
+      inclusionsUl.innerHTML = plan.items.map(item => `<li>${item}</li>`).join('');
+
+      const actionsWrap = document.getElementById('modalActionsWrap');
+      const waText = `Good day Thusanang,\n\nI am interested in the ${plan.name} Plan (${plan.casket}) for Age ${currentAge} (${memberNames[currentMember]}). Please assist me with cover.`;
+      const waUrl = `https://wa.me/27630439438?text=${encodeURIComponent(waText)}`;
+
+      actionsWrap.innerHTML = `
+        <a href="${waUrl}" target="_blank" class="casket-btn-wa">
+          💬 Inquire about ${plan.name} on WhatsApp
+        </a>
+        <button class="casket-btn-select" onclick="choosePlan('${plan.name}', ${price}); closeCasketModal();">
+          ✓ Select ${plan.name} ${price ? `(R${price}/pm)` : ''}
+        </button>
+      `;
+
+      const modal = document.getElementById('casketModal');
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCasketModal() {
+      const modal = document.getElementById('casketModal');
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function handleModalBackdropClick(e) {
+      if (e.target.id === 'casketModal') {
+        closeCasketModal();
+      }
+    }
+
+    // Keyboard support: ESC closes modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeCasketModal();
+    });
+
     function renderAddons() {
       const container = document.getElementById('addonsContainer');
       container.innerHTML = ADDONS.map(addon => {
@@ -1506,8 +2201,8 @@
 
     function renderBranches(filter = "") {
       const container = document.getElementById('branchesContainer');
-      const filtered = BRANCHES.filter(b => 
-        b.name.toLowerCase().includes(filter.toLowerCase()) || 
+      const filtered = BRANCHES.filter(b =>
+        b.name.toLowerCase().includes(filter.toLowerCase()) ||
         b.address.toLowerCase().includes(filter.toLowerCase())
       );
 
@@ -1531,13 +2226,13 @@
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
-      
+
       document.getElementById(`tab-${tabId}`).style.display = 'block';
       event.currentTarget.classList.add('active');
     }
 
     function choosePlan(name, price) {
-      if(!price) {
+      if (!price) {
         alert("This plan is not available for the selected age and member structure.");
         return;
       }
@@ -1547,7 +2242,7 @@
     function shareWhatsApp() {
       const memberNames = { single: "Single", family: "Family", m6: "6 Members", m10: "10 Members" };
       const text = `Good day Thusanang Funeral Services,\n\nI am requesting funeral cover for:\n- Main Member Age: ${currentAge} years\n- Structure: ${memberNames[currentMember]}\n\nPlease contact me with details. Thank you!`;
-      
+
       const url = `https://wa.me/27630439438?text=${encodeURIComponent(text)}`;
       window.open(url, '_blank');
     }
@@ -1565,4 +2260,5 @@
     renderBranches();
   </script>
 </body>
+
 </html>
