@@ -13,6 +13,15 @@ let PLAN_DATA = {}; // Will be populated from server
 
 // Plan benefits based on brochure
 const PLAN_BENEFITS = {
+  'Old Budget Buster': {
+    casket: "FLAT LID",
+    tent: 1,
+    table: 1,
+    toilet: 1,
+    chairs: 50,
+    programmes: 50,
+    service: "1 Service (Incl. Hearse & Family Car & Deco)"
+  },
   'Budget Buster': {
     casket: "FLAT LID",
     tent: 1,
@@ -20,6 +29,56 @@ const PLAN_BENEFITS = {
     toilet: 1,
     chairs: 50,
     programmes: 50,
+    airtime: 100,
+    service: "1 Service (Incl. Hearse & Family Car & Deco)"
+  },
+  'Executive': {
+    casket: "PONGEE CASKET (WALNUT)",
+    tent: 1,
+    table: 1,
+    toilet: 1,
+    chairs: 80,
+    programmes: 80,
+    airtime: 200,
+    cashback: 5000,
+    grocery_items: ["Grocery included"],
+    service: "1 Service (Incl. Hearse & Family Car & Deco)"
+  },
+  'Royal': {
+    casket: "RAISED ½ VIEW (WALNUT)",
+    tent: 1,
+    table: 1,
+    toilet: 1,
+    chairs: 100,
+    programmes: 100,
+    airtime: 200,
+    cashback: 6000,
+    grocery_items: ["Grocery & Fresh Flower"],
+    service: "1 Service (Incl. Hearse & Family Car & Deco)"
+  },
+  'Presidential': {
+    casket: "4 TIER (MOUNTAIN ASH)",
+    tent: 1,
+    table: 2,
+    toilet: "VIP",
+    chairs: 100,
+    programmes: 100,
+    airtime: 200,
+    cashback: 10000,
+    grocery_items: ["Grocery & Fresh Flower"],
+    service: "1 Service (Incl. Hearse & Family Car & Deco)"
+  },
+  'One-Stop All-Inclusive': {
+    casket: "PRINCETON DOME CASKET",
+    tent: 1,
+    table: 2,
+    toilet: "VIP",
+    chairs: 100,
+    programmes: 150,
+    airtime: 200,
+    cashback: 15000,
+    catering: 1,
+    tombstone: "1 Tombstone (Headstone)",
     service: "1 Service (Incl. Hearse & Family Car & Deco)"
   },
   'Plan A': {
@@ -236,8 +295,15 @@ const EXTRA_PRICES = {
 // LEGACY PLAN MAPPING — Maps old brochure plan names to new system plan names
 // Based on actual brochure prices from the image
 const LEGACY_PLAN_MAPPING = {
+  // NEW PAMPHLET PLANS
+  "BUDGET BUSTER (PAMPHLET)": { category: "pamphlet", name: "Budget Buster", age: "18-64", members: "single" },
+  "EXECUTIVE (PAMPHLET)": { category: "pamphlet", name: "Executive", age: "18-64", members: "single" },
+  "ROYAL (PAMPHLET)": { category: "pamphlet", name: "Royal", age: "18-64", members: "single" },
+  "PRESIDENTIAL (PAMPHLET)": { category: "pamphlet", name: "Presidential", age: "18-64", members: "single" },
+  "ONE-STOP ALL-INCLUSIVE (PAMPHLET)": { category: "pamphlet", name: "One-Stop All-Inclusive", age: "18-64", members: "single" },
+
   // MOTJHA O TJHELE / SOCIETY PLANS
-  "BUDGET BUSTER (MOTJHA)": { category: "motjha", name: "Budget Buster", members: 6 },
+  "OLD BUDGET BUSTER (MOTJHA)": { category: "motjha", name: "Old Budget Buster", members: 6 },
   "PLAN A (MOTJHA)": { category: "motjha", name: "Plan A", members: 6 },
   "PLAN B (MOTJHA)": { category: "motjha", name: "Plan B", members: 6 },
   "PLAN C (MOTJHA)": { category: "motjha", name: "Plan C", members: 6 },
@@ -246,7 +312,7 @@ const LEGACY_PLAN_MAPPING = {
   "PLAN F (MOTJHA)": { category: "motjha", name: "Plan F", members: 6 },
 
   // MOTJHA with 10 members
-  "BUDGET BUSTER (MOTJHA 10)": { category: "motjha", name: "Budget Buster", members: 10 },
+  "OLD BUDGET BUSTER (MOTJHA 10)": { category: "motjha", name: "Old Budget Buster", members: 10 },
   "PLAN A (MOTJHA 10)": { category: "motjha", name: "Plan A", members: 10 },
   "PLAN B (MOTJHA 10)": { category: "motjha", name: "Plan B", members: 10 },
   "PLAN C (MOTJHA 10)": { category: "motjha", name: "Plan C", members: 10 },
@@ -255,7 +321,7 @@ const LEGACY_PLAN_MAPPING = {
   "PLAN F (MOTJHA 10)": { category: "motjha", name: "Plan F", members: 10 },
 
   // FAMILY PLANS (Most common)
-  "BUDGET BUSTER (FAMILY)": { category: "family", name: "Budget Buster", age: "18-65" },
+  "OLD BUDGET BUSTER (FAMILY)": { category: "family", name: "Old Budget Buster", age: "18-65" },
   "PLAN A (FAMILY)": { category: "family", name: "Plan A", age: "18-65" },
   "PLAN B (FAMILY)": { category: "family", name: "Plan B", age: "18-65" },
   "PLAN C (FAMILY)": { category: "family", name: "Plan C", age: "18-65" },
@@ -264,7 +330,7 @@ const LEGACY_PLAN_MAPPING = {
   "PLAN F (FAMILY)": { category: "family", name: "Plan F", age: "18-65" },
 
   // SINGLE PLANS
-  "BUDGET BUSTER (SINGLE)": { category: "single", name: "Budget Buster", age: "18-65" },
+  "OLD BUDGET BUSTER (SINGLE)": { category: "single", name: "Old Budget Buster", age: "18-65" },
   "PLAN A (SINGLE)": { category: "single", name: "Plan A", age: "18-65" },
   "PLAN B (SINGLE)": { category: "single", name: "Plan B", age: "18-65" },
   "PLAN C (SINGLE)": { category: "single", name: "Plan C", age: "18-65" },
@@ -297,10 +363,10 @@ export default function ConsultationForm() {
   }, []);
 
   const [form, setForm] = useState({
-    plan_category: 'family',
+    plan_category: 'pamphlet',
     plan_name: 'Budget Buster',
-    plan_members: 6,
-    plan_age_bracket: '18-65',
+    plan_members: 'single',
+    plan_age_bracket: '18-64',
     benefit_mode: 'benefits',
     pearl_bonus: '',
     claim_date: '',
@@ -637,9 +703,11 @@ export default function ConsultationForm() {
   const getAutoPrice = () => {
     if (form.plan_category === 'colour_grade') return 0;
     const plan = PLAN_DATA[form.plan_category]?.[form.plan_name];
-    const key = form.plan_category === 'motjha' || form.plan_category === 'specials'
-      ? form.plan_members
-      : form.plan_age_bracket;
+    const key = form.plan_category === 'pamphlet'
+      ? `${form.plan_age_bracket}_${form.plan_members}`
+      : (form.plan_category === 'motjha' || form.plan_category === 'specials'
+        ? form.plan_members
+        : form.plan_age_bracket);
 
     const basePrice = plan?.[key] || 0;
 
@@ -734,6 +802,7 @@ export default function ConsultationForm() {
 
   const formatCategory = (cat) => {
     switch (cat) {
+      case 'pamphlet': return 'PAMPHLET';
       case 'motjha': return 'MOTJHA';
       case 'family': return 'FAMILY';
       case 'single': return 'SINGLE';
@@ -1556,6 +1625,11 @@ export default function ConsultationForm() {
                     defaultValue=""
                   >
                     <option value="">– Select from brochure (auto-fills below) –</option>
+                    <optgroup label="New Pamphlet Plans">
+                      {Object.keys(LEGACY_PLAN_MAPPING).filter(k => k.includes('PAMPHLET')).map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </optgroup>
                     <optgroup label="Motjha O Tlhele / Society Plans">
                       {Object.keys(LEGACY_PLAN_MAPPING).filter(k => k.includes('MOTJHA')).map(name => (
                         <option key={name} value={name}>{name}</option>
@@ -1589,11 +1663,10 @@ export default function ConsultationForm() {
                     <select value={form.plan_category} onChange={(e) => {
                       const cat = e.target.value;
                       const defaultName = cat === 'specials' ? 'Spring A' :
-                        cat === 'motjha' ? 'Budget Buster' :
-                          cat === 'single' ? 'Budget Buster' :
-                            'Budget Buster';
-                      const defaultsForMembers = (cat === 'motjha' || cat === 'specials') ? 6 : form.plan_members;
-                      const defaultsForAge = (cat === 'family' || cat === 'single') ? '18-65' : '';
+                        cat === 'pamphlet' ? 'Budget Buster' :
+                          'Old Budget Buster';
+                      const defaultsForMembers = cat === 'pamphlet' ? 'single' : ((cat === 'motjha' || cat === 'specials') ? 6 : form.plan_members);
+                      const defaultsForAge = cat === 'pamphlet' ? '18-64' : ((cat === 'family' || cat === 'single') ? '18-65' : '');
                       setForm(prev => ({
                         ...prev,
                         plan_category: cat,
@@ -1602,6 +1675,7 @@ export default function ConsultationForm() {
                         plan_age_bracket: defaultsForAge
                       }));
                     }} className="w-full px-4 py-3 border rounded-lg">
+                      <option value="pamphlet">New Pamphlet Plans</option>
                       <option value="motjha">Motjha O Tlhele</option>
                       <option value="single">Single Plan</option>
                       <option value="family">Family Plan</option>
@@ -1617,6 +1691,29 @@ export default function ConsultationForm() {
                       ))}
                     </select>
                   </div>
+
+                  {form.plan_category === 'pamphlet' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Age Tier</label>
+                        <select value={form.plan_age_bracket} onChange={e => handleInputChange('plan_age_bracket', e.target.value)} className="w-full px-4 py-3 border rounded-lg">
+                          <option value="18-64">18–64 yrs</option>
+                          <option value="65-74">65–74 yrs</option>
+                          <option value="75-84">75–84 yrs</option>
+                          <option value="85-100">85–100 yrs</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Member Type</label>
+                        <select value={form.plan_members} onChange={e => handleInputChange('plan_members', e.target.value)} className="w-full px-4 py-3 border rounded-lg">
+                          <option value="single">Single Member</option>
+                          <option value="family">Family (Main + Spouse + Children)</option>
+                          <option value="m6">6 Members</option>
+                          <option value="m10">10 Members</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
 
                   {(form.plan_category === 'motjha' || form.plan_category === 'specials') && (
                     <div>
@@ -1647,6 +1744,7 @@ export default function ConsultationForm() {
                       {getLegacyPlanName() && <span className="ml-3 text-green-700 text-sm">(Brochure: {getLegacyPlanName()})</span>}
                     </p>
                     <p className="text-sm text-blue-700 mb-2">
+                      {form.plan_category === 'pamphlet' && `Pamphlet • ${form.plan_age_bracket} yrs • ${form.plan_members === 'single' ? 'Single' : form.plan_members === 'family' ? 'Family' : form.plan_members === 'm6' ? '6 Members' : '10 Members'}`}
                       {form.plan_category === 'motjha' && `${form.plan_members} members`}
                       {form.plan_category === 'family' && `Family • ${form.plan_age_bracket} years`}
                       {form.plan_category === 'single' && `Single • ${form.plan_age_bracket} years`}
