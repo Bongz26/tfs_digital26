@@ -913,187 +913,7 @@
       margin-bottom: 6px;
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
 
-    .casket-inclusions-list li:last-child {
-      margin-bottom: 0;
-    }
-
-    .casket-inclusions-list li::before {
-      content: '✓';
-      color: var(--gold-bright);
-      font-weight: bold;
-    }
-
-    .casket-modal-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: auto;
-    }
-
-    .casket-btn-wa {
-      background: #25D366;
-      color: #000;
-      font-weight: 700;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      text-decoration: none;
-    }
-
-    .casket-btn-wa:hover {
-      background: #20BA5C;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(37, 211, 102, 0.3);
-    }
-
-    .casket-btn-select {
-      background: var(--gold-primary);
-      color: var(--maroon-dark);
-      font-weight: 700;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .casket-btn-select:hover {
-      background: var(--gold-bright);
-    }
-
-    .matrix-casket-btn {
-      background: rgba(197, 160, 89, 0.15);
-      border: 1px solid var(--gold-primary);
-      color: var(--gold-bright);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.2s ease;
-    }
-
-    .matrix-casket-btn:hover {
-      background: var(--gold-primary);
-      color: var(--maroon-dark);
-    }
-
-    /* Table Matrix */
-    .table-card {
-      background: var(--maroon-card);
-      border: 1px solid var(--gold-border);
-      border-radius: var(--radius);
-      overflow-x: auto;
-      box-shadow: var(--shadow-deep);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      min-width: 680px;
-      text-align: left;
-    }
-
-    th,
-    td {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--gold-border);
-    }
-
-    th {
-      background: var(--maroon-dark);
-      color: var(--gold-bright);
-      font-family: 'Cinzel', serif;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    tr:nth-child(even) td {
-      background: rgba(0, 0, 0, 0.18);
-    }
-
-    /* Riders & Children */
-    .riders-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-    }
-
-    .rider-card {
-      background: var(--maroon-card);
-      border: 1px solid var(--gold-border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow-deep);
-    }
-
-    .rider-card h4 {
-      font-family: 'Playfair Display', serif;
-      font-size: 18px;
-      color: var(--gold-bright);
-      margin-bottom: 4px;
-    }
-
-    .rider-card p {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    /* Branch Directory */
-    .branch-search-input {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 6px;
-      border: 1px solid var(--gold-border);
-      background: rgba(0, 0, 0, 0.3);
-      color: white;
-      font-size: 14px;
-      outline: none;
-      margin-bottom: 16px;
-    }
-
-    .branches-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
-    }
-
-    .branch-card {
-      background: var(--maroon-card);
-      border: 1px solid var(--gold-border);
-      border-radius: 8px;
-      padding: 18px;
-    }
-
-    .branch-card.ho {
-      border: 2px solid var(--gold-bright);
-      background: linear-gradient(145deg, #5E1420 0%, #4A0E17 100%);
-    }
-
-    .branch-card h5 {
-      font-family: 'Playfair Display', serif;
-      font-size: 16px;
       color: var(--gold-bright);
       margin-bottom: 4px;
     }
@@ -1209,15 +1029,14 @@
   <div class="top-carousel-wrapper">
     <div class="carousel-container" id="photoCarousel">
 
-      <!-- Slide 1: Bikes & Mercedes Fleet Setup -->
+      <!-- Slide 1: Fleet & Escort Motorbikes -->
       <div class="carousel-slide active">
         <img src="images/fleet_bikes_setup.jpg" alt="Executive Fleet & Escort Motorbikes" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
               <div class="slide-title">Executive Fleet & Escort Motorbikes</div>
-              <div class="slide-subtitle">Branded Mercedes-Benz fleet & escort motorbikes with custom Thusanang marquee
-                setup</div>
+              <div class="slide-subtitle">Executive family transport and ceremonial escort motorbikes with custom Thusanang marquee setup</div>
             </div>
           </div>
         </div>
@@ -1238,15 +1057,15 @@
         </div>
       </div>
 
-      <!-- Slide 3: Defender & Horse Escort Procession -->
+      <!-- Slide 3: Prestige Escort -->
       <div class="carousel-slide">
-        <img src="images/defender_horses_procession.jpg" alt="Prestige Escort" class="slide-img-landscape">
+        <img src="images/defender_horses_procession.jpg" alt="Prestige Escort"
+          class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
               <div class="slide-title">Prestige Escort</div>
-              <div class="slide-subtitle">White Land Rover Defender towing the glass dome hearse led by traditional
-                Basotho horsemen</div>
+              <div class="slide-subtitle">Ceremonial hearse procession led with reverence by traditional Basotho horsemen</div>
             </div>
           </div>
         </div>
@@ -1266,102 +1085,72 @@
         </div>
       </div>
 
-      <!-- Slide 5: Defender Towing Glass Dome Hearse -->
+      <!-- Slide 5: Ceremonial Glass Dome Hearse -->
       <div class="carousel-slide">
-        <img src="images/defender_dome_hearse.jpg" alt="Defender & Glass Dome Hearse" class="slide-img-landscape">
+        <img src="images/defender_dome_hearse.jpg" alt="Ceremonial Glass Dome Hearse" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
-              <div class="slide-title">Luxury Land Rover Defender & Glass Dome Trailer</div>
-              <div class="slide-subtitle">Ceremonial Defender hearse combination with floral tribute and official
-                Thusanang emblem</div>
+              <div class="slide-title">Ceremonial Glass Dome Hearse</div>
+              <div class="slide-subtitle">Dignified glass dome hearse presentation with floral tribute and official Thusanang emblem</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 6: Church Deco 1 -->
+      <!-- Slide 6: Church Decoration & Sanctuary Setup -->
       <div class="carousel-slide">
-        <img src="images/church_deco1.jpg" alt="Church Decoration & Stage Styling" class="slide-img-landscape">
+        <img src="images/church_deco_clean.jpg" alt="Church Decoration & Sanctuary Setup" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
-              <div class="slide-title">Church Decoration & Stage Styling</div>
-              <div class="slide-subtitle">Illuminated angel wings backdrop, white floral pedestals & red walkway carpet
-              </div>
+              <div class="slide-title">Church Decoration & Sanctuary Setup</div>
+              <div class="slide-subtitle">Sanctuary staging with custom arch backdrop, white floral pedestals, red carpet & VIP family seating</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 7: Church Deco 2 -->
+      <!-- Slide 7: Premium VIP Catering (Gold Chairs) -->
       <div class="carousel-slide">
-        <img src="images/church_deco2.jpg" alt="VIP Sanctuary Setup" class="slide-img-landscape">
+        <img src="images/premium_catering_gold.jpg" alt="Premium VIP Catering Service" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
-              <div class="slide-title">Family VIP Seating & Sanctuary Setup</div>
-              <div class="slide-subtitle">Reserved family seating area with gold stanchions & elegant stage design</div>
+              <div class="slide-title">Premium VIP Catering & Dining</div>
+              <div class="slide-subtitle">Luxury marquee dining with gold high-back seating, curated centerpieces & full meal service</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 8: Premium Church Deco -->
+      <!-- Slide 8: Standard Event Catering (White Tiffany Chairs) -->
       <div class="carousel-slide">
-        <img src="images/premium_church_deco.jpg" alt="Premium Church & Venue Decoration" class="slide-img-landscape">
+        <img src="images/standard_catering_tiffany.jpg" alt="Standard Event Setup & Catering" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
-              <div class="slide-title">Premium Church & Venue Decoration</div>
-              <div class="slide-subtitle">Full venue transformation with artificial lawn, white arch, and floral
-                pedestals</div>
+              <div class="slide-title">Standard Event Setup & Catering</div>
+              <div class="slide-subtitle">Classic white Tiffany seating, red carpet aisle, and complete guest hospitality service</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 9: Premium Catering -->
-      <div class="carousel-slide">
-        <img src="images/premium_catering.jpg" alt="Premium VIP Catering Service" class="slide-img-landscape">
-        <div class="carousel-overlay">
-          <div class="container">
-            <div class="caption-glass-card">
-              <div class="slide-title">Premium VIP Catering Service</div>
-              <div class="slide-subtitle">Complete hot meal catering service, warm dishes, salads, and drinks</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Slide 10: Standard Catering -->
-      <div class="carousel-slide">
-        <img src="images/standard_catering.jpg" alt="Standard Event Catering" class="slide-img-landscape">
-        <div class="carousel-overlay">
-          <div class="container">
-            <div class="caption-glass-card">
-              <div class="slide-title">Standard Event Catering</div>
-              <div class="slide-subtitle">Quality buffet meal presentation for family and funeral guests</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Slide 11: Friendly Catering Team -->
+      <!-- Slide 9: Friendly Catering Team -->
       <div class="carousel-slide">
         <img src="images/catering_team.jpg" alt="Friendly Catering Team" class="slide-img-landscape">
         <div class="carousel-overlay">
           <div class="container">
             <div class="caption-glass-card">
               <div class="slide-title">Friendly & Professional Catering Staff</div>
-              <div class="slide-subtitle">Warm, respectful catering team dedicated to serving your family with care
-              </div>
+              <div class="slide-subtitle">Warm, respectful catering team dedicated to serving your family with care</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 12: Tombstone Top Tier -->
+      <!-- Slide 10: Tombstone Top Tier -->
       <div class="carousel-slide">
         <img src="images/tombstone_top_tier.jpg" alt="Top Tier Memorial Tombstone" class="slide-img-landscape">
         <div class="carousel-overlay">
@@ -1390,8 +1179,6 @@
         <span class="dot" onclick="setSlide(7)"></span>
         <span class="dot" onclick="setSlide(8)"></span>
         <span class="dot" onclick="setSlide(9)"></span>
-        <span class="dot" onclick="setSlide(10)"></span>
-        <span class="dot" onclick="setSlide(11)"></span>
       </div>
     </div>
   </div>
@@ -1450,7 +1237,7 @@
     <div class="tabs-row">
       <button class="tab-item active" onclick="switchTab('plans')">♦ Cover Tiers</button>
       <button class="tab-item" onclick="switchTab('matrix')">♦ Plan Comparison Matrix</button>
-      <button class="tab-item" onclick="switchTab('addons')">♦ Catering & Tombstones</button>
+      <button class="tab-item" onclick="switchTab('addons')">♦ Tombstone & Catering</button>
       <button class="tab-item" onclick="switchTab('children')">♦ Children's Cover Scale</button>
       <button class="tab-item" onclick="switchTab('branches')">♦ Contact Us & Branches</button>
     </div>
