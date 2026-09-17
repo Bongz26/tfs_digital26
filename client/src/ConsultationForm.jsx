@@ -7,7 +7,69 @@ import { fetchInventory } from './api/inventory';
 import { API_HOST } from './api/config';
 import { saveDraft as saveDraftServer, getDraftByPolicy as getDraftServer, getLastDraft as getLastDraftServer, deleteDraftByPolicy as deleteDraftServer, listDrafts as listDraftsServer, getDraftHistory } from './api/claimDrafts';
 
-let PLAN_DATA = {}; // Will be populated from server
+const DEFAULT_PLAN_DATA = {
+  motjha: {
+    'Old Budget Buster': { 6: 145, 10: 165, 14: 195 },
+    'Plan A': { 6: 180, 10: 242, 14: 308 },
+    'Plan B': { 6: 259, 10: 336, 14: 468 },
+    'Plan C': { 6: 325, 10: 457, 14: 677 },
+    'Plan D': { 6: 455, 10: 699 },
+    'Plan E': { 6: 635, 10: 941 },
+    'Plan F': { 6: 785, 10: 1363 },
+    Green: { 6: 132, 10: 165, 14: 187 },
+    Silver: { 6: 180, 10: 242, 14: 308 },
+    Gold: { 6: 264, 10: 341, 14: 473 },
+    Platinum: { 6: 330, 10: 462, 14: 682 },
+    Black: { 6: 460, 10: 704 },
+    Pearl: { 6: 640, 10: 946 },
+    Ivory: { 6: 790, 10: 1368 },
+  },
+  single: {
+    'Old Budget Buster': { '18-65': 88, '66-85': 130, '86-100': 205 },
+    'Plan A': { '18-65': 115, '66-85': 170, '86-100': 295 },
+    'Plan B': { '18-65': 132, '66-85': 187, '86-100': 312 },
+    'Plan C': { '18-65': 165, '66-85': 275, '86-100': 415 },
+    'Plan D': { '18-65': 240, '66-85': 410 },
+    'Plan E': { '18-65': 315 },
+    'Plan F': { '18-65': 450 },
+    Green: { '18-65': 45, '66-85': 80, '86-100': 105 },
+    Silver: { '18-65': 88, '66-85': 130, '86-100': 205 },
+    Gold: { '18-65': 132, '66-85': 187, '86-100': 312 },
+    Platinum: { '18-65': 165, '66-85': 275, '86-100': 415 },
+    Black: { '18-65': 240, '66-85': 410 },
+    Pearl: { '18-65': 315 },
+    Ivory: { '18-65': 450 }
+  },
+  family: {
+    'Old Budget Buster': { '18-65': 115, '66-85': 150, '86-100': 285 },
+    'Plan A': { '18-65': 135, '66-85': 190, '86-100': 385 },
+    'Plan B': { '18-65': 152, '66-85': 207, '86-100': 402 },
+    'Plan C': { '18-65': 195, '66-85': 315, '86-100': 535 },
+    'Plan D': { '18-65': 280, '66-85': 470 },
+    'Plan E': { '18-65': 405 },
+    'Plan F': { '18-65': 565 },
+    Green: { '18-65': 65, '66-85': 90, '86-100': 145 },
+    Silver: { '18-65': 115, '66-85': 150, '86-100': 285 },
+    Gold: { '18-65': 152, '66-85': 207, '86-100': 402 },
+    Platinum: { '18-65': 195, '66-85': 315, '86-100': 535 },
+    Black: { '18-65': 280, '66-85': 470 },
+    Pearl: { '18-65': 405 },
+    Ivory: { '18-65': 565 }
+  },
+  specials: {
+    'Spring A': { 6: 0, 10: 0, 14: 0, '18-65': 0, '66-85': 0, '86-100': 0 },
+    'Spring B': { 6: 0, 10: 0, 14: 0, '18-65': 0, '66-85': 0, '86-100': 0 }
+  },
+  pamphlet: {
+    'Budget Buster': {},
+    'Executive': {},
+    'Royal': {},
+    'Presidential': {},
+    'One-Stop All-Inclusive': {}
+  }
+};
+
+let PLAN_DATA = DEFAULT_PLAN_DATA;
 
 // ... inside ConsultationForm component ...
 
@@ -1686,7 +1748,7 @@ export default function ConsultationForm() {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Grade</label>
                     <select value={form.plan_name} onChange={e => handleInputChange('plan_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg bg-gray-50">
-                      {Object.keys(PLAN_DATA[form.plan_category] || {}).map(p => (
+                      {Object.keys(PLAN_DATA[form.plan_category] || DEFAULT_PLAN_DATA[form.plan_category] || {}).map(p => (
                         <option key={p} value={p}>{p}</option>
                       ))}
                     </select>
