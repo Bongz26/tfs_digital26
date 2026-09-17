@@ -88,14 +88,58 @@ const SingleTripReceipt = ({ assignment, caseData, groupName }) => {
                 </div>
             </div>
 
-            <div className="mt-8 pt-4 flex gap-6">
+            {/* Driver Packing Checklist */}
+            <div className="mb-4 bg-gray-50 p-2 rounded border border-gray-200 break-inside-avoid">
+                <div className="text-[10px] uppercase tracking-wide border-b border-gray-300 pb-1 mb-2 font-bold text-gray-700">Driver Packing Checklist</div>
+                <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-gray-800">
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 border border-gray-400 bg-white"></div>
+                        <span className="truncate">Coffin: {caseData.casket_type || 'Verify'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 border border-gray-400 bg-white"></div>
+                        <span>Crucifix</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 border border-gray-400 bg-white"></div>
+                        <span>Fresh Flowers</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 border border-gray-400 bg-white"></div>
+                        <span>Coffin Screen / Canvas</span>
+                    </div>
+                    {(caseData.church_time || caseData.church_date || (caseData.venue_name && caseData.venue_name.toLowerCase().includes('church'))) && (
+                        <div className="flex items-center gap-2 col-span-2">
+                            <div className="w-3 h-3 border border-red-400 bg-white"></div>
+                            <span className="text-red-700">Church Trolley / Coffin Stands</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Service Discipline & Comments */}
+            <div className="mt-2 border border-red-800 p-1.5 bg-red-50 text-[8px] text-red-900 rounded break-inside-avoid shadow-sm">
+                <p className="uppercase font-bold mb-0.5">Time Management Agreement</p>
+                <p className="leading-tight">If service or departure is delayed by more than 20 mins from scheduled time, Thusanang drivers reserve the right to depart for other scheduled services.</p>
+            </div>
+
+            <div className="mt-3 border border-gray-300 p-2 rounded break-inside-avoid bg-gray-50">
+                <div className="flex justify-between items-center mb-4">
+                    <p className="text-[9px] font-bold uppercase text-gray-600">Driver Comments / Incident Report</p>
+                    <p className="text-[8px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded border border-red-200">⚠️ MANDATORY: CALL OFFICE BEFORE DEPARTING</p>
+                </div>
+                <div className="border-b border-dotted border-gray-400 mb-4"></div>
+                <div className="border-b border-dotted border-gray-400 mb-2"></div>
+            </div>
+
+            <div className="mt-5 pt-2 flex gap-6 break-inside-avoid">
                 <div className="flex-1">
                     <div className="border-b border-gray-400 h-4"></div>
-                    <div className="text-[9px] text-center text-gray-500 mt-1.5 uppercase font-semibold">Driver Signature</div>
+                    <div className="text-[9px] text-center text-gray-500 mt-1.5 uppercase font-semibold">Driver Sign-Off</div>
                 </div>
                 <div className="flex-1">
                     <div className="border-b border-gray-400 h-4"></div>
-                    <div className="text-[9px] text-center text-gray-500 mt-1.5 uppercase font-semibold">Manager Signature</div>
+                    <div className="text-[9px] text-center text-gray-500 mt-1.5 uppercase font-semibold">Manager Acknowledgement</div>
                 </div>
             </div>
         </div>
