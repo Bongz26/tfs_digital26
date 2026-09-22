@@ -1,0 +1,19 @@
+--- Expanded Forensic Analysis ---
+Found 6 items:
+ID: 76 | Name: PONGEE | Branch: MAKENENG | Stock: 3 | Reserved: 0
+ID: 4 | Name: Pongee | Branch: MAKENENG | Stock: 2 | Reserved: 0
+ID: 105 | Name: Pongee | Branch: Head Office | Stock: 1 | Reserved: 0
+ID: 106 | Name: Pongee | Branch: Head Office | Stock: 1 | Reserved: 0
+ID: 91 | Name: Pongee | Branch: MAKENENG | Stock: 1 | Reserved: 0
+ID: 134 | Name: Pongee -Poper | Branch: Head Office | Stock: -1 | Reserved: 0
+
+--- Movements ---
+[2026-01-30T10:53:58.906103] Item: 4 | Type: adjustment | Change: 3 | Case: null | Reason: Manual update
+[2026-01-30T10:54:10.024451] Item: 4 | Type: adjustment | Change: 1 | Case: null | Reason: Manual update
+[2026-02-02T13:49:10.191601] Item: 4 | Type: adjustment | Change: -1 | Case: null | Reason: Stock Take Adjustment
+[2026-02-02T13:49:11.038621] Item: 76 | Type: adjustment | Change: 0 | Case: null | Reason: Stock Take Adjustment
+[2026-02-10T15:16:09.738] Item: 134 | Type: sale | Change: -1 | Case: 160 | Reason: Case Sync: Recovery for THS-2026-056
+
+--- Case 49 Details ---
+Case Number: THS-2025-092 | Deceased: Qwerty | Status: archived | Branch: Head Office
+Casket: null | Color: null

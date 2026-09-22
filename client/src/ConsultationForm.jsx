@@ -121,9 +121,9 @@ const PLAN_BENEFITS = {
     toilet: 1,
     chairs: 80,
     programmes: 80,
-    airtime: 200,
+    airtime: 100,
     cashback: 5000,
-    grocery_items: ["Grocery included"],
+    grocery_items: ["Mokoti / Grocery"],
     service: "1 Service (Incl. Hearse & Family Car & Deco)"
   },
   'Royal': {
@@ -145,9 +145,10 @@ const PLAN_BENEFITS = {
     toilet: "VIP",
     chairs: 100,
     programmes: 100,
+    is_vip_programmes: true,
     airtime: 200,
     cashback: 10000,
-    grocery_items: ["Grocery & Fresh Flower"],
+    grocery_items: ["Grocery & Grave Marker"],
     service: "1 Service (Incl. Hearse & Family Car & Deco)"
   },
   'One-Stop All-Inclusive': {
@@ -157,6 +158,7 @@ const PLAN_BENEFITS = {
     toilet: "VIP",
     chairs: 100,
     programmes: 150,
+    is_vip_programmes: true,
     airtime: 200,
     cashback: 15000,
     catering: 1,
@@ -485,6 +487,7 @@ export default function ConsultationForm() {
     top_up_plan_members: 6,
     top_up_plan_age: '18-65',
     airtime: false,
+    airtime_type: 'Airtime',
     airtime_network: '',
     airtime_number: '',
     cover_amount: 0,
@@ -615,6 +618,7 @@ export default function ConsultationForm() {
             casket_colour: found.casket_colour || prev.casket_colour,
             programs: found.programs != null ? found.programs : prev.programs,
             airtime: found.airtime != null ? found.airtime : prev.airtime,
+            airtime_type: found.airtime_type || 'Airtime',
             airtime_network: found.airtime_network || prev.airtime_network,
             airtime_number: found.airtime_number || prev.airtime_number,
             cover_amount: found.cover_amount != null ? found.cover_amount : prev.cover_amount,
@@ -823,7 +827,7 @@ export default function ConsultationForm() {
         : `Top-Up: R${form.top_up_amount}`;
       items.push(topupLabel);
     }
-    if (form.airtime) items.push(`Airtime: ${form.airtime_network || ''} ${form.airtime_number || ''}`.trim());
+    if (form.airtime) items.push(`${form.airtime_type || 'Airtime'}: ${form.airtime_network || ''} ${form.airtime_number || ''}`.trim());
 
     // Add Billable Extras to summary
     if (form.extra_chairs > 0) items.push(`Extra Chairs: ${form.extra_chairs}`);
@@ -858,10 +862,10 @@ export default function ConsultationForm() {
     if (typeof b.table !== 'undefined') parts.push(`${b.table} Table`);
     if (b.toilet) parts.push(`${String(b.toilet).toUpperCase()} Toilet`);
     if (typeof b.chairs !== 'undefined') parts.push(`${b.chairs} Chairs`);
-    if (typeof b.programmes !== 'undefined') parts.push(`${b.programmes} Programmes`);
+    if (typeof b.programmes !== 'undefined') parts.push(`${b.programmes} ${b.is_vip_programmes ? 'VIP ' : ''}Programmes`);
     if (typeof b.crucifix !== 'undefined') parts.push('Crucifix');
     if (typeof b.flower !== 'undefined') parts.push(`${b.flower} Flowers`);
-    if (typeof b.airtime !== 'undefined') parts.push(`R${b.airtime} Airtime`);
+    if (typeof b.airtime !== 'undefined') parts.push(`R${b.airtime} ${form.airtime_type || 'Airtime'}`);
     if (Array.isArray(b.grocery_items)) parts.push(`Grocery (${b.grocery_items.join(', ')})`);
     else if (b.grocery) parts.push(b.grocery);
     else if (b.groceries) parts.push(b.groceries);
@@ -1192,7 +1196,7 @@ export default function ConsultationForm() {
         requires_catering: false, requires_grocery: false, requires_bus: false,
         programs: 0, top_up_amount: 0, top_up_type: 'none', top_up_reference: '',
         top_up_plan_category: 'family', top_up_plan_name: 'Silver', top_up_plan_members: 6, top_up_plan_age: '18-65',
-        airtime: false, airtime_network: '', airtime_number: '',
+        airtime: false, airtime_type: 'Airtime', airtime_network: '', airtime_number: '',
         cover_amount: 0, cashback_amount: 0, amount_to_bank: 0,
         total_price: '', casket_type: '', casket_colour: '', tombstone_type: '',
         office_personnel1: '', client_name1: '', date1: '',
@@ -1276,7 +1280,7 @@ export default function ConsultationForm() {
                 <>
                   <li>Additional Selected: {selected.length ? selected.join(', ') : 'None'}</li>
                   <li>Not Selected: {notSelected.length ? notSelected.join(', ') : 'None'}</li>
-                  <li>Airtime Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
+                  <li>{data.airtime_type || 'Airtime'} Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
                   {data.top_up_type === 'book' && data.top_up_amount > 0 ? (
                     (() => {
                       const topUpPlanBenefits = PLAN_BENEFITS[data.top_up_plan_name];
@@ -1348,7 +1352,7 @@ export default function ConsultationForm() {
                   <li>Additional Selected: {selected.length ? selected.join(', ') : 'None'}</li>
                   <li>Not Selected: {notSelected.length ? notSelected.join(', ') : 'None'}</li>
                   <li>Programmes: {data.programs || 'None'}</li>
-                  <li>Airtime Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
+                  <li>{data.airtime_type || 'Airtime'} Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
                   {data.top_up_type === 'book' && data.top_up_amount > 0 ? (
                     (() => {
                       const topUpPlanBenefits = PLAN_BENEFITS[data.top_up_plan_name];
@@ -1430,7 +1434,7 @@ export default function ConsultationForm() {
                   <li>Additional Selected: {selected.length ? selected.join(', ') : 'None'}</li>
                   <li>Not Selected: {notSelected.length ? notSelected.join(', ') : 'None'}</li>
                   <li>Programmes: {data.programs || 'None'}</li>
-                  <li>Airtime Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
+                  <li>{data.airtime_type || 'Airtime'} Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
                   {data.top_up_type === 'book' && data.top_up_amount > 0 ? (
                     (() => {
                       const topUpPlanBenefits = PLAN_BENEFITS[data.top_up_plan_name];
@@ -1503,7 +1507,7 @@ export default function ConsultationForm() {
             <>
               <li>Additional Selected: {selected.length ? selected.join(', ') : 'None'}</li>
               <li>Not Selected: {notSelected.length ? notSelected.join(', ') : 'None'}</li>
-              <li>Airtime Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
+              <li>{data.airtime_type || 'Airtime'} Details: {data.airtime ? `${data.airtime_network || ''} ${data.airtime_number || ''}`.trim() || 'Provided' : 'None'}</li>
               {data.top_up_type === 'book' && data.top_up_amount > 0 ? (
                 (() => {
                   const topUpPlanBenefits = PLAN_BENEFITS[data.top_up_plan_name];
@@ -2111,7 +2115,7 @@ export default function ConsultationForm() {
                           network: form.airtime_network,
                           phone_number: form.airtime_number,
                           amount,
-                          notes: `Auto from plan ${form.plan_name}`
+                          notes: `Auto from plan ${form.plan_name} (${form.airtime_type || 'Airtime'})`
                         });
                         setMessage(`Airtime request created (Status: ${req.status})`);
                       } catch (e) {
@@ -2319,11 +2323,19 @@ export default function ConsultationForm() {
                       <p className="text-xs text-blue-600 mt-1">⚠️ This amount is automatically set from the book top-up plan selection above.</p>
                     )}
                   </div>
-                  <label className="flex items-center"><input type="checkbox" checked={form.airtime} onChange={e => handleInputChange('airtime', e.target.checked)} className="mr-3 w-5 h-5" /><span className="font-medium">Airtime</span></label>
+                  <label className="flex items-center"><input type="checkbox" checked={form.airtime} onChange={e => handleInputChange('airtime', e.target.checked)} className="mr-3 w-5 h-5" /><span className="font-medium">Airtime / Data / Electricity</span></label>
                   {form.airtime && (
-                    <div className="grid grid-cols-2 gap-4 ml-8">
-                      <div><label>Network</label><input value={form.airtime_network} onChange={e => handleInputChange('airtime_network', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
-                      <div><label>Number</label><input value={form.airtime_number} onChange={e => handleInputChange('airtime_number', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ml-8 mt-2">
+                      <div>
+                        <label>Type</label>
+                        <select value={form.airtime_type || 'Airtime'} onChange={e => handleInputChange('airtime_type', e.target.value)} className="w-full px-4 py-3 border rounded-lg bg-white">
+                          <option value="Airtime">Airtime</option>
+                          <option value="Data">Data</option>
+                          <option value="Electricity">Electricity</option>
+                        </select>
+                      </div>
+                      <div><label>{form.airtime_type === 'Electricity' ? 'Client Number / Provider' : 'Network / Provider'}</label><input value={form.airtime_network} onChange={e => handleInputChange('airtime_network', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
+                      <div><label>{form.airtime_type === 'Electricity' ? 'Meter Number' : 'Phone Number'}</label><input value={form.airtime_number} onChange={e => handleInputChange('airtime_number', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
                     </div>
                   )}
                   <div><label>Cashback Amount (Auto)</label><input disabled value={form.cashback_amount} className="w-full px-4 py-3 border rounded-lg bg-gray-100 mt-2" /></div>
@@ -2747,7 +2759,7 @@ export default function ConsultationForm() {
 
                           <div className="checklist-item"><span className="checklist-label">Catering</span> <span className="checklist-val">{printedData.requires_catering ? 'YES' : 'NO'}</span></div>
                           <div className="checklist-item"><span className="checklist-label">Airtime</span> <span className="checklist-val">{printedData.airtime ? 'YES' : 'NO'}</span></div>
-                          <div className="checklist-item"><span className="checklist-label">Network/No</span> <span className="checklist-val text-[9px]">{printedData.airtime ? `${printedData.airtime_network} ${printedData.airtime_number}` : '-'}</span></div>
+                          <div className="checklist-item"><span className="checklist-label">Network/No</span> <span className="checklist-val text-[9px]">{printedData.airtime ? `${printedData.airtime_type || 'Airtime'} ${printedData.airtime_network} ${printedData.airtime_number}` : '-'}</span></div>
 
                           <div className="checklist-item col-span-3"><span className="checklist-label mr-2">Grocery:</span> <span className="checklist-val font-normal text-[9px]">
                             {(() => {

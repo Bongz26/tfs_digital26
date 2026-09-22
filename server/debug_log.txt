@@ -1,0 +1,1 @@
+Returned item: {"id":150,"stock_quantity":6,"reserved_quantity":1,"name":"1/4 View","model":"CASKET","color":"KIAAT","unit_price":0,"low_stock_threshold":3,"sku":null,"supplier":null,"location":"Head Office"}
