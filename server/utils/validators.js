@@ -120,7 +120,7 @@ const validateCase = (caseData) => {
   }
 
   // Validate plan_category
-  const validPlanCategories = ['motjha', 'single', 'family', 'colour_grade', 'specials'];
+  const validPlanCategories = ['motjha', 'single', 'family', 'colour_grade', 'specials', 'pamphlet'];
   if (caseData.plan_category && !validPlanCategories.includes(caseData.plan_category)) {
     errors.push(`Plan category must be one of: ${validPlanCategories.join(', ')}`);
   }

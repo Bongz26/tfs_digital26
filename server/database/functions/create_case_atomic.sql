@@ -42,7 +42,7 @@ BEGIN
     (case_data->>'nok_relation')::VARCHAR,
     (case_data->>'plan_category')::VARCHAR,
     (case_data->>'plan_name')::VARCHAR,
-    (case_data->>'plan_members')::INT,
+    (case_data->>'plan_members')::VARCHAR,
     (case_data->>'plan_age_bracket')::VARCHAR,
     (case_data->>'funeral_date')::DATE,
     (case_data->>'funeral_time')::TIME,

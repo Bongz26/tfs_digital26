@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS cases (
     nok_relation character varying(50),
     plan_category character varying(20),
     plan_name character varying(20),
-    plan_members integer,
+    plan_members character varying(50),
     plan_age_bracket character varying(20),
     funeral_date date,
     funeral_time time without time zone,
