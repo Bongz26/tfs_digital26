@@ -116,7 +116,7 @@ export default function ActiveCases() {
       setModalCase(null);
       setEditingAssignment(null);
     } catch (err) {
-      alert("Failed to assign vehicle: " + (err.response?.data?.message || err.message));
+      alert("Failed to assign vehicle: " + (err.response?.data?.error || err.response?.data?.message || err.message));
       throw err; // Propagate error so modal knows it failed
     }
   };
@@ -131,13 +131,14 @@ export default function ActiveCases() {
     }
   };
 
-  const handleChangeCaseStatus = async (caseId, newStatus) => {
+  const handleChangeCaseStatus = async (caseId, newStatus, notes) => {
     try {
       setChangingStatus(prev => ({ ...prev, [caseId]: true }));
-      await updateCaseStatus(caseId, newStatus);
+      await updateCaseStatus(caseId, newStatus, notes);
       await loadData();
     } catch (err) {
-      alert("Failed to update status: " + (err.response?.data?.message || err.message));
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Unknown error";
+      alert("Failed to update status: " + errorMsg);
     } finally {
       setChangingStatus(prev => ({ ...prev, [caseId]: false }));
     }
@@ -164,7 +165,7 @@ export default function ActiveCases() {
           c.id === caseId ? { ...c, is_yard_burial: currentState } : c
         )
       );
-      alert("Failed to update burial type: " + (err.response?.data?.message || err.message));
+      alert("Failed to update burial type: " + (err.response?.data?.error || err.response?.data?.message || err.message));
     }
   };
 
@@ -335,9 +336,22 @@ export default function ActiveCases() {
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                   disabled={changingStatus[c.id] || isLocked(c)}
                   onChange={(e) => {
-                    if (!e.target.value) return;
-                    if (window.confirm(`Change status to "${getStatusConfig(e.target.value).label}"?`)) {
-                      handleChangeCaseStatus(c.id, e.target.value);
+                    const val = e.target.value;
+                    if (!val) return;
+                    if (val === "cancelled") {
+                      const reason = window.prompt("Cancellation reason (required):");
+                      if (reason == null || String(reason).trim() === "") {
+                        e.target.value = "";
+                        return;
+                      }
+                      if (window.confirm(`Cancel this case? Reason: ${reason.trim()}`)) {
+                        handleChangeCaseStatus(c.id, val, reason.trim());
+                      }
+                      e.target.value = "";
+                      return;
+                    }
+                    if (window.confirm(`Change status to "${getStatusConfig(val).label}"?`)) {
+                      handleChangeCaseStatus(c.id, val);
                     }
                     e.target.value = "";
                   }}

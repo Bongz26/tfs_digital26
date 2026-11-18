@@ -35,6 +35,7 @@ router.patch('/:id/funeral-time', casesController.updateFuneralTime);
 router.patch('/:id/venue', casesController.updateCaseVenue);
 
 router.get('/list/cancelled', casesController.getCancelledCases);
+router.get('/cancelled', casesController.getCancelledCases);
 
 // GET audit log for case
 router.get('/:id/audit-log', casesController.getCaseAuditLog);

@@ -1,6 +1,7 @@
 const { query, getClient } = require('../config/db');
 const { notifyCasketUsage, maybeNotifyLowStock } = require('./inventoryController');
 const { findOrCreateInventoryItem } = require('../utils/inventoryHelpers');
+const { validateSAID } = require('../utils/saIdValidator');
 
 // --- LOOKUP CASE BY IDENTIFIERS ---
 exports.lookupCase = async (req, res) => {
@@ -235,7 +236,7 @@ exports.createCase = async (req, res) => {
         funeral_date, funeral_time,
         church_date, church_time,
         cleansing_date, cleansing_time,
-        venue_name, venue_address, venue_lat, venue_lng,
+        venue_name, venue_address, venue_lat, venue_lng, venue_directions,
         requires_cow, requires_sheep, requires_tombstone, requires_catering, requires_grocery, requires_bus,
         service_type, total_price, casket_type,
         casket_colour, delivery_date, delivery_time, intake_day,
@@ -269,6 +270,39 @@ exports.createCase = async (req, res) => {
 
         if (!delivery_date || !delivery_time) {
             return res.status(400).json({ success: false, error: 'Delivery date and time are required' });
+        }
+
+        // ID number validation (SA ID: 13 digits, valid DOB, checksum)
+        const idError = validateSAID(deceased_id);
+        if (idError) {
+            console.warn('⚠️ [POST /api/cases] Rejected - invalid deceased_id:', {
+                user: req.user?.email || 'unknown',
+                policy_number,
+                deceased_id,
+                reason: idError
+            });
+            return res.status(400).json({ success: false, error: idError, field: 'deceased_id' });
+        }
+
+        const benefitExchange = req.body.benefit_exchange;
+        const needsVenue = (!benefitExchange || benefitExchange === 'standard') && benefit_mode !== 'cashback';
+        if (needsVenue) {
+            const missingVenue = [];
+            if (!String(venue_name || '').trim()) missingVenue.push({ field: 'venue_name', label: 'Service Venue' });
+            if (!String(venue_address || '').trim()) missingVenue.push({ field: 'venue_address', label: 'Full Address' });
+            if (!String(venue_directions || '').trim()) missingVenue.push({ field: 'venue_directions', label: 'Directions' });
+            if (missingVenue.length) {
+                console.warn('⚠️ [POST /api/cases] Rejected - missing venue details:', {
+                    user: req.user?.email || 'unknown',
+                    policy_number,
+                    missing: missingVenue.map(m => m.field)
+                });
+                return res.status(400).json({
+                    success: false,
+                    error: `Required for a full case submission: ${missingVenue.map(m => m.label).join(', ')}`,
+                    field: missingVenue[0].field
+                });
+            }
         }
 
         let finalCaseNumber = case_number;
@@ -368,7 +402,7 @@ exports.createCase = async (req, res) => {
             claim_date: claim_date || null,
             policy_number: policy_number || null,
             deceased_name,
-            deceased_id: deceased_id || null,
+            deceased_id: deceased_id ? String(deceased_id).replace(/\s+/g, '') : null,
             nok_name,
             nok_contact,
             nok_relation: nok_relation || null,
@@ -386,6 +420,7 @@ exports.createCase = async (req, res) => {
             cleansing_time: cleansing_time || null,
             venue_name: venue_name || null,
             venue_address: venue_address || null,
+            venue_directions: String(venue_directions || '').trim() || null,
             venue_lat: venue_lat || null,
             venue_lng: venue_lng || null,
             requires_cow: !!requires_cow,
@@ -1540,23 +1575,34 @@ exports.getCancelledCases = async (req, res) => {
     try {
         const supabase = req.app?.locals?.supabase;
         if (supabase) {
-            const { data, error } = await supabase
-                .from('cases')
-                .select('*')
-                .eq('status', 'cancelled')
-                .order('updated_at', { ascending: false });
-            if (error) {
-                console.warn('⚠️ Supabase read failed in getCancelledCases, falling back to DB:', error.message);
-            } else {
-                return res.json({ success: true, cases: Array.isArray(data) ? data : [] });
+            try {
+                const { data, error } = await supabase
+                    .from('cases')
+                    .select('id, case_number, deceased_name, funeral_date, funeral_time, status, created_at, updated_at')
+                    .eq('status', 'cancelled')
+                    .order('created_at', { ascending: false, nullsFirst: false });
+                if (!error && Array.isArray(data)) {
+                    return res.json({ success: true, cases: data });
+                }
+                if (error) {
+                    console.warn('⚠️ Supabase read failed in getCancelledCases:', error.message);
+                }
+            } catch (supaErr) {
+                console.warn('⚠️ Supabase error in getCancelledCases:', supaErr.message);
             }
         }
-        const result = await query(
-            `SELECT * FROM cases WHERE status = 'cancelled' ORDER BY updated_at DESC`
-        );
-        res.json({ success: true, cases: result.rows });
+        try {
+            const result = await query(
+                `SELECT id, case_number, deceased_name, funeral_date, funeral_time, status, created_at, updated_at FROM cases WHERE status = 'cancelled' ORDER BY created_at DESC LIMIT 100`
+            );
+            return res.json({ success: true, cases: result.rows || [] });
+        } catch (dbErr) {
+            console.warn('⚠️ Direct DB query also failed in getCancelledCases:', dbErr.message);
+            return res.json({ success: true, cases: [] });
+        }
     } catch (err) {
-        res.status(500).json({ success: false, error: 'Failed to fetch cancelled cases' });
+        console.error('getCancelledCases unexpected error:', err.message);
+        res.json({ success: true, cases: [] });
     }
 };
 exports.updateCaseDetails = async (req, res) => {
@@ -1567,7 +1613,7 @@ exports.updateCaseDetails = async (req, res) => {
         plan_category, plan_name, plan_members, plan_age_bracket,
         service_date, service_time, funeral_date, funeral_time,
         church_date, church_time, cleansing_date, cleansing_time,
-        venue_name, venue_address, venue_lat, venue_lng,
+        venue_name, venue_address, venue_lat, venue_lng, venue_directions,
         requires_cow, requires_sheep, requires_tombstone, requires_catering, requires_grocery, requires_bus,
         service_type, total_price, casket_type, casket_colour,
         delivery_date, delivery_time, intake_day,
@@ -1602,6 +1648,25 @@ exports.updateCaseDetails = async (req, res) => {
             });
         }
 
+        // ID validation: only enforced when the ID is being changed, so legacy cases
+        // with old/incomplete IDs can still be edited for other fields.
+        const newIdNorm = String(deceased_id || '').replace(/\s+/g, '');
+        const oldIdNorm = String(oldValues.deceased_id || '').replace(/\s+/g, '');
+        if (newIdNorm && newIdNorm !== oldIdNorm) {
+            const idError = validateSAID(newIdNorm);
+            if (idError) {
+                console.warn('⚠️ [PUT /api/cases/:id] Rejected - invalid deceased_id:', {
+                    user: req.user?.email || 'unknown',
+                    case_id: id,
+                    case_number: oldValues.case_number,
+                    old_id: oldValues.deceased_id,
+                    new_id: deceased_id,
+                    reason: idError
+                });
+                return res.status(400).json({ success: false, error: idError, field: 'deceased_id' });
+            }
+        }
+
         const finalFuneralDate = service_date || funeral_date;
         const finalFuneralTime = service_time || funeral_time;
 
@@ -1610,7 +1675,7 @@ exports.updateCaseDetails = async (req, res) => {
             claim_date: claim_date || null,
             policy_number: policy_number || null,
             deceased_name,
-            deceased_id: deceased_id || null,
+            deceased_id: newIdNorm || null,
             nok_name,
             nok_contact,
             nok_relation: nok_relation || null,
@@ -1628,6 +1693,7 @@ exports.updateCaseDetails = async (req, res) => {
             cleansing_time: cleansing_time || null,
             venue_name: venue_name || null,
             venue_address: venue_address || null,
+            venue_directions: venue_directions !== undefined ? (String(venue_directions || '').trim() || null) : undefined,
             venue_lat: venue_lat || null,
             venue_lng: venue_lng || null,
             requires_cow: !!requires_cow,

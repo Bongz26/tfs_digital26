@@ -6,6 +6,9 @@ import { createAirtimeRequest } from './api/sms';
 import { fetchInventory } from './api/inventory';
 import { API_HOST } from './api/config';
 import { saveDraft as saveDraftServer, getDraftByPolicy as getDraftServer, getLastDraft as getLastDraftServer, deleteDraftByPolicy as deleteDraftServer, listDrafts as listDraftsServer, getDraftHistory } from './api/claimDrafts';
+import { validateSAID } from './utils/saIdValidator';
+
+const MIN_DIRECTIONS_LENGTH = 10;
 
 const DEFAULT_PLAN_DATA = {
   motjha: {
@@ -471,6 +474,7 @@ export default function ConsultationForm() {
     church_time: '',
     venue_name: '',
     venue_address: '',
+    venue_directions: '',
     requires_cow: false,
     requires_sheep: false,
     requires_tombstone: false,
@@ -1029,6 +1033,17 @@ export default function ConsultationForm() {
       return;
     }
 
+    // ID is optional on a draft, but if entered it must be a valid SA ID
+    if (String(form.deceased_id || '').trim()) {
+      const idErr = validateSAID(form.deceased_id);
+      if (idErr) {
+        console.warn('[ConsultationForm] Draft save blocked - invalid ID:', { policy: form.policy_number, deceased_id: form.deceased_id, reason: idErr });
+        setMessage(idErr);
+        setSubmitting(false);
+        return;
+      }
+    }
+
     // Require service type and pricing to be resolved
     const autoPrice = getAutoPrice();
     if (!form.service_type) {
@@ -1112,8 +1127,51 @@ export default function ConsultationForm() {
     setSubmitting(true);
     setMessage('');
 
+    // ---- Full-case validation: collect ALL problems so the user sees them at once ----
+    const missing = [];
+    const errors = [];
+    if (!form.claim_date) missing.push('Claim Date');
+    if (!String(form.policy_number || '').trim()) missing.push('Policy Number');
+    if (!String(form.deceased_name || '').trim()) missing.push('Deceased Name');
+    if (!String(form.nok_name || '').trim()) missing.push('Claimant Name');
+    if (!String(form.nok_contact || '').trim()) missing.push('Contact Details');
+
+    if (!String(form.deceased_id || '').trim()) {
+      missing.push('ID Number');
+    } else {
+      const idErr = validateSAID(form.deceased_id);
+      if (idErr) errors.push(idErr);
+    }
+
+    const needsVenue = (!form.benefit_exchange || form.benefit_exchange === 'standard') && form.benefit_mode !== 'cashback';
+    if (needsVenue) {
+      if (!String(form.venue_name || '').trim()) missing.push('Service Venue');
+      if (!String(form.venue_address || '').trim()) missing.push('Full Address (GPS)');
+      const directions = String(form.venue_directions || '').trim();
+      if (!directions) {
+        missing.push('Directions');
+      } else if (directions.length < MIN_DIRECTIONS_LENGTH) {
+        errors.push(`Directions are too short (${directions.length} characters). Please describe how to get there (min ${MIN_DIRECTIONS_LENGTH} characters).`);
+      }
+    }
+
+    if (missing.length) errors.unshift(`Missing required fields: ${missing.join(', ')}.`);
+    if (errors.length) {
+      console.warn('[ConsultationForm] Final submit blocked by validation:', {
+        policy: form.policy_number,
+        case_id: form.id || null,
+        deceased_id: form.deceased_id,
+        missing,
+        errors
+      });
+      setMessage(errors.join(' • '));
+      setSubmitting(false);
+      return;
+    }
+
     const data = {
       ...form,
+      deceased_id: String(form.deceased_id || '').replace(/\s+/g, ''),
       total_price: form.service_type === 'book' ? getAutoPrice() : parseFloat(form.total_price) || 0,
       casket_type: form.casket_type,
       venue_lat: null,
@@ -1191,7 +1249,7 @@ export default function ConsultationForm() {
         claim_date: '', policy_number: '',
         cleansing_date: '', cleansing_time: '', delivery_date: '', delivery_time: '',
         service_date: '', service_time: '', church_date: '', church_time: '',
-        venue_name: '', venue_address: '', intake_day: '',
+        venue_name: '', venue_address: '', venue_directions: '', intake_day: '',
         requires_cow: false, requires_sheep: false, requires_tombstone: false, requires_flower: false,
         requires_catering: false, requires_grocery: false, requires_bus: false,
         programs: 0, top_up_amount: 0, top_up_type: 'none', top_up_reference: '',
@@ -1205,6 +1263,7 @@ export default function ConsultationForm() {
     } catch (err) {
       const serverErr = err.response?.data;
       const detail = serverErr?.details || serverErr?.hint || serverErr?.error;
+      console.error('[ConsultationForm] Final submit failed:', { status: err.response?.status, serverErr, message: err.message });
       setMessage(`Failed to confirm: ${detail || err.message || 'Unknown error'}`);
     } finally {
       setSubmitting(false);
@@ -1669,7 +1728,27 @@ export default function ConsultationForm() {
                 </select>
               </div>
               <div><label>Deceased Full Name <span className="text-red-600">*</span></label><input required value={form.deceased_name} onChange={e => handleInputChange('deceased_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg" placeholder="Enter deceased name" /></div>
-              <div><label>ID Number</label><input value={form.deceased_id} onChange={e => handleInputChange('deceased_id', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
+              <div>
+                <label>ID Number <span className="text-red-600">*</span></label>
+                {(() => {
+                  const idVal = String(form.deceased_id || '').trim();
+                  const idErr = idVal ? validateSAID(idVal) : null;
+                  return (
+                    <>
+                      <input
+                        value={form.deceased_id}
+                        onChange={e => handleInputChange('deceased_id', e.target.value)}
+                        inputMode="numeric"
+                        maxLength={16}
+                        placeholder="13-digit SA ID number"
+                        className={`w-full px-4 py-3 border rounded-lg ${idErr ? 'border-red-500 bg-red-50' : (idVal ? 'border-green-500' : '')}`}
+                      />
+                      {idErr && <p className="text-xs text-red-600 mt-1 font-semibold">{idErr}</p>}
+                      {idVal && !idErr && <p className="text-xs text-green-700 mt-1">Valid ID number</p>}
+                    </>
+                  );
+                })()}
+              </div>
               <div><label>Claimant Name <span className="text-red-600">*</span></label><input required value={form.nok_name} onChange={e => handleInputChange('nok_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
               <div><label>Contact Details <span className="text-red-600">*</span></label><input required value={form.nok_contact} onChange={e => handleInputChange('nok_contact', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
               <div><label>Relationship</label><input value={form.nok_relation} onChange={e => handleInputChange('nok_relation', e.target.value)} className="w-full px-4 py-3 border rounded-lg" placeholder="e.g., Spouse, Child" /></div>
@@ -2261,8 +2340,20 @@ export default function ConsultationForm() {
                     </select>
                   </div>
 
-                  <div><label>Service Venue</label><input value={form.venue_name || ''} onChange={e => handleInputChange('venue_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
+                  <div><label>Service Venue <span className="text-red-600">*</span></label><input required value={form.venue_name || ''} onChange={e => handleInputChange('venue_name', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
                   <div><label>Full Address (GPS) <span className="text-red-600">*</span></label><input required value={form.venue_address || ''} onChange={e => handleInputChange('venue_address', e.target.value)} className="w-full px-4 py-3 border rounded-lg" /></div>
+                  <div className="md:col-span-2">
+                    <label>Directions <span className="text-red-600">*</span></label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={form.venue_directions || ''}
+                      onChange={e => handleInputChange('venue_directions', e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-lg ${form.venue_directions && String(form.venue_directions).trim().length < MIN_DIRECTIONS_LENGTH ? 'border-red-500 bg-red-50' : ''}`}
+                      placeholder="How to get there, e.g. Turn left after the Engen garage, 3rd house with green gate, next to the church"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Required for a full case submission. Landmarks help drivers find the house/venue.</p>
+                  </div>
                   <div className="md:col-span-2">
                     <label>Burial Place</label>
                     <input value={form.burial_place || ''} onChange={e => handleInputChange('burial_place', e.target.value)} className="w-full px-4 py-3 border rounded-lg" placeholder="e.g. Avalon Cemetery" />
@@ -2529,6 +2620,9 @@ export default function ConsultationForm() {
                       <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Delivery Venue</h4>
                       <p className="font-bold text-lg">{printedData.venue_name || 'N/A'}</p>
                       <p className="text-sm text-gray-600 whitespace-pre-wrap">{printedData.venue_address || 'N/A'}</p>
+                      {printedData.venue_directions && (
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap mt-2"><span className="font-bold">Directions: </span>{printedData.venue_directions}</p>
+                      )}
                     </div>
                     <div className="bg-gray-50 p-4 border rounded border-blue-100">
                       <h4 className="text-xs font-bold text-blue-600 uppercase mb-2">Primary On-Site Contact</h4>

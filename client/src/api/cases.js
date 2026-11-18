@@ -130,10 +130,10 @@ export const fetchCancelledCases = async () => {
         const res = await axios.get(`${BASE_URL}/list/cancelled`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
-        return res.data.cases || [];
+        return res.data?.cases || [];
     } catch (err) {
-        console.error('Error fetching cancelled cases:', err.response || err);
-        throw err;
+        console.warn('Non-critical: Error fetching cancelled cases:', err.response?.data?.error || err.message);
+        return [];
     }
 };
 
