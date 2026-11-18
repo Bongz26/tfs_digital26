@@ -752,9 +752,17 @@ export default function ConsultationForm() {
     // Parse Name/Model from selection
     let nameToMatch = selectedType;
     let modelToMatch = null;
+    let explicitColor = null;
 
-    if (selectedType.includes(' - ')) {
-      const parts = selectedType.split(' - ');
+    // Check if casket_type specifies a color in parentheses, e.g. "PONGEE CASKET (WALNUT)" or "RAISED ½ VIEW (WALNUT)"
+    const colorInParen = selectedType.match(/\(([^)]+)\)$/);
+    if (colorInParen) {
+      explicitColor = colorInParen[1].trim();
+      nameToMatch = selectedType.replace(/\s*\([^)]+\)$/, '').trim();
+    }
+
+    if (nameToMatch.includes(' - ')) {
+      const parts = nameToMatch.split(' - ');
       nameToMatch = parts[0].trim();
       modelToMatch = parts[1].trim();
     }
@@ -778,11 +786,26 @@ export default function ConsultationForm() {
       if (item.color) colors.add(item.color.trim());
     });
 
+    // Ensure Walnut is always available for Pongee and Raised Half View
+    const isPongee = /pongee/i.test(selectedType);
+    const isRaisedHalfView = /raised\s*(half\s*view|½\s*view|halfview)/i.test(selectedType);
+    if (isPongee || isRaisedHalfView) {
+      colors.add('Walnut');
+    }
+
+    if (explicitColor) {
+      const formatted = explicitColor.charAt(0).toUpperCase() + explicitColor.slice(1).toLowerCase();
+      colors.add(formatted);
+    }
+
     const colorList = Array.from(colors).sort();
     setAvailableColors(colorList);
 
-    // Auto-select if only 1 color exists AND not already set
-    if (colorList.length === 1 && !form.casket_colour) {
+    // Auto-select color if explicit from plan or if only 1 color exists and not set
+    if (explicitColor && (!form.casket_colour || form.casket_colour.toLowerCase() !== explicitColor.toLowerCase())) {
+      const matched = colorList.find(c => c.toLowerCase() === explicitColor.toLowerCase()) || explicitColor;
+      setForm(prev => ({ ...prev, casket_colour: matched }));
+    } else if (colorList.length === 1 && !form.casket_colour) {
       setForm(prev => ({ ...prev, casket_colour: colorList[0] }));
     }
 

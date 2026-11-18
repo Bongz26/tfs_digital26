@@ -12,7 +12,7 @@ import AssignedTransportList from '../components/AssignedTransportList';
 import { prepareCaseForEdit } from '../utils/caseFormatters';
 import { fetchInventory } from '../api/inventory';
 
-const CASKET_COLORS = ['Brown', 'KIAAT', 'Cherry', 'White', 'Silver', 'Gold', 'Grey'];
+const CASKET_COLORS = ['Walnut', 'Brown', 'KIAAT', 'Cherry', 'White', 'Silver', 'Gold', 'Grey'];
 
 export default function CaseDetails() {
   const { id } = useParams();
@@ -130,9 +130,17 @@ export default function CaseDetails() {
     const selectedType = editForm.casket_type.trim();
     let nameToMatch = selectedType;
     let modelToMatch = null;
+    let explicitColor = null;
 
-    if (selectedType.includes(' - ')) {
-      const parts = selectedType.split(' - ');
+    // Check if casket_type specifies a color in parentheses, e.g. "PONGEE CASKET (WALNUT)" or "RAISED ½ VIEW (WALNUT)"
+    const colorInParen = selectedType.match(/\(([^)]+)\)$/);
+    if (colorInParen) {
+      explicitColor = colorInParen[1].trim();
+      nameToMatch = selectedType.replace(/\s*\([^)]+\)$/, '').trim();
+    }
+
+    if (nameToMatch.includes(' - ')) {
+      const parts = nameToMatch.split(' - ');
       nameToMatch = parts[0].trim();
       modelToMatch = parts[1].trim();
     }
@@ -154,12 +162,26 @@ export default function CaseDetails() {
       if (item.color) colors.add(item.color.trim());
     });
 
+    // Ensure Walnut is always available for Pongee and Raised Half View
+    const isPongee = /pongee/i.test(selectedType);
+    const isRaisedHalfView = /raised\s*(half\s*view|½\s*view|halfview)/i.test(selectedType);
+    if (isPongee || isRaisedHalfView) {
+      colors.add('Walnut');
+    }
+
+    if (explicitColor) {
+      const formatted = explicitColor.charAt(0).toUpperCase() + explicitColor.slice(1).toLowerCase();
+      colors.add(formatted);
+    }
+
     const colorList = Array.from(colors).sort();
     setAvailableColors(colorList);
 
     // Auto-select if only 1 color exists AND not already set to a valid option
-    if (colorList.length === 1) {
-      // Only auto-set if current selection is invalid or empty
+    if (explicitColor && (!editForm.casket_colour || editForm.casket_colour.toLowerCase() !== explicitColor.toLowerCase())) {
+      const matched = colorList.find(c => c.toLowerCase() === explicitColor.toLowerCase()) || explicitColor;
+      setEditForm(prev => ({ ...prev, casket_colour: matched }));
+    } else if (colorList.length === 1) {
       if (!editForm.casket_colour || !colorList.includes(editForm.casket_colour)) {
         setEditForm(prev => ({ ...prev, casket_colour: colorList[0] }));
       }
