@@ -132,6 +132,22 @@ export default function ActiveCases() {
   };
 
   const handleChangeCaseStatus = async (caseId, newStatus, notes) => {
+    // Client-side pre-check: block scheduling/in_progress if no vehicles assigned
+    if (['scheduled', 'in_progress'].includes(newStatus)) {
+      const caseItem = cases.find(c => c.id === caseId);
+      if (caseItem) {
+        const assigned = (caseItem.roster || []).length;
+        const minNeeded = caseItem.required_min_vehicles || (caseItem.is_yard_burial ? 1 : 2);
+        if (assigned < minNeeded) {
+          const scale = caseItem.is_yard_burial ? ' (Small Service/Yard Burial)' : '';
+          const msg = assigned === 0
+            ? `❌ No vehicles assigned for this case${scale}.\n\nYou must assign at least ${minNeeded} vehicle(s) using the "Assign Vehicle & Driver" button before scheduling.`
+            : `❌ Not enough vehicles${scale}.\n\n${assigned} of ${minNeeded} required vehicle(s) assigned.\n\nPlease assign the remaining vehicle(s) using "Assign Vehicle & Driver" before scheduling.`;
+          alert(msg);
+          return;
+        }
+      }
+    }
     try {
       setChangingStatus(prev => ({ ...prev, [caseId]: true }));
       await updateCaseStatus(caseId, newStatus, notes);
@@ -330,6 +346,33 @@ export default function ActiveCases() {
                   {getStatusConfig(c.status).label}
                 </span>
               </div>
+
+              {/* Vehicle readiness badge */}
+              {(() => {
+                const assigned = (c.roster || []).length;
+                const minNeeded = c.required_min_vehicles || (c.is_yard_burial ? 1 : 2);
+                const needsVehicleCheck = ['intake', 'confirmed', 'preparation'].includes(c.status);
+                if (!needsVehicleCheck) return null;
+                if (assigned === 0) {
+                  return (
+                    <div className="mb-2 flex items-center gap-1 bg-red-50 border border-red-200 rounded px-2 py-1 text-xs text-red-700 font-semibold">
+                      🚫 No vehicles assigned — required before scheduling
+                    </div>
+                  );
+                }
+                if (assigned < minNeeded) {
+                  return (
+                    <div className="mb-2 flex items-center gap-1 bg-orange-50 border border-orange-200 rounded px-2 py-1 text-xs text-orange-700 font-semibold">
+                      ⚠️ {assigned}/{minNeeded} vehicles — assign more before scheduling
+                    </div>
+                  );
+                }
+                return (
+                  <div className="mb-2 flex items-center gap-1 bg-green-50 border border-green-200 rounded px-2 py-1 text-xs text-green-700 font-semibold">
+                    ✅ {assigned}/{minNeeded} vehicles ready
+                  </div>
+                );
+              })()}
 
               {getNextStatuses(c.status)?.length > 0 && (
                 <select

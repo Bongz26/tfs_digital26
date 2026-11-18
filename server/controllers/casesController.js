@@ -891,10 +891,13 @@ exports.updateCaseStatus = async (req, res) => {
             console.log(`🔍 Vehicle Check: assigned=${assigned}, minNeeded=${minVehicles}, isYard=${isYardBurial}`);
 
             if (!countErr && assigned < minVehicles) {
-                console.warn(`⚠️ Vehicle Check failed for case ${id}`);
+                const vehicleWord = minVehicles === 1 ? 'vehicle' : 'vehicles';
+                const assignedWord = assigned === 1 ? 'vehicle is' : 'vehicles are';
+                const scaleNote = isYardBurial ? ' (Small Service / Yard Burial)' : '';
+                console.warn(`⚠️ Vehicle Check failed for case ${id}: ${assigned}/${minVehicles} assigned`);
                 return res.status(400).json({
                     success: false,
-                    error: `Assign at least ${minVehicles} vehicle(s) before setting status to ${status}${isYardBurial ? ' (Small Service/Yard Burial logic applied)' : ''}`,
+                    error: `Cannot schedule this case${scaleNote} — ${assigned === 0 ? 'no vehicles have been assigned' : `only ${assigned} ${assignedWord} assigned, but ${minVehicles} ${vehicleWord} required`}. Please use the "Assign Vehicle & Driver" button to add transport before scheduling.`,
                     required_min_vehicles: minVehicles,
                     assigned_vehicles: assigned
                 });

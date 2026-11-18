@@ -130,6 +130,22 @@ export default function VehicleCalendar() {
   };
 
   const handleChangeCaseStatus = async (caseId, newStatus, notes) => {
+    // Client-side pre-check: block scheduling/in_progress if no vehicles assigned
+    if (['scheduled', 'in_progress'].includes(newStatus)) {
+      const group = groupByCase(roster).find(g => g.case_id === caseId);
+      if (group) {
+        const assigned = (group.assignments || []).length;
+        const isYard = (group.case_status || '').toLowerCase().includes('yard');
+        const minNeeded = isYard ? 1 : 2;
+        if (assigned < minNeeded) {
+          const msg = assigned === 0
+            ? `❌ No vehicles assigned for this case.\n\nYou must assign at least ${minNeeded} vehicle(s) before scheduling.`
+            : `❌ Not enough vehicles.\n\n${assigned} of ${minNeeded} required vehicle(s) assigned.\n\nPlease assign the remaining vehicle(s) before scheduling.`;
+          alert(msg);
+          return;
+        }
+      }
+    }
     try {
       setChangingStatus(prev => ({ ...prev, [caseId]: true }));
       await updateCaseStatus(caseId, newStatus, notes);
