@@ -1285,9 +1285,10 @@ export default function ConsultationForm() {
       }));
     } catch (err) {
       const serverErr = err.response?.data;
-      const detail = serverErr?.details || serverErr?.hint || serverErr?.error;
+      const detail = serverErr?.error || serverErr?.details || serverErr?.message || serverErr?.hint || err.message;
       console.error('[ConsultationForm] Final submit failed:', { status: err.response?.status, serverErr, message: err.message });
-      setMessage(`Failed to confirm: ${detail || err.message || 'Unknown error'}`);
+      setMessage(`Failed to confirm: ${detail || 'Unknown error'}`);
+      alert(`⚠️ Cannot Confirm Case:\n\n${detail || 'Validation error from server'}`);
     } finally {
       setSubmitting(false);
     }

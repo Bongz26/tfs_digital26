@@ -38,7 +38,8 @@ export const createCase = async (caseData) => {
         });
         return res.data.case;
     } catch (err) {
-        console.error("Error creating case:", err.response || err);
+        const errMsg = err.response?.data?.error || err.response?.data?.details || err.message;
+        console.error("❌ Error creating case:", errMsg, err.response?.data || err);
         throw err;
     }
 };
